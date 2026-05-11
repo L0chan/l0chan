@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from flask import Flask, render_template, render_template_string, request, redirect, session, flash, send_from_directory
+from flask import render_template, render_template_string, request, redirect, session, flash, send_from_directory
 import base64
 import sqlite3
 import os
@@ -20,14 +20,7 @@ RELEASE_DIR = BASE_DIR / "release"
 DATABASE_PATH = str(BASE_DIR / "database.db")
 UPLOAD_FOLDER = str(FRONTEND_DIR / "static" / "uploads")
 
-app = Flask(
-    __name__,
-    template_folder=str(FRONTEND_DIR / "templates"),
-    static_folder=str(FRONTEND_DIR / "static"),
-    static_url_path="/static",
-)
-app.secret_key = os.environ.get("NPF_SECRET_KEY", "nearbypricefinder")
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+from backend.app_factory import app
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
 def allowed_file(filename):
@@ -228,16 +221,18 @@ def role_required(*roles):
             if current_role == "admin" and session.get("is_owner_admin"):
                 return view_func(*args, **kwargs)
 
-            if "admin" in allowed_roles:
-                flash("Owner admin access is required for that panel.")
-                return redirect(dashboard_for_role(current_role))
-
             if current_role in allowed_roles:
                 return view_func(*args, **kwargs)
 
-            needed_role = label_for_role(next(iter(allowed_roles), "customer"))
-            flash(f"Please login with a {needed_role} account to open that panel.")
-            return redirect(dashboard_for_role(current_role))
+            # Fail-safe: Avoid infinite redirect loop if dashboard_for_role returns current path
+            target = dashboard_for_role(current_role)
+            if target == request.path:
+                flash(f"Access denied: Your role '{current_role}' does not have permission for this section.")
+                return redirect("/")
+
+            return redirect(target)
+
+
 
         return wrapped
 

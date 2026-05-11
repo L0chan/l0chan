@@ -2,7 +2,7 @@ import os
 import threading
 import webbrowser
 
-from backend.app import app
+from backend.app_factory import app
 
 
 HOST = os.environ.get("NPF_HOST", "127.0.0.1")
