@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart — Nearby Price Finder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg: #07111f;
+            --panel: rgba(255, 255, 255, 0.09);
+            --line: rgba(255, 255, 255, 0.15);
+            --text: #f8fbff;
+            --muted: #9fb1c7;
+            --cyan: #22d3ee;
+            --green: #4ade80;
+            --amber: #facc15;
+            --rose: #fb7185;
+            --ink: #06111f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: var(--text);
+            font-family: "Inter", Arial, sans-serif;
+            background:
+                radial-gradient(circle at 10% 10%, rgba(34, 211, 238, 0.15), transparent 30%),
+                radial-gradient(circle at 90% 18%, rgba(74, 222, 128, 0.12), transparent 25%),
+                linear-gradient(135deg, #07111f 0%, #101f30 48%, #102538 100%);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 54px 54px;
+            mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
+        }
+
+        .motion-layer {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .tile {
+            position: absolute;
+            width: var(--size);
+            height: var(--size);
+            left: var(--left);
+            bottom: -150px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.05);
+            animation: rise var(--duration) linear infinite;
+            animation-delay: var(--delay);
+        }
+
+        @keyframes rise {
+            0% { opacity: 0; transform: translateY(0) rotate(0deg) scale(0.7); }
+            15% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-115vh) rotate(360deg) scale(1.1); }
+        }
+
+        /* NAVBAR */
+        nav {
+            padding: 24px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(20px);
+            background: rgba(6, 17, 31, 0.6);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .brand-mark {
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            border-radius: 12px;
+            color: var(--ink);
+            box-shadow: 0 8px 20px rgba(34, 211, 238, 0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--cyan);
+        }
+
+        /* MAIN CONTENT */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .header h1 span {
+            color: var(--cyan);
+        }
+
+        .header p {
+            color: var(--muted);
+            margin-top: 8px;
+        }
+
+        .cart-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 960px) {
+            .cart-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ITEMS */
+        .cart-items {
+            display: grid;
+            gap: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 20px;
+            padding: 24px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            backdrop-filter: blur(18px);
+            transition: transform 0.2s;
+        }
+
+        .cart-item:hover {
+            transform: translateX(8px);
+            border-color: rgba(34, 211, 238, 0.3);
+        }
+
+        .item-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 16px;
+            object-fit: cover;
+            border: 1px solid var(--line);
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-details h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .item-shop {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .item-price {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--green);
+        }
+
+        .item-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .qty-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+        }
+
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: var(--panel);
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.2s;
+        }
+
+        .qty-btn:hover { background: var(--cyan); color: var(--ink); }
+
+        .qty-input {
+            width: 40px;
+            text-align: center;
+            background: none;
+            border: none;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            color: var(--rose);
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+
+        .remove-btn:hover { opacity: 0.8; }
+
+        /* SUMMARY PANEL */
+        .summary {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            padding: 30px;
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 120px;
+        }
+
+        .summary h2 {
+            font-size: 24px;
+            margin-bottom: 24px;
+        }
+
+        .sum-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .sum-row.total {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--line);
+            color: var(--text);
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .sum-row.total span:last-child {
+            color: var(--cyan);
+        }
+
+        .checkout-form {
+            margin-top: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .input-group textarea, .input-group select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px;
+            color: white;
+            font-family: inherit;
+            font-size: 15px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .input-group textarea:focus { border-color: var(--cyan); }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            color: var(--ink);
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 12px 24px rgba(34, 211, 238, 0.2);
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        .checkout-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(34, 211, 238, 0.3); }
+
+        .empty-cart {
+            text-align: center;
+            padding: 100px 20px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 30px;
+        }
+
+        .empty-cart i { font-size: 64px; color: var(--muted); margin-bottom: 20px; }
+        .empty-cart h2 { font-size: 28px; margin-bottom: 12px; }
+        .empty-cart a {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 14px 30px;
+            background: var(--cyan);
+            color: var(--ink);
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: 800;
+        }
+
+        .flash-msg {
+            padding: 14px 20px;
+            background: rgba(34, 211, 238, 0.1);
+            border: 1px solid var(--cyan);
+            border-radius: 14px;
+            color: var(--cyan);
+            margin-bottom: 24px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="motion-layer">
+        <span class="tile" style="--left: 10%; --size: 80px; --duration: 18s; --delay: -2s;"></span>
+        <span class="tile" style="--left: 30%; --size: 60px; --duration: 15s; --delay: -5s;"></span>
+        <span class="tile" style="--left: 55%; --size: 100px; --duration: 22s; --delay: -8s;"></span>
+        <span class="tile" style="--left: 80%; --size: 70px; --duration: 20s; --delay: -3s;"></span>
+    </div>
+
+    <nav>
+        <a class="brand" href="/home">
+            <span class="brand-mark"><i class="fa-solid fa-cart-shopping"></i></span>
+            Nearby Price Finder
+        </a>
+        <div class="nav-links">
+            <a href="/home">Home</a>
+            <a href="/customer">Shop</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for msg in messages %}
+                    <div class="flash-msg">{{ msg }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="header">
+            <h1>Your <span>Shopping Cart</span></h1>
+            <p>Review your selected items and secure your order.</p>
+        </div>
+
+        {% if not items %}
+            <div class="empty-cart">
+                <i class="fa-solid fa-cart-plus"></i>
+                <h2>Your cart is empty</h2>
+                <p>Looks like you haven't added anything yet.</p>
+                <a href="/customer">Start Shopping</a>
+            </div>
+        {% else %}
+            <div class="cart-grid">
+                <div class="cart-items">
+                    {% for item in items %}
+                        <div class="cart-item">
+                            <img src="/static/uploads/{{ item.product_image }}" class="item-img" alt="{{ item.product_name }}">
+                            <div class="item-details">
+                                <h3>{{ item.product_name }}</h3>
+                                <p class="item-shop"><i class="fa-solid fa-store"></i> {{ item.shop_name or 'Local Shop' }}</p>
+                                <div class="item-price">₹{{ item.price }}</div>
+                                
+                                <div class="item-controls">
+                                    <form method="POST" action="/update_cart/{{ item.id }}" id="qty-form-{{ item.id }}">
+                                        <div class="qty-box">
+                                            <button type="button" class="qty-btn" onclick="updateQty({{ item.id }}, -1)">-</button>
+                                            <input type="number" name="quantity" id="qty-{{ item.id }}" class="qty-input" value="{{ item.quantity }}" min="1" onchange="this.form.submit()">
+                                            <button type="button" class="qty-btn" onclick="updateQty({{ item.id }}, 1)">+</button>
+                                        </div>
+                                    </form>
+                                    
+                                    <form method="POST" action="/remove_from_cart/{{ item.id }}">
+                                        <button type="submit" class="remove-btn">
+                                            <i class="fa-solid fa-trash"></i> Remove
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="summary">
+                    <h2>Order Summary</h2>
+                    <div class="sum-row">
+                        <span>Items ({{ items|length }})</span>
+                        <span>₹{{ total }}</span>
+                    </div>
+                    <div class="sum-row">
+                        <span>Delivery</span>
+                        <span style="color:var(--green);">FREE</span>
+                    </div>
+                    <div class="sum-row total">
+                        <span>Total</span>
+                        <span>₹{{ total }}</span>
+                    </div>
+
+                    <form class="checkout-form" method="POST" action="/checkout">
+                        <div class="input-group">
+                            <label>Delivery Address</label>
+                            <textarea name="address" placeholder="Enter your full delivery address..." required></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label>Payment Method</label>
+                            <select name="payment">
+                                <option value="Cash on Delivery">💵 Cash on Delivery</option>
+                                <option value="UPI">📱 UPI Payment</option>
+                                <option value="Card">💳 Credit / Debit Card</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="checkout-btn">
+                            Confirm Order
+                        </button>
+                    </form>
+                    <p style="text-align: center; color: var(--muted); font-size: 12px; margin-top: 20px;">
+                        <i class="fa-solid fa-lock"></i> Secure 256-bit SSL encrypted checkout
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function updateQty(id, delta) {
+            const input = document.getElementById('qty-' + id);
+            let val = parseInt(input.value) + delta;
+            if (val < 1) val = 1;
+            input.value = val;
+            document.getElementById('qty-form-' + id).submit();
+        }
+    </script>
+</body>
+</html>
+

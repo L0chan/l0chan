@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Live Delivery Tracking</title>
+
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+<style>
+
+body{
+
+    background:#0f172a;
+    color:white;
+    font-family:Arial;
+
+}
+
+.order-box{
+
+    width:80%;
+    margin:auto;
+
+    background:white;
+    color:black;
+
+    padding:20px;
+
+    border-radius:20px;
+
+    margin-top:20px;
+
+}
+
+#map{
+
+    width:90%;
+    height:500px;
+
+    margin:auto;
+
+    margin-top:30px;
+
+    border-radius:20px;
+
+}
+
+</style>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+
+<body data-panel="orders">
+
+<h1 style="text-align:center;">
+
+Live Delivery Tracking
+
+</h1>
+
+{% for order in orders %}
+
+<div class="order-box">
+
+<h2>
+
+{{ order.product_name }}
+
+</h2>
+
+<p>
+
+Customer:
+{{ order.customer_name }}
+
+</p>
+
+<p>
+
+Address:
+{{ order.address }}
+
+</p>
+
+<p>
+
+Shop:
+{{ order.shop_name }}
+
+</p>
+
+<p>
+
+Status:
+{{ order.status }}
+
+</p>
+
+</div>
+
+{% endfor %}
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js">
+
+</script>
+
+<script>
+
+var map = L.map('map').setView(
+
+    [12.9716, 77.5946],
+
+    12
+
+);
+
+L.tileLayer(
+
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+
+{
+
+    attribution:'© OpenStreetMap'
+
+}).addTo(map);
+
+var shop = L.marker(
+
+    [12.9716, 77.5946]
+
+).addTo(map)
+
+.bindPopup(
+
+    "Shop Location"
+
+);
+
+var customer = L.marker(
+
+    [12.9352, 77.6245]
+
+).addTo(map)
+
+.bindPopup(
+
+    "Customer Location"
+
+);
+
+var latlngs = [
+
+    [12.9716, 77.5946],
+
+    [12.9352, 77.6245]
+
+];
+
+var polyline = L.polyline(
+
+    latlngs,
+
+    {
+
+        color:'blue'
+
+    }
+
+).addTo(map);
+
+map.fitBounds(
+
+    polyline.getBounds()
+
+);
+
+</script>
+
+</body>
+
+</html>

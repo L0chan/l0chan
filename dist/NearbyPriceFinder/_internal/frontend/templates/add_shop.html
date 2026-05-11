@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Add Shop</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="seller">
+
+<div class="container">
+
+<h1>Add Shop</h1>
+
+<form method="POST">
+
+<input type="text" name="shop_name" placeholder="Shop Name" required>
+
+<input type="text" name="location" placeholder="Location" required>
+
+<input type="hidden" id="latitude" name="latitude">
+<input type="hidden" id="longitude" name="longitude">
+
+<button type="submit">Add Shop</button>
+
+</form>
+
+</div>
+
+<script>
+
+navigator.geolocation.getCurrentPosition(function(position){
+
+    document.getElementById("latitude").value =
+        position.coords.latitude;
+
+    document.getElementById("longitude").value =
+        position.coords.longitude;
+
+});
+
+</script>
+
+</body>
+</html>

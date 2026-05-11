@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Maps</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            color: #f8fbff;
+            font-family: "Inter", Arial, sans-serif;
+            background:
+                radial-gradient(circle at 10% 10%, rgba(34, 211, 238, 0.22), transparent 28%),
+                radial-gradient(circle at 88% 18%, rgba(74, 222, 128, 0.16), transparent 25%),
+                linear-gradient(135deg, #07111f 0%, #101f30 48%, #102538 100%);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .shell {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 24px 0;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.09);
+            backdrop-filter: blur(18px);
+        }
+
+        h1 {
+            font-size: clamp(28px, 4vw, 48px);
+            line-height: 1.05;
+        }
+
+        p {
+            margin-top: 8px;
+            color: #9fb1c7;
+            line-height: 1.6;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-link {
+            min-height: 46px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 16px;
+            border-radius: 14px;
+            color: #06111f;
+            background: linear-gradient(135deg, #22d3ee, #4ade80);
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .action-link.secondary {
+            color: #dbe8f7;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        #map {
+            height: calc(100vh - 190px);
+            min-height: 460px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 26px;
+            background: #0b1624;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+        }
+
+        @media (max-width: 760px) {
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            #map {
+                height: 68vh;
+                min-height: 420px;
+            }
+        }
+</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="maps">
+    <main class="shell">
+        <section class="topbar">
+            <div>
+                <h1>Seller Map Center</h1>
+                <p>All products with saved shop coordinates appear on this real-time map.</p>
+            </div>
+            <div class="actions">
+                <a class="action-link secondary" href="/shopkeeper"><i class="fa-solid fa-plus"></i> Add Product</a>
+                <a class="action-link" href="/shopkeeper_dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+            </div>
+        </section>
+
+        <div id="map"></div>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const products = [
+            {% for product in products %}
+                {
+                    name: {{ product['product_name']|tojson }},
+                    shop: {{ product['shop_name']|tojson }},
+                    location: {{ product['location']|tojson }},
+                    latitude: parseFloat("{{ product['latitude'] }}"),
+                    longitude: parseFloat("{{ product['longitude'] }}"),
+                },
+            {% endfor %}
+        ];
+
+        const map = L.map("map").setView([20.5937, 78.9629], 5);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors",
+        }).addTo(map);
+
+        const bounds = [];
+
+        products.forEach((product) => {
+            if (!Number.isFinite(product.latitude) || !Number.isFinite(product.longitude)) return;
+
+            const position = [product.latitude, product.longitude];
+            bounds.push(position);
+            L.marker(position)
+                .addTo(map)
+                .bindPopup(`<strong>${product.name}</strong><br>${product.shop}<br>${product.location}`);
+        });
+
+        if (bounds.length) {
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition((position) => {
+                const current = [position.coords.latitude, position.coords.longitude];
+                L.circleMarker(current, {
+                    radius: 8,
+                    color: "#22d3ee",
+                    fillColor: "#22d3ee",
+                    fillOpacity: 0.85,
+                }).addTo(map).bindPopup("Your live location");
+            });
+        }
+    </script>
+</body>
+</html>

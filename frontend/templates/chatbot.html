@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>AI Shopping Assistant</title>
+
+    <style>
+
+        body{
+
+            background:#020b45;
+            font-family:Arial;
+            margin:0;
+
+            display:flex;
+            justify-content:center;
+            align-items:center;
+
+            height:100vh;
+
+        }
+
+        .chat-box{
+
+            width:500px;
+            height:700px;
+
+            background:white;
+
+            border-radius:20px;
+
+            overflow:hidden;
+
+            display:flex;
+            flex-direction:column;
+
+        }
+
+        .header{
+
+            background:#2962ff;
+            color:white;
+
+            padding:20px;
+
+            text-align:center;
+
+            font-size:28px;
+            font-weight:bold;
+
+        }
+
+        .messages{
+
+            flex:1;
+
+            padding:20px;
+
+            overflow-y:auto;
+
+        }
+
+        .bot{
+
+            background:#2962ff;
+            color:white;
+
+            padding:15px;
+
+            border-radius:15px;
+
+            margin-bottom:15px;
+
+            width:fit-content;
+
+        }
+
+        .input-box{
+
+            display:flex;
+
+            padding:15px;
+
+            gap:10px;
+
+            border-top:1px solid #ddd;
+
+        }
+
+        input{
+
+            flex:1;
+
+            padding:15px;
+
+            border-radius:10px;
+
+            border:1px solid #ccc;
+
+        }
+
+        button{
+
+            padding:15px 25px;
+
+            border:none;
+
+            border-radius:10px;
+
+            background:#2962ff;
+
+            color:white;
+
+            cursor:pointer;
+
+        }
+
+    </style>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+
+<body data-panel="chat">
+
+<div class="chat-box">
+
+    <div class="header">
+
+        🤖 AI Shopping Assistant
+
+    </div>
+
+    <div class="messages" id="messages">
+
+        <div class="bot">
+
+            👋 Hello! Ask about products.
+
+        </div>
+
+    </div>
+
+    <div class="input-box">
+
+        <input
+        type="text"
+        id="message"
+        placeholder="Search products...">
+
+        <button onclick="sendMessage()">
+
+            Send
+
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+function sendMessage(){
+
+    let msg = document.getElementById("message").value;
+
+    if(msg == ""){
+
+        return;
+
+    }
+
+    let messages = document.getElementById("messages");
+
+    messages.innerHTML += `
+
+    <div style="
+    background:#00d4ff;
+    color:black;
+    padding:15px;
+    border-radius:15px;
+    margin-bottom:15px;
+    margin-left:auto;
+    width:fit-content;">
+
+    ${msg}
+
+    </div>
+    `;
+
+    fetch("/chat_response",{
+
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/x-www-form-urlencoded"
+        },
+
+        body:"message="+msg
+
+    })
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        messages.innerHTML += `
+
+        <div class="bot">
+
+            ${data.reply}
+
+        </div>
+        `;
+
+        messages.scrollTop = messages.scrollHeight;
+
+    });
+
+    document.getElementById("message").value = "";
+
+}
+
+</script>
+
+</body>
+
+</html>

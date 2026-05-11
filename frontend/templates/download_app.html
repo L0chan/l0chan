@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Nearby Price Finder</title>
+    <meta name="theme-color" content="#16a34a">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="{{ url_for('static', filename='app-icon.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #0b1220;
+            color: #f8fafc;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .download-shell {
+            width: min(920px, 100%);
+        }
+
+        .download-header {
+            margin-bottom: 28px;
+        }
+
+        .download-header h1 {
+            margin: 0 0 10px;
+            font-size: clamp(32px, 5vw, 58px);
+            line-height: 1;
+        }
+
+        .download-header p {
+            margin: 0;
+            max-width: 680px;
+            color: #cbd5e1;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .download-card {
+            background: #111827;
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 8px;
+            padding: 24px;
+            min-height: 260px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .download-card h2 {
+            margin: 0 0 12px;
+            font-size: 26px;
+        }
+
+        .download-card p,
+        .download-card li {
+            color: #cbd5e1;
+            line-height: 1.55;
+        }
+
+        .download-card ol {
+            padding-left: 20px;
+            margin: 0;
+        }
+
+        .install-note {
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: rgba(250, 204, 21, .12);
+            color: #fde68a;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .download-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+            margin-top: 22px;
+            padding: 0 18px;
+            border-radius: 999px;
+            background: #16a34a;
+            color: white;
+            font-weight: 700;
+            text-decoration: none;
+            border: 0;
+            cursor: pointer;
+        }
+
+        .download-action.disabled {
+            background: #475569;
+            pointer-events: none;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 22px;
+            color: #93c5fd;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        @media (max-width: 760px) {
+            .download-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="download">
+    <main class="download-shell">
+        <header class="download-header">
+            <h1>Download Nearby Price Finder</h1>
+            <p>Install the marketplace app on Windows or Android. Windows uses a portable zip, while Android installs from Chrome as a home-screen app.</p>
+        </header>
+
+        <section class="download-grid">
+            <article class="download-card">
+                <div>
+                    <h2>Windows</h2>
+                    <p>Download the zip, extract it, and open NearbyPriceFinder.exe.</p>
+                </div>
+
+                {% if windows_zip_exists %}
+                    <a class="download-action" href="/download/windows">Download Windows Zip</a>
+                {% else %}
+                    <span class="download-action disabled">Run make_downloads.bat first</span>
+                {% endif %}
+            </article>
+
+            <article class="download-card">
+                <div>
+                    <h2>Android</h2>
+                    <ol>
+                        <li>Tap the Android download button below.</li>
+                        <li>If APK is not built yet, use HTTPS install instructions.</li>
+                        <li>Chrome can install only from a secure HTTPS app link.</li>
+                    </ol>
+                    <div class="install-note" id="android-note">Checking install support...</div>
+                </div>
+
+                <div>
+                    {% if android_apk_exists %}
+                        <a class="download-action" href="/download/android">Download Android APK</a>
+                    {% else %}
+                        <a class="download-action" href="/download/android">Android Download Setup</a>
+                    {% endif %}
+                    <button class="download-action" type="button" id="android-install">Install from Chrome</button>
+                </div>
+            </article>
+        </section>
+
+        <a class="back-link" href="/">Back to app</a>
+    </main>
+
+    <script src="{{ url_for('static', filename='pwa.js') }}"></script>
+    <script>
+        const androidNote = document.getElementById("android-note");
+
+        function updateAndroidNote() {
+            if (!window.isSecureContext) {
+                androidNote.textContent = "Install prompt is blocked because this page is not HTTPS. Use an HTTPS hosted link, ngrok, Cloudflare Tunnel, or an APK wrapper.";
+                return;
+            }
+
+            androidNote.textContent = "This page is secure. If Chrome supports install for this device, the install prompt will appear after the page loads.";
+        }
+
+        updateAndroidNote();
+
+        document.getElementById("android-install").addEventListener("click", () => {
+            window.NPF_PWA.promptInstall();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Nearby Price Finder app icon">
+  <rect width="512" height="512" rx="112" fill="#0b1220"/>
+  <circle cx="256" cy="232" r="142" fill="#16a34a"/>
+  <path d="M256 90c78.4 0 142 63.6 142 142 0 111.8-142 218-142 218S114 343.8 114 232c0-78.4 63.6-142 142-142Z" fill="#22c55e"/>
+  <circle cx="256" cy="232" r="78" fill="#f8fafc"/>
+  <path d="M214 245h84c14.4 0 26-11.6 26-26s-11.6-26-26-26h-84m0 0 84 104m-84-104v104" fill="none" stroke="#0b1220" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M135 402c32 34 74 52 121 52s89-18 121-52" fill="none" stroke="#facc15" stroke-width="24" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Customer Seller Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #07111f;
+            --panel: rgba(255, 255, 255, 0.1);
+            --line: rgba(255, 255, 255, 0.15);
+            --text: #f8fbff;
+            --muted: #aab8ca;
+            --cyan: #22d3ee;
+            --green: #41e58d;
+            --amber: #ffd166;
+            --ink: #06111f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            color: var(--text);
+            font-family: "Poppins", sans-serif;
+            background:
+                radial-gradient(circle at 10% 8%, rgba(34, 211, 238, 0.22), transparent 28%),
+                radial-gradient(circle at 88% 16%, rgba(65, 229, 141, 0.18), transparent 24%),
+                linear-gradient(135deg, #07111f 0%, #101f30 48%, #102538 100%);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        .shell {
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 24px 0;
+        }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 16px 18px;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: rgba(7, 17, 31, 0.74);
+            box-shadow: 0 18px 54px rgba(0, 0, 0, 0.28);
+            backdrop-filter: blur(18px);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: clamp(19px, 2vw, 28px);
+            font-weight: 800;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 44px;
+            height: 44px;
+            place-items: center;
+            border-radius: 14px;
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            padding: 10px 13px;
+            border-radius: 14px;
+            color: #dbe8f8;
+            font-weight: 700;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-layout {
+            display: grid;
+            grid-template-columns: 310px minmax(0, 1fr);
+            gap: 22px;
+            margin-top: 24px;
+        }
+
+        .side-panel,
+        .chat-panel {
+            border: 1px solid var(--line);
+            border-radius: 26px;
+            background: var(--panel);
+            box-shadow: 0 22px 58px rgba(0, 0, 0, 0.24);
+            backdrop-filter: blur(18px);
+        }
+
+        .side-panel {
+            padding: 22px;
+        }
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 9px 13px;
+            border: 1px solid rgba(65, 229, 141, 0.25);
+            border-radius: 999px;
+            color: #a6ffc9;
+            background: rgba(65, 229, 141, 0.12);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .pulse {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: var(--green);
+            box-shadow: 0 0 0 8px rgba(65, 229, 141, 0.14);
+        }
+
+        h1 {
+            margin-top: 18px;
+            font-size: 38px;
+            line-height: 1.08;
+        }
+
+        .side-panel p {
+            margin-top: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .role-picker {
+            display: grid;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .role-btn {
+            min-height: 54px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            color: white;
+            background: rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            font-weight: 800;
+        }
+
+        .role-btn.active {
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+        }
+
+        .hint {
+            margin-top: 24px;
+            padding: 15px;
+            border-radius: 18px;
+            color: #143047;
+            background: #f8fbff;
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .chat-panel {
+            min-height: calc(100vh - 154px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 20px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .chat-title strong,
+        .chat-title span {
+            display: block;
+        }
+
+        .chat-title strong {
+            font-size: 22px;
+        }
+
+        .chat-title span {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .sync-state {
+            color: #9ef3ff;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .messages {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 13px;
+            min-height: 380px;
+            padding: 22px;
+            overflow-y: auto;
+            background: rgba(3, 10, 20, 0.32);
+        }
+
+        .message {
+            max-width: min(78%, 560px);
+            padding: 13px 15px;
+            border-radius: 18px;
+            overflow-wrap: anywhere;
+            line-height: 1.55;
+        }
+
+        .message.customer {
+            align-self: flex-start;
+            color: #102033;
+            background: #f8fbff;
+            border-bottom-left-radius: 6px;
+        }
+
+        .message.seller {
+            align-self: flex-end;
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            border-bottom-right-radius: 6px;
+        }
+
+        .message-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 5px;
+            font-size: 12px;
+            font-weight: 800;
+            opacity: 0.8;
+        }
+
+        .empty {
+            margin: auto;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.7;
+        }
+
+        .chat-form {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 12px;
+            padding: 16px;
+            border-top: 1px solid var(--line);
+            background: rgba(7, 17, 31, 0.78);
+        }
+
+        .chat-form input {
+            min-height: 56px;
+            padding: 0 17px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 16px;
+            outline: none;
+            color: white;
+            background: rgba(255, 255, 255, 0.09);
+        }
+
+        .chat-form input::placeholder {
+            color: #9fb1c7;
+        }
+
+        .chat-form button {
+            min-width: 132px;
+            min-height: 56px;
+            border: 0;
+            border-radius: 16px;
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            cursor: pointer;
+            font-weight: 900;
+        }
+
+        .chat-form button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        @media (max-width: 860px) {
+            .navbar,
+            .chat-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .chat-panel {
+                min-height: 620px;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .shell {
+                width: min(100% - 22px, 1120px);
+                padding-top: 12px;
+            }
+
+            .message {
+                max-width: 92%;
+            }
+
+            .chat-form {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-form button {
+                width: 100%;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="chat">
+    <div class="shell">
+        <nav class="navbar">
+            <a class="brand" href="/home" aria-label="Nearby Price Finder home">
+                <span class="brand-mark">NP</span>
+                Nearby Price Finder
+            </a>
+            <div class="nav-links">
+                <a href="/customer">Customer</a>
+                <a href="/shopkeeper_dashboard">Seller</a>
+                <a href="/home">Home</a>
+            </div>
+        </nav>
+
+        <main class="chat-layout">
+            <aside class="side-panel">
+                <div class="status-chip"><span class="pulse"></span> Live chat online</div>
+                <h1>Customer and seller chat</h1>
+                <p>Switch your role, send a message, and the conversation refreshes automatically.</p>
+
+                <div class="role-picker" aria-label="Choose chat role">
+                    <button class="role-btn active" type="button" data-role="customer">Customer</button>
+                    <button class="role-btn" type="button" data-role="seller">Seller</button>
+                </div>
+
+                <div class="hint">
+                    Current user: {{ current_user }}<br>
+                    Messages update every second while this page is open.
+                </div>
+            </aside>
+
+            <section class="chat-panel" aria-label="Live customer seller chat">
+                <div class="chat-head">
+                    <div class="chat-title">
+                        <strong>Live Conversation</strong>
+                        <span id="roleLabel">Sending as Customer</span>
+                    </div>
+                    <div class="sync-state" id="syncState">Connecting...</div>
+                </div>
+
+                <div class="messages" id="messages">
+                    <div class="empty">Loading messages...</div>
+                </div>
+
+                <form class="chat-form" id="chatForm">
+                    <input id="messageInput" type="text" placeholder="Type your message..." autocomplete="off" required>
+                    <button id="sendButton" type="submit">Send</button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const messagesEl = document.getElementById("messages");
+        const chatForm = document.getElementById("chatForm");
+        const messageInput = document.getElementById("messageInput");
+        const sendButton = document.getElementById("sendButton");
+        const syncState = document.getElementById("syncState");
+        const roleLabel = document.getElementById("roleLabel");
+        const roleButtons = document.querySelectorAll(".role-btn");
+
+        let currentRole = "customer";
+        let lastRendered = "";
+
+        function setRole(role) {
+            currentRole = role;
+            roleLabel.textContent = `Sending as ${role === "seller" ? "Seller" : "Customer"}`;
+
+            roleButtons.forEach((button) => {
+                button.classList.toggle("active", button.dataset.role === role);
+            });
+        }
+
+        function renderMessages(chats) {
+            const signature = JSON.stringify(chats);
+            if (signature === lastRendered) return;
+            lastRendered = signature;
+
+            if (!chats.length) {
+                messagesEl.innerHTML = '<div class="empty">No messages yet. Start the conversation.</div>';
+                return;
+            }
+
+            messagesEl.innerHTML = chats.map((chat) => `
+                <div class="message ${chat.sender === "seller" ? "seller" : "customer"}">
+                    <div class="message-top">
+                        <span>${chat.sender === "seller" ? "Seller" : "Customer"}</span>
+                        <span>${chat.created_at || ""}</span>
+                    </div>
+                    <div>${escapeHtml(chat.message)}</div>
+                </div>
+            `).join("");
+
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function escapeHtml(value) {
+            return value
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        async function loadMessages() {
+            try {
+                const response = await fetch("/chat_messages", { cache: "no-store" });
+                if (!response.ok) throw new Error("Could not load chat messages");
+                const data = await response.json();
+                renderMessages(data.chats || []);
+                syncState.textContent = "Live";
+            } catch (error) {
+                syncState.textContent = "Offline";
+            }
+        }
+
+        chatForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            sendButton.disabled = true;
+
+            try {
+                const response = await fetch("/send_message", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                    body: new URLSearchParams({
+                        sender: currentRole,
+                        message,
+                    }),
+                });
+
+                if (!response.ok) throw new Error("Could not send message");
+                messageInput.value = "";
+                await loadMessages();
+            } catch (error) {
+                syncState.textContent = "Send failed";
+            } finally {
+                sendButton.disabled = false;
+                messageInput.focus();
+            }
+        });
+
+        roleButtons.forEach((button) => {
+            button.addEventListener("click", () => setRole(button.dataset.role));
+        });
+
+        setRole("customer");
+        loadMessages();
+        setInterval(loadMessages, 1000);
+    </script>
+</body>
+</html>

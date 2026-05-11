@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product['product_name'] }} Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            color: #f8fbff;
+            font-family: "Inter", Arial, sans-serif;
+            background:
+                radial-gradient(circle at 10% 10%, rgba(34, 211, 238, 0.22), transparent 28%),
+                radial-gradient(circle at 88% 18%, rgba(74, 222, 128, 0.16), transparent 25%),
+                linear-gradient(135deg, #07111f 0%, #101f30 48%, #102538 100%);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .shell {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 24px 0;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 18px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.09);
+            backdrop-filter: blur(18px);
+        }
+
+        h1 {
+            font-size: clamp(28px, 4vw, 48px);
+            line-height: 1.05;
+        }
+
+        p {
+            margin-top: 8px;
+            color: #9fb1c7;
+            line-height: 1.6;
+        }
+
+        .back-link {
+            min-height: 46px;
+            display: inline-flex;
+            align-items: center;
+            padding: 0 16px;
+            border-radius: 14px;
+            color: #06111f;
+            background: linear-gradient(135deg, #22d3ee, #4ade80);
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        #map {
+            height: calc(100vh - 190px);
+            min-height: 460px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 26px;
+            background: #0b1624;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+        }
+
+        .map-wrap {
+            position: relative;
+        }
+
+        .distance-panel {
+            position: absolute;
+            left: 18px;
+            top: 18px;
+            z-index: 500;
+            width: min(330px, calc(100% - 36px));
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 20px;
+            background: rgba(7, 17, 31, 0.86);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+            backdrop-filter: blur(16px);
+        }
+
+        .distance-panel span {
+            display: block;
+            color: #9fb1c7;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .distance-panel strong {
+            display: block;
+            margin-top: 7px;
+            color: #4ade80;
+            font-size: 34px;
+            line-height: 1;
+        }
+
+        .distance-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .distance-mini {
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .distance-mini b {
+            display: block;
+            margin-top: 5px;
+            font-size: 13px;
+            word-break: break-word;
+        }
+
+        .notice {
+            margin-top: 12px;
+            color: #9fb1c7;
+            font-size: 14px;
+        }
+
+        @media (max-width: 700px) {
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            #map {
+                height: 68vh;
+                min-height: 420px;
+            }
+
+            .distance-panel {
+                position: relative;
+                left: auto;
+                top: auto;
+                width: 100%;
+                margin-bottom: 12px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="maps">
+    <main class="shell">
+        <section class="topbar">
+            <div>
+                <h1>{{ product['product_name'] }}</h1>
+                <p>{{ product['shop_name'] }} - {{ product['location'] }}</p>
+            </div>
+            <a class="back-link" href="/customer">Back to Customer Panel</a>
+        </section>
+
+        <div class="map-wrap">
+            <aside class="distance-panel">
+                <span>Distance from your live location</span>
+                <strong id="distance-value">Waiting...</strong>
+                <div class="distance-grid">
+                    <div class="distance-mini">
+                        <span>Shop</span>
+                        <b id="shop-coordinates">Not available</b>
+                    </div>
+                    <div class="distance-mini">
+                        <span>You</span>
+                        <b id="user-coordinates">Allow location</b>
+                    </div>
+                </div>
+            </aside>
+            <div id="map"></div>
+        </div>
+        <div class="notice" id="notice">Opening live map...</div>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const shopLatitude = parseFloat("{{ product['latitude'] or '' }}");
+        const shopLongitude = parseFloat("{{ product['longitude'] or '' }}");
+        const shopName = {{ product['shop_name']|tojson }};
+        const productName = {{ product['product_name']|tojson }};
+        const hasShopLocation = Number.isFinite(shopLatitude) && Number.isFinite(shopLongitude);
+        const defaultPosition = [20.5937, 78.9629];
+        const map = L.map("map").setView(hasShopLocation ? [shopLatitude, shopLongitude] : defaultPosition, hasShopLocation ? 15 : 5);
+        const notice = document.getElementById("notice");
+        const distanceValue = document.getElementById("distance-value");
+        const shopCoordinates = document.getElementById("shop-coordinates");
+        const userCoordinates = document.getElementById("user-coordinates");
+        let userMarker = null;
+        let routeLine = null;
+
+        function formatCoordinates(latitude, longitude) {
+            return `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+        }
+
+        function formatDistance(meters) {
+            if (meters < 1000) {
+                return `${Math.round(meters)} m`;
+            }
+
+            return `${(meters / 1000).toFixed(2)} km`;
+        }
+
+        function distanceInMeters(from, to) {
+            const earthRadius = 6371000;
+            const toRadians = (degrees) => degrees * Math.PI / 180;
+            const latitude1 = toRadians(from[0]);
+            const latitude2 = toRadians(to[0]);
+            const latitudeDelta = toRadians(to[0] - from[0]);
+            const longitudeDelta = toRadians(to[1] - from[1]);
+
+            const haversine =
+                Math.sin(latitudeDelta / 2) * Math.sin(latitudeDelta / 2) +
+                Math.cos(latitude1) * Math.cos(latitude2) *
+                Math.sin(longitudeDelta / 2) * Math.sin(longitudeDelta / 2);
+
+            return earthRadius * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+        }
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors",
+        }).addTo(map);
+
+        if (hasShopLocation) {
+            shopCoordinates.textContent = formatCoordinates(shopLatitude, shopLongitude);
+            L.marker([shopLatitude, shopLongitude])
+                .addTo(map)
+                .bindPopup(`${shopName}<br>${productName}`)
+                .openPopup();
+            notice.textContent = "Shop location loaded. Allow location access to show your live position.";
+        } else {
+            distanceValue.textContent = "No shop pin";
+            notice.textContent = "This product does not have saved coordinates yet.";
+        }
+
+        if (navigator.geolocation && hasShopLocation) {
+            navigator.geolocation.watchPosition(
+                (position) => {
+                    const userPosition = [position.coords.latitude, position.coords.longitude];
+                    const shopPosition = [shopLatitude, shopLongitude];
+                    const meters = distanceInMeters(userPosition, shopPosition);
+
+                    distanceValue.textContent = formatDistance(meters);
+                    userCoordinates.textContent = formatCoordinates(userPosition[0], userPosition[1]);
+
+                    if (userMarker) {
+                        userMarker.setLatLng(userPosition);
+                    } else {
+                        userMarker = L.circleMarker(userPosition, {
+                            radius: 9,
+                            color: "#22d3ee",
+                            fillColor: "#22d3ee",
+                            fillOpacity: 0.9,
+                        }).addTo(map).bindPopup("Your live location");
+                    }
+
+                    if (routeLine) {
+                        routeLine.setLatLngs([userPosition, shopPosition]);
+                    } else {
+                        routeLine = L.polyline([userPosition, shopPosition], {
+                            color: "#4ade80",
+                            weight: 4,
+                            dashArray: "8, 8",
+                        }).addTo(map);
+                    }
+
+                    map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+                    notice.textContent = `Live location active. Approx distance to shop: ${formatDistance(meters)}.`;
+                },
+                () => {
+                    distanceValue.textContent = "Permission needed";
+                    notice.textContent = "Location permission was not allowed. Shop map is still available.";
+                },
+                { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+            );
+        }
+    </script>
+</body>
+</html>

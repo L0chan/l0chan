@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nearby Price Finder</title>
+    <meta name="theme-color" content="#16a34a">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="{{ url_for('static', filename='app-icon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='app-icon.svg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="home">
+    <div id="root"></div>
+
+    <script>
+        window.NPF_ACCOUNT = {
+            user: {{ current_user|tojson }},
+            role: {{ current_role|tojson }},
+            isOwnerAdmin: {{ is_owner_admin|tojson }},
+        };
+    </script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script src="{{ url_for('static', filename='pwa.js') }}"></script>
+    <script type="text/babel" src="{{ url_for('static', filename='home.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Map Tracking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg: #07111f;
+            --panel: rgba(255, 255, 255, 0.1);
+            --line: rgba(255, 255, 255, 0.16);
+            --text: #f8fbff;
+            --muted: #9fb1c7;
+            --cyan: #22d3ee;
+            --green: #4ade80;
+            --amber: #facc15;
+            --rose: #fb7185;
+            --ink: #06111f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            color: var(--text);
+            font-family: "Inter", Arial, sans-serif;
+            background:
+                radial-gradient(circle at 9% 8%, rgba(34, 211, 238, 0.23), transparent 28%),
+                radial-gradient(circle at 88% 16%, rgba(74, 222, 128, 0.17), transparent 24%),
+                radial-gradient(circle at 68% 92%, rgba(250, 204, 21, 0.12), transparent 31%),
+                linear-gradient(135deg, #07111f 0%, #101f30 48%, #102538 100%);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 54px 54px;
+            mask-image: linear-gradient(to bottom, black 12%, transparent 92%);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .shell {
+            width: min(1220px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 24px 0 56px;
+        }
+
+        .topbar,
+        .map-card,
+        .info-card,
+        .timeline-card {
+            border: 1px solid var(--line);
+            background: var(--panel);
+            box-shadow: 0 22px 58px rgba(0, 0, 0, 0.24);
+            backdrop-filter: blur(18px);
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 18px;
+            border-radius: 22px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: clamp(20px, 2vw, 28px);
+            font-weight: 900;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 46px;
+            height: 46px;
+            place-items: center;
+            border-radius: 15px;
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+        }
+
+        .nav {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .nav a,
+        .live-pill {
+            padding: 10px 14px;
+            border-radius: 14px;
+            color: #dbe8f8;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .nav a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .live-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            border: 1px solid rgba(74, 222, 128, 0.28);
+            color: #a6ffc9;
+            background: rgba(74, 222, 128, 0.12);
+        }
+
+        .pulse {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: var(--green);
+            box-shadow: 0 0 0 8px rgba(74, 222, 128, 0.14);
+            animation: pulse 1.7s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            50% {
+                box-shadow: 0 0 0 13px rgba(74, 222, 128, 0.02);
+            }
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 20px;
+            align-items: end;
+            margin: 34px 0 22px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border: 1px solid rgba(34, 211, 238, 0.32);
+            border-radius: 999px;
+            color: #9ef3ff;
+            background: rgba(34, 211, 238, 0.1);
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        h1 {
+            max-width: 790px;
+            margin-top: 16px;
+            font-size: clamp(38px, 6vw, 72px);
+            line-height: 1.02;
+        }
+
+        h1 span {
+            color: var(--cyan);
+        }
+
+        .hero p {
+            max-width: 690px;
+            margin-top: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .order-chip {
+            align-self: center;
+            padding: 16px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.08);
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+            gap: 22px;
+            align-items: start;
+        }
+
+        .map-card {
+            overflow: hidden;
+            border-radius: 28px;
+        }
+
+        .map-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .map-head strong,
+        .info-card h2,
+        .timeline-card h2 {
+            font-size: 22px;
+        }
+
+        .eta {
+            color: var(--amber);
+            font-weight: 900;
+        }
+
+        .map-stage {
+            position: relative;
+            min-height: 560px;
+            overflow: hidden;
+            background:
+                linear-gradient(90deg, transparent 48%, rgba(255, 255, 255, 0.1) 49%, rgba(255, 255, 255, 0.1) 51%, transparent 52%),
+                linear-gradient(0deg, transparent 48%, rgba(255, 255, 255, 0.08) 49%, rgba(255, 255, 255, 0.08) 51%, transparent 52%),
+                radial-gradient(circle at 20% 22%, rgba(34, 211, 238, 0.18), transparent 22%),
+                radial-gradient(circle at 75% 76%, rgba(74, 222, 128, 0.15), transparent 24%),
+                rgba(3, 10, 20, 0.72);
+            background-size: 92px 92px, 92px 92px, auto, auto, auto;
+        }
+
+        .road {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .road-base {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.18);
+            stroke-width: 18;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .road-glow {
+            fill: none;
+            stroke: rgba(34, 211, 238, 0.65);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 18 20;
+            animation: dash 1.2s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -38;
+            }
+        }
+
+        .progress-road {
+            fill: none;
+            stroke: var(--green);
+            stroke-width: 9;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            filter: drop-shadow(0 0 12px rgba(74, 222, 128, 0.45));
+            transition: stroke-dashoffset 700ms ease;
+        }
+
+        .marker {
+            position: absolute;
+            z-index: 4;
+            display: grid;
+            width: 64px;
+            height: 64px;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 22px 22px 22px 6px;
+            color: var(--ink);
+            background: var(--accent);
+            box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+            transform: translate(-50%, -50%) rotate(-45deg);
+        }
+
+        .marker i {
+            transform: rotate(45deg);
+            font-size: 24px;
+        }
+
+        .marker.pickup {
+            left: 12%;
+            top: 76%;
+            --accent: var(--cyan);
+        }
+
+        .marker.drop {
+            left: 86%;
+            top: 20%;
+            --accent: var(--green);
+        }
+
+        .marker-label {
+            position: absolute;
+            z-index: 5;
+            min-width: 152px;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+            color: white;
+            background: rgba(6, 17, 31, 0.82);
+            font-size: 13px;
+            font-weight: 800;
+            backdrop-filter: blur(12px);
+        }
+
+        .pickup-label {
+            left: 7%;
+            top: 82%;
+        }
+
+        .drop-label {
+            right: 4%;
+            top: 26%;
+        }
+
+        .bike {
+            position: absolute;
+            z-index: 7;
+            left: 12%;
+            top: 76%;
+            display: grid;
+            width: 66px;
+            height: 66px;
+            place-items: center;
+            border-radius: 22px;
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--amber), #ff9f43);
+            box-shadow: 0 20px 40px rgba(250, 204, 21, 0.28);
+            transform: translate(-50%, -50%);
+            transition: left 700ms ease, top 700ms ease;
+        }
+
+        .bike i {
+            font-size: 28px;
+            animation: bikeBounce 700ms ease-in-out infinite;
+        }
+
+        @keyframes bikeBounce {
+            50% {
+                transform: translateY(-4px) rotate(-3deg);
+            }
+        }
+
+        .bike::after {
+            content: "";
+            position: absolute;
+            right: -28px;
+            width: 34px;
+            height: 8px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(250, 204, 21, 0.56), transparent);
+            filter: blur(2px);
+            animation: exhaust 650ms ease-in-out infinite;
+        }
+
+        @keyframes exhaust {
+            50% {
+                opacity: 0.35;
+                transform: scaleX(0.68);
+            }
+        }
+
+        .map-stats {
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            bottom: 18px;
+            z-index: 8;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .stat {
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 16px;
+            background: rgba(6, 17, 31, 0.78);
+            backdrop-filter: blur(12px);
+        }
+
+        .stat span,
+        .detail span {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .stat strong,
+        .detail strong {
+            display: block;
+            margin-top: 6px;
+            font-size: 18px;
+        }
+
+        .side {
+            display: grid;
+            gap: 18px;
+        }
+
+        .info-card,
+        .timeline-card {
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .status-card {
+            margin-top: 16px;
+            padding: 18px;
+            border: 1px solid rgba(74, 222, 128, 0.26);
+            border-radius: 18px;
+            background: rgba(74, 222, 128, 0.1);
+        }
+
+        .status-card span {
+            display: block;
+            color: #a6ffc9;
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .status-card strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 28px;
+        }
+
+        .details {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .detail {
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .timeline {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .step {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 12px;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            opacity: 0.65;
+            transition: 180ms ease;
+        }
+
+        .step-icon {
+            display: grid;
+            width: 42px;
+            height: 42px;
+            place-items: center;
+            border-radius: 14px;
+            color: white;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .step strong,
+        .step span {
+            display: block;
+        }
+
+        .step span {
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .step.done,
+        .step.active {
+            opacity: 1;
+            border-color: rgba(74, 222, 128, 0.28);
+            background: rgba(74, 222, 128, 0.1);
+        }
+
+        .step.done .step-icon {
+            color: var(--ink);
+            background: var(--green);
+        }
+
+        .step.active .step-icon {
+            color: var(--ink);
+            background: var(--amber);
+            animation: activeStep 1.2s ease-in-out infinite;
+        }
+
+        @keyframes activeStep {
+            50% {
+                transform: scale(1.08);
+            }
+        }
+
+        @media (max-width: 980px) {
+            .grid,
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .map-stage {
+                min-height: 500px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .shell {
+                width: min(100% - 22px, 1220px);
+                padding-top: 12px;
+            }
+
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .map-stage {
+                min-height: 460px;
+            }
+
+            .map-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .marker-label {
+                display: none;
+            }
+
+            .bike,
+            .marker {
+                width: 54px;
+                height: 54px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="tracking">
+    <div class="shell">
+        <nav class="topbar">
+            <a class="brand" href="/home">
+                <span class="brand-mark"><i class="fa-solid fa-route"></i></span>
+                Live Tracking
+            </a>
+
+            <div class="nav">
+                <span class="live-pill"><span class="pulse"></span> Live map active</span>
+                <a href="/customer">Shop More</a>
+                <a href="/live_chat">Chat</a>
+                <a href="/home">Home</a>
+            </div>
+        </nav>
+
+        <section class="hero">
+            <div>
+                <div class="eyebrow"><span class="pulse"></span> Bike delivery in progress</div>
+                <h1>Track order <span>#{{ order_id }}</span> on the live map.</h1>
+                <p>Your delivery position updates with the order status. When the seller changes the status, this page refreshes the route automatically.</p>
+            </div>
+
+            <div class="order-chip"><i class="fa-solid fa-box"></i> {{ order['product_name'] or 'Product' }}</div>
+        </section>
+
+        <main class="grid">
+            <section class="map-card">
+                <div class="map-head">
+                    <strong>Delivery Route</strong>
+                    <span class="eta" id="etaText">Calculating ETA...</span>
+                </div>
+
+                <div class="map-stage" id="mapStage">
+                    <svg class="road" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
+                        <path class="road-base" d="M 120 475 C 235 390, 190 300, 330 285 S 525 395, 605 285 S 705 125, 865 130" />
+                        <path class="road-glow" d="M 120 475 C 235 390, 190 300, 330 285 S 525 395, 605 285 S 705 125, 865 130" />
+                        <path class="progress-road" id="progressRoad" d="M 120 475 C 235 390, 190 300, 330 285 S 525 395, 605 285 S 705 125, 865 130" />
+                    </svg>
+
+                    <div class="marker pickup"><i class="fa-solid fa-store"></i></div>
+                    <div class="marker drop"><i class="fa-solid fa-house"></i></div>
+                    <div class="marker-label pickup-label">Pickup: Nearby shop</div>
+                    <div class="marker-label drop-label" id="dropLabel">{{ order['address'] or 'Customer location' }}</div>
+
+                    <div class="bike" id="bike"><i class="fa-solid fa-motorcycle"></i></div>
+
+                    <div class="map-stats">
+                        <div class="stat">
+                            <span>Distance</span>
+                            <strong id="distanceText">2.8 km</strong>
+                        </div>
+                        <div class="stat">
+                            <span>Progress</span>
+                            <strong id="progressText">0%</strong>
+                        </div>
+                        <div class="stat">
+                            <span>Rider</span>
+                            <strong id="riderShortText">{{ order['rider_name'] or 'Assigned' }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="side">
+                <section class="info-card">
+                    <h2>Order Details</h2>
+
+                    <div class="status-card">
+                        <span>Current Status</span>
+                        <strong id="statusText">{{ status or 'Order Confirmed' }}</strong>
+                    </div>
+
+                    <div class="details">
+                        <div class="detail">
+                            <span>Product</span>
+                            <strong id="productText">{{ order['product_name'] or 'Product' }}</strong>
+                        </div>
+                        <div class="detail">
+                            <span>Payment</span>
+                            <strong id="paymentText">{{ order['payment_method'] or 'Payment' }}</strong>
+                        </div>
+                        <div class="detail">
+                            <span>Delivery Rider</span>
+                            <strong id="riderText">{{ order['rider_name'] or 'Assigned Rider' }}</strong>
+                        </div>
+                        <div class="detail">
+                            <span>Rider Phone</span>
+                            <strong id="riderPhoneText">{{ order['rider_phone'] or '+91 98765 12000' }}</strong>
+                        </div>
+                        <div class="detail">
+                            <span>Delivery OTP</span>
+                            <strong id="otpText">{{ order['delivery_otp'] or '000000' }}</strong>
+                        </div>
+                        <div class="detail">
+                            <span>Delivery Address</span>
+                            <strong id="addressText">{{ order['address'] or 'Customer location' }}</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="timeline-card">
+                    <h2>Delivery Timeline</h2>
+
+                    <div class="timeline">
+                        <div class="step" data-step="confirmed">
+                            <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+                            <div><strong>Order Confirmed</strong><span>Your order is accepted.</span></div>
+                        </div>
+                        <div class="step" data-step="packed">
+                            <div class="step-icon"><i class="fa-solid fa-box-open"></i></div>
+                            <div><strong>Packed</strong><span>The seller packed your item.</span></div>
+                        </div>
+                        <div class="step" data-step="out">
+                            <div class="step-icon"><i class="fa-solid fa-motorcycle"></i></div>
+                            <div><strong>Out For Delivery</strong><span>The rider is moving on the map.</span></div>
+                        </div>
+                        <div class="step" data-step="delivered">
+                            <div class="step-icon"><i class="fa-solid fa-house-circle-check"></i></div>
+                            <div><strong>Delivered</strong><span>Your order reached the address.</span></div>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </main>
+    </div>
+
+    <script>
+        const orderId = {{ order_id }};
+        const statusText = document.getElementById("statusText");
+        const productText = document.getElementById("productText");
+        const paymentText = document.getElementById("paymentText");
+        const riderText = document.getElementById("riderText");
+        const riderPhoneText = document.getElementById("riderPhoneText");
+        const riderShortText = document.getElementById("riderShortText");
+        const otpText = document.getElementById("otpText");
+        const addressText = document.getElementById("addressText");
+        const dropLabel = document.getElementById("dropLabel");
+        const etaText = document.getElementById("etaText");
+        const distanceText = document.getElementById("distanceText");
+        const progressText = document.getElementById("progressText");
+        const bike = document.getElementById("bike");
+        const progressRoad = document.getElementById("progressRoad");
+        const steps = Array.from(document.querySelectorAll(".step"));
+
+        const routePoints = [
+            { x: 12, y: 76 },
+            { x: 27, y: 60 },
+            { x: 34, y: 46 },
+            { x: 49, y: 58 },
+            { x: 61, y: 45 },
+            { x: 72, y: 27 },
+            { x: 86, y: 20 },
+        ];
+
+        const statusMeta = [
+            { key: "confirmed", label: "Order Confirmed", progress: 0.12, eta: "24 min", distance: "2.8 km" },
+            { key: "packed", label: "Packed", progress: 0.36, eta: "18 min", distance: "2.1 km" },
+            { key: "out", label: "Out For Delivery", progress: 0.68, eta: "9 min", distance: "850 m" },
+            { key: "delivered", label: "Delivered", progress: 1, eta: "Arrived", distance: "0 m" },
+        ];
+
+        const roadLength = progressRoad.getTotalLength();
+        progressRoad.style.strokeDasharray = roadLength;
+
+        function normalizeStatus(value) {
+            const text = (value || "").toLowerCase();
+            if (text.includes("deliver") && !text.includes("out")) return "delivered";
+            if (text.includes("out") || text.includes("way") || text.includes("transit")) return "out";
+            if (text.includes("pack") || text.includes("prepar")) return "packed";
+            return "confirmed";
+        }
+
+        function interpolate(points, progress) {
+            const clamped = Math.max(0, Math.min(1, progress));
+            const scaled = clamped * (points.length - 1);
+            const index = Math.min(points.length - 2, Math.floor(scaled));
+            const local = scaled - index;
+            const start = points[index];
+            const end = points[index + 1];
+            return {
+                x: start.x + (end.x - start.x) * local,
+                y: start.y + (end.y - start.y) * local,
+            };
+        }
+
+        function movingProgress(base, key) {
+            if (key !== "out") return base;
+            const movement = (Math.sin(Date.now() / 900) + 1) * 0.045;
+            return Math.min(0.86, base + movement);
+        }
+
+        function setBike(progress, key) {
+            const animatedProgress = movingProgress(progress, key);
+            const point = interpolate(routePoints, animatedProgress);
+            bike.style.left = `${point.x}%`;
+            bike.style.top = `${point.y}%`;
+            progressRoad.style.strokeDashoffset = roadLength * (1 - animatedProgress);
+            progressText.textContent = `${Math.round(animatedProgress * 100)}%`;
+        }
+
+        function setTimeline(activeKey) {
+            const order = ["confirmed", "packed", "out", "delivered"];
+            const activeIndex = order.indexOf(activeKey);
+
+            steps.forEach((step) => {
+                const stepIndex = order.indexOf(step.dataset.step);
+                step.classList.toggle("done", stepIndex < activeIndex || (activeKey === "delivered" && stepIndex <= activeIndex));
+                step.classList.toggle("active", stepIndex === activeIndex && activeKey !== "delivered");
+            });
+        }
+
+        function render(order) {
+            const key = normalizeStatus(order.status);
+            const meta = statusMeta.find((item) => item.key === key) || statusMeta[0];
+
+            statusText.textContent = order.status || meta.label;
+            productText.textContent = order.product_name || "Product";
+            paymentText.textContent = order.payment_method || "Payment";
+            riderText.textContent = order.rider_name || "Assigned Rider";
+            riderPhoneText.textContent = order.rider_phone || "+91 98765 12000";
+            riderShortText.textContent = order.rider_name || "Assigned";
+            otpText.textContent = order.otp_verified === "Yes" ? "Verified" : (order.delivery_otp || "000000");
+            addressText.textContent = order.address || "Customer location";
+            dropLabel.textContent = order.address || "Customer location";
+            etaText.textContent = `ETA: ${meta.eta}`;
+            distanceText.textContent = meta.distance;
+
+            setBike(meta.progress, key);
+            setTimeline(key);
+        }
+
+        async function refreshStatus() {
+            try {
+                const response = await fetch(`/track_status/${orderId}`, { cache: "no-store" });
+                if (!response.ok) throw new Error("Could not load order status");
+                const data = await response.json();
+                if (data.found) render(data.order);
+            } catch (error) {
+                etaText.textContent = "Reconnecting...";
+            }
+        }
+
+        render({
+            product_name: {{ (order['product_name'] or 'Product')|tojson }},
+            payment_method: {{ (order['payment_method'] or 'Payment')|tojson }},
+            rider_name: {{ (order['rider_name'] or 'Assigned Rider')|tojson }},
+            rider_phone: {{ (order['rider_phone'] or '+91 98765 12000')|tojson }},
+            delivery_otp: {{ (order['delivery_otp'] or '000000')|tojson }},
+            otp_verified: {{ (order['otp_verified'] or 'No')|tojson }},
+            address: {{ (order['address'] or 'Customer location')|tojson }},
+            status: {{ (status or 'Order Confirmed')|tojson }},
+        });
+
+        setInterval(() => {
+            const key = normalizeStatus(statusText.textContent);
+            const meta = statusMeta.find((item) => item.key === key) || statusMeta[0];
+            setBike(meta.progress, key);
+        }, 600);
+
+        refreshStatus();
+        setInterval(refreshStatus, 2500);
+    </script>
+</body>
+</html>

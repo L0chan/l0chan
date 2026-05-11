@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nearby Price Finder - Login</title>
+    <meta name="theme-color" content="#16a34a">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="{{ url_for('static', filename='app-icon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='app-icon.svg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='flow-ui.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="auth">
+    <div class="motion-layer" aria-hidden="true">
+        <span class="tile" style="--left: 7%; --size: 78px; --duration: 18s; --delay: -2s;"></span>
+        <span class="tile" style="--left: 28%; --size: 54px; --duration: 15s; --delay: -8s;"></span>
+        <span class="tile" style="--left: 54%; --size: 96px; --duration: 22s; --delay: -5s;"></span>
+        <span class="tile" style="--left: 82%; --size: 72px; --duration: 20s; --delay: -10s;"></span>
+    </div>
+
+    <main class="auth-shell">
+        <section class="brand-panel">
+            <div class="eyebrow"><span class="pulse-dot"></span> Smart local shopping</div>
+            <h1>Welcome back to <span>Nearby Price Finder.</span></h1>
+            <p class="lead">Login once and jump into the right workspace automatically, whether you shop, sell, or manage the marketplace.</p>
+            <div class="feature-stack">
+                <div class="feature-item"><span class="feature-icon" style="--accent: var(--cyan);"><i class="fa-solid fa-bag-shopping"></i></span><div><strong>Customer portal</strong><span>Search, compare, buy, chat, and track orders.</span></div></div>
+                <div class="feature-item"><span class="feature-icon" style="--accent: var(--green);"><i class="fa-solid fa-store"></i></span><div><strong>Seller workspace</strong><span>Manage inventory, stock, maps, and live orders.</span></div></div>
+                <div class="feature-item"><span class="feature-icon" style="--accent: var(--amber);"><i class="fa-solid fa-chart-line"></i></span><div><strong>Admin control</strong><span>Monitor users, products, orders, and platform health.</span></div></div>
+            </div>
+        </section>
+
+        <section class="form-panel">
+            <div class="eyebrow"><span class="pulse-dot"></span> Account login</div>
+            <h1>Sign <span>in</span></h1>
+            <p class="lead">Use your username and password. Your account role decides which dashboard opens.</p>
+
+            <form action="/login" method="POST">
+                <div class="field">
+                    <label for="username">Username</label>
+                    <input id="username" type="text" name="username" placeholder="Enter username" required>
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input id="password" type="password" name="password" placeholder="Enter password" required>
+                </div>
+
+                <button class="primary-btn" type="submit"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</button>
+            </form>
+
+            <a class="secondary-btn" href="/otp_login"><i class="fa-solid fa-mobile-screen"></i> Login with Mobile OTP</a>
+
+            <div class="switch-link">New here? <a href="/register">Create an account</a></div>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='pwa.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Product Viewer - {{ product['product_name'] }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #06111f;
+            --panel: rgba(255, 255, 255, 0.1);
+            --line: rgba(255, 255, 255, 0.16);
+            --text: #f8fbff;
+            --muted: #a9b8ca;
+            --cyan: #22d3ee;
+            --green: #4ade80;
+            --amber: #facc15;
+            --ink: #06111f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text);
+            font-family: "Inter", Arial, sans-serif;
+            background:
+                radial-gradient(circle at 12% 12%, rgba(34, 211, 238, 0.18), transparent 26%),
+                radial-gradient(circle at 90% 20%, rgba(74, 222, 128, 0.14), transparent 24%),
+                linear-gradient(135deg, #06111f 0%, #0e1f31 48%, #102538 100%);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font: inherit;
+        }
+
+        .viewer-shell {
+            position: relative;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 360px;
+        }
+
+        .scene-wrap {
+            position: relative;
+            min-height: 100vh;
+        }
+
+        #viewerCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: grab;
+        }
+
+        #viewerCanvas:active {
+            cursor: grabbing;
+        }
+
+        .topbar {
+            position: absolute;
+            left: 24px;
+            top: 22px;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn,
+        .tool-btn,
+        .buy-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            color: white;
+            background: rgba(6, 17, 31, 0.68);
+            backdrop-filter: blur(16px);
+            cursor: pointer;
+            font-weight: 800;
+        }
+
+        .nav-btn {
+            padding: 0 15px;
+        }
+
+        .toolbox {
+            position: absolute;
+            left: 24px;
+            bottom: 24px;
+            z-index: 4;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            width: 46px;
+            height: 46px;
+            font-size: 20px;
+        }
+
+        .product-panel {
+            position: relative;
+            z-index: 3;
+            min-height: 100vh;
+            padding: 28px;
+            border-left: 1px solid var(--line);
+            background: rgba(6, 17, 31, 0.78);
+            backdrop-filter: blur(22px);
+            box-shadow: -18px 0 58px rgba(0, 0, 0, 0.28);
+            overflow-y: auto;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 36px;
+            padding: 0 12px;
+            border: 1px solid rgba(34, 211, 238, 0.28);
+            border-radius: 999px;
+            color: #9ef3ff;
+            background: rgba(34, 211, 238, 0.1);
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        h1 {
+            margin-top: 18px;
+            font-size: clamp(34px, 5vw, 52px);
+            line-height: 1.02;
+            letter-spacing: 0;
+        }
+
+        .price {
+            margin-top: 16px;
+            color: var(--green);
+            font-size: 42px;
+            font-weight: 900;
+        }
+
+        .meta {
+            display: grid;
+            gap: 13px;
+            margin-top: 22px;
+        }
+
+        .meta-row {
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .meta-row span,
+        .meta-row strong {
+            display: block;
+        }
+
+        .meta-row span {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .meta-row strong {
+            margin-top: 5px;
+            font-size: 17px;
+        }
+
+        .preview-image {
+            width: 100%;
+            aspect-ratio: 1.35;
+            margin-top: 22px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: #0b1624;
+        }
+
+        .preview-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .buy-btn {
+            width: 100%;
+            min-height: 56px;
+            margin-top: 22px;
+            border: 0;
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            font-size: 16px;
+        }
+
+        .loading {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            display: grid;
+            place-items: center;
+            color: #cfe9f7;
+            background: rgba(6, 17, 31, 0.2);
+            pointer-events: none;
+            font-weight: 800;
+        }
+
+        .loading.hidden {
+            display: none;
+        }
+
+        .fallback {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            z-index: 5;
+            width: min(420px, calc(100% - 32px));
+            transform: translate(-50%, -50%);
+            padding: 18px;
+            border: 1px solid rgba(250, 204, 21, 0.34);
+            border-radius: 18px;
+            color: #fff3b8;
+            background: rgba(6, 17, 31, 0.82);
+            display: none;
+            line-height: 1.6;
+        }
+
+        .fallback.show {
+            display: block;
+        }
+
+        @media (max-width: 920px) {
+            body {
+                overflow: auto;
+            }
+
+            .viewer-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .scene-wrap {
+                min-height: 62vh;
+            }
+
+            .product-panel {
+                min-height: auto;
+                border-left: 0;
+                border-top: 1px solid var(--line);
+            }
+        }
+
+        @media (max-width: 560px) {
+            .topbar,
+            .toolbox {
+                left: 12px;
+                right: 12px;
+            }
+
+            .toolbox {
+                bottom: 12px;
+            }
+
+            .product-panel {
+                padding: 20px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="products">
+    <main class="viewer-shell">
+        <section class="scene-wrap" aria-label="Interactive 3D product viewer">
+            <canvas id="viewerCanvas"></canvas>
+            <div class="loading" id="loadingState">Loading 3D viewer...</div>
+            <div class="fallback" id="fallbackState">
+                The 3D viewer could not load. Check your internet connection for the Three.js library and refresh this page.
+            </div>
+
+            <div class="topbar">
+                <a class="nav-btn" href="/customer">Back to Products</a>
+                <a class="nav-btn" href="/product_map/{{ product['id'] }}">Live Map</a>
+            </div>
+
+            <div class="toolbox" aria-label="3D viewer controls">
+                <button class="tool-btn" type="button" id="rotateToggle" aria-label="Toggle rotation">R</button>
+                <button class="tool-btn" type="button" id="zoomIn" aria-label="Zoom in">+</button>
+                <button class="tool-btn" type="button" id="zoomOut" aria-label="Zoom out">-</button>
+                <button class="tool-btn" type="button" id="resetView" aria-label="Reset view">0</button>
+            </div>
+        </section>
+
+        <aside class="product-panel">
+            <span class="badge">3D Product Preview</span>
+            <h1>{{ product['product_name'] }}</h1>
+            <div class="price">Rs. {{ product['price'] }}</div>
+
+            <div class="meta">
+                <div class="meta-row">
+                    <span>Shop</span>
+                    <strong>{{ product['shop_name'] }}</strong>
+                </div>
+                <div class="meta-row">
+                    <span>Location</span>
+                    <strong>{{ product['location'] }}</strong>
+                </div>
+                <div class="meta-row">
+                    <span>Stock</span>
+                    <strong>{{ product['stock'] }}</strong>
+                </div>
+            </div>
+
+            <div class="preview-image">
+                <img src="{{ url_for('static', filename='uploads/' ~ product['product_image']) }}" alt="{{ product['product_name'] }}">
+            </div>
+
+            <a class="buy-btn" href="/buy?product_name={{ product['product_name'] }}&price={{ product['price'] }}&product_image={{ url_for('static', filename='uploads/' ~ product['product_image']) }}">Buy Now</a>
+        </aside>
+    </main>
+
+    <script>
+        window.productViewerData = {
+            name: {{ product['product_name']|tojson }},
+            image: {{ url_for('static', filename='uploads/' ~ product['product_image'])|tojson }},
+        };
+    </script>
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script>
+        const canvas = document.getElementById("viewerCanvas");
+        const loadingState = document.getElementById("loadingState");
+        const fallbackState = document.getElementById("fallbackState");
+        const rotateToggle = document.getElementById("rotateToggle");
+        const zoomIn = document.getElementById("zoomIn");
+        const zoomOut = document.getElementById("zoomOut");
+        const resetView = document.getElementById("resetView");
+
+        if (!window.THREE) {
+            loadingState.classList.add("hidden");
+            fallbackState.classList.add("show");
+        } else {
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x06111f, 7, 18);
+
+            const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+            camera.position.set(0, 1.4, 6);
+
+            const renderer = new THREE.WebGLRenderer({
+                canvas,
+                antialias: true,
+                alpha: true,
+            });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+            const group = new THREE.Group();
+            scene.add(group);
+
+            const ambient = new THREE.HemisphereLight(0xb6f5ff, 0x101827, 2.2);
+            scene.add(ambient);
+
+            const keyLight = new THREE.DirectionalLight(0xffffff, 2.4);
+            keyLight.position.set(4, 5, 5);
+            scene.add(keyLight);
+
+            const rimLight = new THREE.PointLight(0x22d3ee, 4, 12);
+            rimLight.position.set(-4, 2, 3);
+            scene.add(rimLight);
+
+            const productGeometry = new THREE.BoxGeometry(2.4, 2.9, 0.45, 6, 6, 2);
+            const edgeGeometry = new THREE.EdgesGeometry(productGeometry);
+            const textureLoader = new THREE.TextureLoader();
+            const baseMaterial = new THREE.MeshStandardMaterial({
+                color: 0xeaf8ff,
+                roughness: 0.42,
+                metalness: 0.08,
+            });
+
+            const productMesh = new THREE.Mesh(productGeometry, baseMaterial);
+            group.add(productMesh);
+
+            const edges = new THREE.LineSegments(
+                edgeGeometry,
+                new THREE.LineBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.34 })
+            );
+            group.add(edges);
+
+            const imagePlaneGeometry = new THREE.PlaneGeometry(2.18, 2.62);
+            const imageMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                roughness: 0.7,
+                metalness: 0,
+            });
+            const imagePlane = new THREE.Mesh(imagePlaneGeometry, imageMaterial);
+            imagePlane.position.z = 0.236;
+            group.add(imagePlane);
+
+            textureLoader.load(
+                window.productViewerData.image,
+                (texture) => {
+                    texture.colorSpace = THREE.SRGBColorSpace;
+                    texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+                    imageMaterial.map = texture;
+                    imageMaterial.needsUpdate = true;
+                    loadingState.classList.add("hidden");
+                },
+                undefined,
+                () => {
+                    loadingState.classList.add("hidden");
+                }
+            );
+
+            const floor = new THREE.Mesh(
+                new THREE.CircleGeometry(3.2, 72),
+                new THREE.MeshStandardMaterial({
+                    color: 0x0a2233,
+                    roughness: 0.85,
+                    metalness: 0.05,
+                    transparent: true,
+                    opacity: 0.72,
+                })
+            );
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.y = -1.82;
+            scene.add(floor);
+
+            const ring = new THREE.Mesh(
+                new THREE.TorusGeometry(2.1, 0.015, 12, 120),
+                new THREE.MeshBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.62 })
+            );
+            ring.rotation.x = Math.PI / 2;
+            ring.position.y = -1.78;
+            scene.add(ring);
+
+            let autoRotate = true;
+            let isDragging = false;
+            let lastX = 0;
+            let lastY = 0;
+
+            function resize() {
+                const width = canvas.clientWidth;
+                const height = canvas.clientHeight;
+                renderer.setSize(width, height, false);
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                if (autoRotate && !isDragging) {
+                    group.rotation.y += 0.008;
+                }
+                ring.rotation.z += 0.006;
+                renderer.render(scene, camera);
+            }
+
+            function onPointerDown(event) {
+                isDragging = true;
+                lastX = event.clientX;
+                lastY = event.clientY;
+                canvas.setPointerCapture(event.pointerId);
+            }
+
+            function onPointerMove(event) {
+                if (!isDragging) return;
+                const deltaX = event.clientX - lastX;
+                const deltaY = event.clientY - lastY;
+                group.rotation.y += deltaX * 0.01;
+                group.rotation.x += deltaY * 0.006;
+                group.rotation.x = Math.max(-0.7, Math.min(0.7, group.rotation.x));
+                lastX = event.clientX;
+                lastY = event.clientY;
+            }
+
+            function onPointerUp(event) {
+                isDragging = false;
+                if (canvas.hasPointerCapture(event.pointerId)) {
+                    canvas.releasePointerCapture(event.pointerId);
+                }
+            }
+
+            rotateToggle.addEventListener("click", () => {
+                autoRotate = !autoRotate;
+                rotateToggle.style.background = autoRotate
+                    ? "rgba(6, 17, 31, 0.68)"
+                    : "rgba(250, 204, 21, 0.22)";
+            });
+
+            zoomIn.addEventListener("click", () => {
+                camera.position.z = Math.max(3.4, camera.position.z - 0.45);
+            });
+
+            zoomOut.addEventListener("click", () => {
+                camera.position.z = Math.min(8, camera.position.z + 0.45);
+            });
+
+            resetView.addEventListener("click", () => {
+                group.rotation.set(0, 0, 0);
+                camera.position.set(0, 1.4, 6);
+                autoRotate = true;
+                rotateToggle.style.background = "rgba(6, 17, 31, 0.68)";
+            });
+
+            window.addEventListener("resize", resize);
+            canvas.addEventListener("pointerdown", onPointerDown);
+            canvas.addEventListener("pointermove", onPointerMove);
+            canvas.addEventListener("pointerup", onPointerUp);
+            canvas.addEventListener("pointercancel", onPointerUp);
+
+            resize();
+            animate();
+        }
+    </script>
+</body>
+</html>

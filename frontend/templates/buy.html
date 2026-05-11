@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Checkout</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='flow-ui.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="checkout">
+    <div class="motion-layer" aria-hidden="true">
+        <span class="tile" style="--left: 9%; --size: 78px; --duration: 18s; --delay: -2s;"></span>
+        <span class="tile" style="--left: 39%; --size: 54px; --duration: 15s; --delay: -8s;"></span>
+        <span class="tile" style="--left: 76%; --size: 96px; --duration: 22s; --delay: -5s;"></span>
+    </div>
+
+    <main class="checkout-shell">
+        <nav class="checkout-nav">
+            <strong><i class="fa-solid fa-cart-shopping"></i> Secure Checkout</strong>
+            <a class="secondary-btn" style="width:auto; margin-top:0; padding:0 16px;" href="/customer">Back to Products</a>
+        </nav>
+
+        <section class="checkout-grid">
+            <article class="checkout-card">
+                <img class="checkout-image" src="{{ product_image }}" alt="{{ product_name }}">
+                <div class="checkout-content">
+                    <div class="eyebrow"><span class="pulse-dot"></span> Selected product</div>
+                    <h1>{{ product_name }}</h1>
+                    <div class="price">Rs. {{ price }}</div>
+                    <p class="lead">Confirm your delivery details and choose how you want to pay.</p>
+                </div>
+            </article>
+
+            <article class="checkout-card payment-panel">
+                <div class="payment-header">
+                    <div>
+                        <div class="eyebrow"><span class="pulse-dot"></span> Payment details</div>
+                        <h2>Place your order</h2>
+                    </div>
+                </div>
+
+                <form action="/place_order" method="POST">
+                    <input type="hidden" name="product_name" value="{{ product_name }}">
+                    <input type="hidden" name="price" value="{{ price }}">
+                    <input type="hidden" name="product_image" value="{{ product_image }}">
+
+                    <div class="field">
+                        <label for="customer_name">Full Name</label>
+                        <input id="customer_name" type="text" name="customer_name" placeholder="Enter full name" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="phone">Mobile Number</label>
+                        <input id="phone" type="tel" name="phone" placeholder="Enter mobile number" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="address">Delivery Address</label>
+                        <textarea id="address" name="address" placeholder="House number, street, area, city" required></textarea>
+                    </div>
+
+                    <div class="field">
+                        <label for="payment">Payment Method</label>
+                        <select id="payment" name="payment" required>
+                            <option>Cash On Delivery</option>
+                            <option>UPI Payment</option>
+                        </select>
+                    </div>
+
+                    <div class="qr-box">
+                        <img src="/static/qr.png" alt="UPI QR code">
+                        <div>
+                            <strong>UPI QR Payment</strong>
+                            <p>Choose UPI Payment, scan this QR, then place the order.</p>
+                        </div>
+                    </div>
+
+                    <button class="primary-btn" type="submit"><i class="fa-solid fa-check"></i> Place Order</button>
+                </form>
+            </article>
+        </section>
+    </main>
+</body>
+</html>

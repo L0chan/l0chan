@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#16a34a">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="{{ url_for('static', filename='app-icon.svg') }}" type="image/svg+xml">
+<link rel="stylesheet"
+href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="home">
+    <!-- CHATBOT -->
+
+<!-- MODERN CHATBOT -->
+
+<div class="chat-circle"
+onclick="openChat()">
+
+💬
+
+</div>
+
+<div class="chat-container"
+id="chatContainer">
+
+<div class="chat-header">
+
+AI Assistant
+
+<span onclick="closeChat()">
+
+✖
+
+</span>
+
+</div>
+
+<div class="chat-body"
+id="chatBody">
+
+<div class="bot-msg">
+
+Hello 👋<br>
+How can I help you?
+
+</div>
+
+</div>
+
+<div class="chat-footer">
+
+<input type="text"
+id="chatInput"
+placeholder="Type message...">
+
+<button onclick="sendMessage()">
+
+Send
+
+</button>
+
+</div>
+
+</div>
+
+<style>
+
+.chat-circle{
+
+position:fixed;
+
+bottom:20px;
+right:20px;
+
+width:70px;
+height:70px;
+
+background:#2563eb;
+
+border-radius:50%;
+
+display:flex;
+
+justify-content:center;
+align-items:center;
+
+font-size:35px;
+
+cursor:pointer;
+
+box-shadow:0 0 20px #2563eb;
+
+z-index:999;
+
+}
+
+.chat-container{
+
+position:fixed;
+
+bottom:100px;
+right:20px;
+
+width:350px;
+height:500px;
+
+background:white;
+
+border-radius:20px;
+
+display:none;
+
+flex-direction:column;
+
+overflow:hidden;
+
+z-index:999;
+
+box-shadow:0 0 20px black;
+
+}
+
+.chat-header{
+
+background:#2563eb;
+
+color:white;
+
+padding:15px;
+
+font-size:20px;
+
+display:flex;
+
+justify-content:space-between;
+
+}
+
+.chat-body{
+
+flex:1;
+
+padding:10px;
+
+overflow-y:auto;
+
+background:#f1f5f9;
+
+}
+
+.chat-footer{
+
+display:flex;
+
+padding:10px;
+
+background:white;
+
+}
+
+.chat-footer input{
+
+flex:1;
+
+padding:10px;
+
+}
+
+.chat-footer button{
+
+margin-left:10px;
+
+}
+
+.user-msg{
+
+background:#2563eb;
+
+color:white;
+
+padding:10px;
+
+margin:10px;
+
+border-radius:10px;
+
+text-align:right;
+
+}
+
+.bot-msg{
+
+background:#e2e8f0;
+
+padding:10px;
+
+margin:10px;
+
+border-radius:10px;
+
+}
+
+</style>
+
+<script>
+
+function openChat(){
+
+document.getElementById(
+"chatContainer"
+).style.display = "flex";
+
+}
+
+function closeChat(){
+
+document.getElementById(
+"chatContainer"
+).style.display = "none";
+
+}
+
+function sendMessage(){
+
+let input = document.getElementById(
+"chatInput"
+);
+
+let message = input.value;
+
+if(message == "") return;
+
+let body = document.getElementById(
+"chatBody"
+);
+
+body.innerHTML +=
+
+'<div class="user-msg">' +
+message +
+'</div>';
+
+let reply = "";
+
+message = message.toLowerCase();
+
+if(message.includes("milk")){
+
+reply =
+"Nearby milk shops are available.";
+
+}
+
+else if(message.includes("rice")){
+
+reply =
+"Rice products found nearby.";
+
+}
+
+else if(message.includes("delivery")){
+
+reply =
+"Your order is out for delivery.";
+
+}
+
+else if(message.includes("price")){
+
+reply =
+"We compare nearby shop prices.";
+
+}
+
+else{
+
+reply =
+"I can help you search nearby products.";
+
+}
+
+setTimeout(function(){
+
+body.innerHTML +=
+
+'<div class="bot-msg">' +
+reply +
+'</div>';
+
+body.scrollTop =
+body.scrollHeight;
+
+}, 500);
+
+input.value = "";
+
+}
+
+</script>
+<script src="{{ url_for('static', filename='pwa.js') }}"></script>
+
+</script>
+
+<div class="container">
+
+<h1>Nearby Price Finder</h1>
+
+<div class="main-box">
+
+<div class="option-card">
+<h2>Shopkeeper</h2>
+<a href="/shopkeeper">
+<button>Open</button>
+</a>
+</div>
+
+<div class="option-card">
+<h2>Customer</h2>
+<a href="/customer">
+<button>Open</button>
+</a>
+</div>
+
+<div class="option-card">
+<h2>Dashboard</h2>
+<a href="/dashboard">
+<button>Open</bu

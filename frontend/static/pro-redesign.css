@@ -1,0 +1,461 @@
+/* Animated dark pro redesign layer. */
+:root {
+    --np-bg: #050814;
+    --np-bg-2: #0b1020;
+    --np-ink: #f7fbff;
+    --np-muted: #a6b4c8;
+    --np-line: rgba(255, 255, 255, 0.13);
+    --np-card: rgba(11, 18, 35, 0.76);
+    --np-card-solid: #10192c;
+    --np-blue: #4f8cff;
+    --np-cyan: #25d7ff;
+    --np-teal: #35f2b9;
+    --np-lime: #b6ff5b;
+    --np-pink: #ff5da8;
+    --np-amber: #ffd166;
+    --np-shadow: 0 26px 80px rgba(0, 0, 0, 0.42);
+}
+
+* {
+    letter-spacing: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    position: relative;
+    min-height: 100vh;
+    color: var(--np-ink) !important;
+    font-family: "Inter", "Poppins", Arial, sans-serif !important;
+    background:
+        radial-gradient(circle at 12% 12%, rgba(37, 215, 255, 0.22), transparent 28%),
+        radial-gradient(circle at 88% 16%, rgba(255, 93, 168, 0.17), transparent 24%),
+        radial-gradient(circle at 72% 92%, rgba(53, 242, 185, 0.14), transparent 30%),
+        linear-gradient(135deg, #050814 0%, #081426 46%, #11122d 100%) !important;
+    overflow-x: hidden;
+}
+
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    pointer-events: none;
+}
+
+body::before {
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+    background-size: 54px 54px;
+    mask-image: linear-gradient(to bottom, black 10%, transparent 92%);
+    animation: npGridMove 16s linear infinite;
+}
+
+body::after {
+    z-index: -2;
+    background:
+        linear-gradient(110deg, transparent 0 38%, rgba(37, 215, 255, 0.11) 42%, transparent 48% 100%),
+        conic-gradient(from 230deg at 18% 18%, rgba(79, 140, 255, 0.18), transparent 18%, rgba(53, 242, 185, 0.14) 36%, transparent 52%);
+    animation: npAurora 11s ease-in-out infinite alternate;
+}
+
+@keyframes npGridMove {
+    to {
+        background-position: 54px 54px;
+    }
+}
+
+@keyframes npAurora {
+    from {
+        opacity: 0.75;
+        transform: translate3d(-1%, -1%, 0) scale(1);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(1.5%, 1%, 0) scale(1.04);
+    }
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.motion-layer,
+.background-flow {
+    display: block !important;
+}
+
+.tile,
+.signal,
+.float-tile,
+.orb {
+    border-color: rgba(37, 215, 255, 0.2) !important;
+    border-radius: 18px !important;
+    background: linear-gradient(135deg, rgba(37, 215, 255, 0.13), rgba(255, 93, 168, 0.08)) !important;
+    box-shadow: 0 0 32px rgba(37, 215, 255, 0.12);
+}
+
+.shell,
+.main,
+.checkout-shell,
+.page-shell {
+    position: relative;
+}
+
+.navbar,
+.topbar,
+.hero,
+.brand-panel,
+.form-panel,
+.checkout-card,
+.success-card,
+.stat-card,
+.analytics-panel,
+.activity-panel,
+.radar-panel,
+.form-box,
+.tips,
+.preview-card,
+.search-panel,
+.product-card,
+.card,
+.order-box,
+.box,
+.glass-card,
+.quick-card,
+.modal,
+.assistant-panel {
+    border: 1px solid var(--np-line) !important;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.095), rgba(255, 255, 255, 0.045)),
+        var(--np-card) !important;
+    color: var(--np-ink) !important;
+    box-shadow: var(--np-shadow) !important;
+    backdrop-filter: blur(22px) saturate(130%);
+}
+
+.navbar,
+.topbar,
+.hero,
+.brand-panel,
+.form-panel,
+.checkout-card,
+.success-card,
+.stat-card,
+.analytics-panel,
+.activity-panel,
+.radar-panel,
+.form-box,
+.tips,
+.preview-card,
+.search-panel,
+.product-card,
+.order-box,
+.box,
+.glass-card,
+.quick-card,
+.modal,
+.assistant-panel {
+    border-radius: 20px !important;
+}
+
+.sidebar {
+    border-right: 1px solid var(--np-line) !important;
+    background: rgba(5, 10, 22, 0.86) !important;
+    color: var(--np-ink) !important;
+    backdrop-filter: blur(24px);
+}
+
+.hero,
+.brand-panel,
+.topbar {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before,
+.brand-panel::before,
+.topbar::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    z-index: -1;
+    background: linear-gradient(120deg, rgba(37, 215, 255, 0.2), transparent 35%, rgba(255, 93, 168, 0.17), transparent 70%, rgba(53, 242, 185, 0.18));
+    opacity: 0.75;
+    animation: npPanelGlow 7s ease-in-out infinite alternate;
+}
+
+@keyframes npPanelGlow {
+    to {
+        filter: hue-rotate(18deg);
+        transform: translateX(18px);
+    }
+}
+
+.brand-mark,
+.logo-mark,
+.stat-icon,
+.feature-icon,
+.product-dot,
+.mini-thumb,
+.activity-icon,
+.success-icon {
+    color: #04111e !important;
+    background: linear-gradient(135deg, var(--np-cyan), var(--np-teal)) !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16), 0 16px 34px rgba(37, 215, 255, 0.24) !important;
+}
+
+.brand-text,
+.logo,
+h1,
+h2,
+h3,
+.title,
+.map-top strong,
+.preview-top strong,
+.shop,
+.price-row,
+.content,
+.panel-head h2,
+.section-head h2,
+.card-top h2 {
+    color: var(--np-ink) !important;
+    text-shadow: none !important;
+}
+
+h1 span,
+.form-panel h1 span,
+.brand-panel h1 span,
+.success-card h1 span {
+    color: var(--np-cyan) !important;
+    text-shadow: 0 0 26px rgba(37, 215, 255, 0.28) !important;
+}
+
+.lead,
+.hero p,
+.section-head p,
+.panel-head span,
+.meta,
+.feature-item span,
+.feature p,
+.mini-result span,
+.floating-product span,
+.switch-link,
+.map-status,
+.tip,
+.activity-item,
+.content h3,
+.empty,
+.quick-card span,
+.assistant-header strong {
+    color: var(--np-muted) !important;
+}
+
+.eyebrow,
+.status-pill,
+.live-chip,
+.delivery,
+.badge,
+.status {
+    border-color: rgba(53, 242, 185, 0.3) !important;
+    color: #b8ffe7 !important;
+    background: rgba(53, 242, 185, 0.11) !important;
+}
+
+.pulse-dot {
+    background: var(--np-teal) !important;
+    box-shadow: 0 0 0 7px rgba(53, 242, 185, 0.14), 0 0 22px rgba(53, 242, 185, 0.55) !important;
+}
+
+.nav-links a,
+.menu a,
+.quick-actions a,
+.map-btn,
+.secondary-btn,
+.location-btn,
+.view-btn,
+.assistant-prompts button,
+.feature,
+.stat-box,
+.payment-option,
+.result-card,
+.timeline-item,
+.activity-item,
+.tip {
+    color: var(--np-ink) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.065) !important;
+}
+
+.nav-links a:hover,
+.menu a:hover,
+.menu a.active,
+.quick-actions a:hover,
+.map-btn:hover,
+.secondary-btn:hover,
+.location-btn:hover,
+.feature:hover,
+.assistant-prompts button:hover {
+    color: #06111f !important;
+    background: linear-gradient(135deg, var(--np-cyan), var(--np-teal)) !important;
+    border-color: transparent !important;
+    box-shadow: 0 16px 34px rgba(37, 215, 255, 0.2);
+}
+
+.primary-btn,
+.search-btn,
+.buy-btn,
+.upload-btn,
+.modal-btn,
+.btn.primary,
+.assistant-toggle,
+.assistant-form button,
+button.online,
+button.cod,
+.btn.online,
+.btn.cod {
+    color: #04111e !important;
+    background: linear-gradient(135deg, var(--np-cyan), var(--np-teal)) !important;
+    box-shadow: 0 18px 38px rgba(37, 215, 255, 0.24), inset 0 1px rgba(255, 255, 255, 0.36) !important;
+}
+
+.primary-btn:hover,
+.search-btn:hover,
+.buy-btn:hover,
+.upload-btn:hover,
+.btn.primary:hover,
+.assistant-toggle:hover {
+    transform: translateY(-3px) scale(1.01) !important;
+    box-shadow: 0 24px 50px rgba(37, 215, 255, 0.34) !important;
+}
+
+.field input,
+.field textarea,
+.field select,
+.input-box input,
+.search-box input,
+.modal-input,
+.assistant-form input,
+input,
+textarea,
+select {
+    color: var(--np-ink) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    background: rgba(3, 9, 20, 0.68) !important;
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #7e8ba0 !important;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus,
+.input-box input:focus,
+.search-box input:focus,
+.modal-input:focus,
+.assistant-form input:focus {
+    border-color: rgba(37, 215, 255, 0.6) !important;
+    box-shadow: 0 0 0 4px rgba(37, 215, 255, 0.12), inset 0 1px rgba(255, 255, 255, 0.06) !important;
+}
+
+.image-wrap,
+.checkout-image,
+.map-scene,
+#seller-map,
+#map,
+.radar {
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background-color: #08111f !important;
+}
+
+.price {
+    color: var(--np-lime) !important;
+}
+
+.rating {
+    color: var(--np-amber) !important;
+}
+
+.product-card,
+.stat-card,
+.quick-card,
+.feature {
+    transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+
+.product-card:hover,
+.stat-card:hover,
+.card:hover,
+.quick-card:hover {
+    border-color: rgba(37, 215, 255, 0.38) !important;
+    transform: translateY(-7px) !important;
+    box-shadow: 0 32px 86px rgba(0, 0, 0, 0.54), 0 0 34px rgba(37, 215, 255, 0.1) !important;
+}
+
+.empty {
+    border: 1px dashed rgba(255, 255, 255, 0.22) !important;
+    background: rgba(255, 255, 255, 0.055) !important;
+}
+
+.assistant-header {
+    color: var(--np-ink) !important;
+    background: rgba(4, 11, 24, 0.82) !important;
+    border-bottom: 1px solid var(--np-line);
+}
+
+.assistant-messages {
+    background: rgba(4, 11, 24, 0.72) !important;
+}
+
+.assistant-message.bot {
+    color: var(--np-ink) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.assistant-message.user {
+    color: #04111e !important;
+    background: linear-gradient(135deg, var(--np-cyan), var(--np-teal)) !important;
+}
+
+.close-btn,
+.assistant-icon-btn {
+    color: var(--np-ink) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+@media (max-width: 760px) {
+    .layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    .sidebar {
+        position: static !important;
+        height: auto !important;
+    }
+
+    .menu,
+    .stats,
+    .products {
+        grid-template-columns: 1fr !important;
+    }
+}

@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg: #07111f;
+            --panel: rgba(255, 255, 255, 0.09);
+            --line: rgba(255, 255, 255, 0.15);
+            --text: #f8fbff;
+            --muted: #9fb1c7;
+            --cyan: #22d3ee;
+            --green: #4ade80;
+            --amber: #facc15;
+            --rose: #fb7185;
+            --ink: #06111f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: var(--text);
+            font-family: "Inter", Arial, sans-serif;
+            background:
+                radial-gradient(circle at 12% 10%, rgba(34, 211, 238, 0.22), transparent 28%),
+                radial-gradient(circle at 90% 16%, rgba(74, 222, 128, 0.16), transparent 25%),
+                radial-gradient(circle at 72% 90%, rgba(251, 113, 133, 0.12), transparent 31%),
+                linear-gradient(135deg, #07111f 0%, #101f30 48%, #102538 100%);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 54px 54px;
+            mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        select,
+        button {
+            font: inherit;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 270px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            padding: 24px 18px;
+            border-right: 1px solid var(--line);
+            background: rgba(6, 17, 31, 0.78);
+            backdrop-filter: blur(22px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .logo-mark {
+            display: grid;
+            width: 46px;
+            height: 46px;
+            place-items: center;
+            border-radius: 15px;
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            box-shadow: 0 14px 34px rgba(34, 211, 238, 0.24);
+        }
+
+        .menu {
+            display: grid;
+            gap: 10px;
+            margin-top: 34px;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            min-height: 52px;
+            padding: 0 14px;
+            border: 1px solid transparent;
+            border-radius: 16px;
+            color: #d9e6f5;
+            font-size: 15px;
+            font-weight: 700;
+            transition: 180ms ease;
+        }
+
+        .menu a:hover,
+        .menu a.active {
+            color: white;
+            border-color: rgba(34, 211, 238, 0.26);
+            background: rgba(255, 255, 255, 0.09);
+            transform: translateX(4px);
+        }
+
+        .main {
+            padding: 30px;
+        }
+
+        .topbar,
+        .stat-card,
+        .order-card,
+        .empty {
+            border: 1px solid var(--line);
+            background: var(--panel);
+            box-shadow: 0 22px 58px rgba(0, 0, 0, 0.22);
+            backdrop-filter: blur(18px);
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 24px;
+            border-radius: 28px;
+            animation: slideDown 560ms ease both;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: fit-content;
+            padding: 10px 14px;
+            border: 1px solid rgba(34, 211, 238, 0.32);
+            border-radius: 999px;
+            color: #9ef3ff;
+            background: rgba(34, 211, 238, 0.1);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: var(--green);
+            box-shadow: 0 0 0 8px rgba(74, 222, 128, 0.14);
+            animation: pulse 1.7s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            50% {
+                box-shadow: 0 0 0 13px rgba(74, 222, 128, 0.02);
+            }
+        }
+
+        h1 {
+            margin-top: 16px;
+            font-size: clamp(38px, 5vw, 62px);
+            line-height: 1.02;
+            letter-spacing: 0;
+        }
+
+        h1 span {
+            color: var(--cyan);
+        }
+
+        .topbar p {
+            max-width: 670px;
+            margin-top: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .dispatch-badge {
+            display: grid;
+            width: 150px;
+            height: 150px;
+            flex: 0 0 auto;
+            place-items: center;
+            border: 1px solid rgba(34, 211, 238, 0.24);
+            border-radius: 999px;
+            background:
+                radial-gradient(circle, rgba(34, 211, 238, 0.2), transparent 55%),
+                rgba(255, 255, 255, 0.06);
+            animation: floatBadge 4s ease-in-out infinite;
+        }
+
+        @keyframes floatBadge {
+            50% {
+                transform: translateY(-9px);
+            }
+        }
+
+        .dispatch-badge i {
+            color: var(--green);
+            font-size: 52px;
+        }
+
+        .analytics {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-top: 22px;
+        }
+
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+            min-height: 150px;
+            padding: 22px;
+            border-radius: 24px;
+            animation: cardIn 650ms ease both;
+            animation-delay: calc(var(--index) * 90ms);
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(24px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .stat-icon {
+            display: grid;
+            width: 50px;
+            height: 50px;
+            place-items: center;
+            border-radius: 15px;
+            color: var(--ink);
+            background: var(--accent);
+            font-size: 20px;
+        }
+
+        .stat-card h2 {
+            margin-top: 18px;
+            font-size: 34px;
+        }
+
+        .stat-card p {
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .section-head {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 18px;
+            margin: 30px 0 18px;
+        }
+
+        .section-head h2 {
+            font-size: 30px;
+        }
+
+        .section-head p {
+            max-width: 520px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .orders {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 22px;
+        }
+
+        .order-card {
+            overflow: hidden;
+            border-radius: 26px;
+            animation: cardIn 650ms ease both;
+            animation-delay: calc(var(--index) * 65ms);
+            transition: 200ms ease;
+        }
+
+        .order-card:hover {
+            transform: translateY(-7px);
+            border-color: rgba(34, 211, 238, 0.32);
+        }
+
+        .image-wrap {
+            position: relative;
+            height: 220px;
+            overflow: hidden;
+            background: #0b1624;
+        }
+
+        .image-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: 420ms ease;
+        }
+
+        .order-card:hover .image-wrap img {
+            transform: scale(1.07);
+        }
+
+        .status-chip {
+            position: absolute;
+            left: 16px;
+            bottom: 16px;
+            padding: 9px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 999px;
+            color: white;
+            background: rgba(6, 17, 31, 0.78);
+            font-size: 13px;
+            font-weight: 800;
+            backdrop-filter: blur(12px);
+        }
+
+        .content {
+            padding: 22px;
+        }
+
+        .content h2 {
+            font-size: 26px;
+            line-height: 1.18;
+        }
+
+        .price {
+            margin-top: 13px;
+            color: var(--green);
+            font-size: 30px;
+            font-weight: 900;
+        }
+
+        .details {
+            display: grid;
+            gap: 10px;
+            margin-top: 16px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .details div {
+            display: flex;
+            gap: 10px;
+        }
+
+        .details i {
+            width: 18px;
+            color: var(--cyan);
+            margin-top: 2px;
+        }
+
+        .status {
+            width: 100%;
+            min-height: 54px;
+            margin-top: 20px;
+            padding: 0 14px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 15px;
+            outline: none;
+            color: white;
+            background: rgba(6, 17, 31, 0.76);
+        }
+
+        .update-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            min-height: 56px;
+            margin-top: 14px;
+            border: 0;
+            border-radius: 16px;
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            cursor: pointer;
+            font-weight: 900;
+            transition: 180ms ease;
+            box-shadow: 0 16px 34px rgba(34, 211, 238, 0.22);
+        }
+
+        .delete-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            min-height: 54px;
+            margin-top: 12px;
+            border: 1px solid rgba(251, 113, 133, 0.36);
+            border-radius: 16px;
+            color: white;
+            background: rgba(251, 113, 133, 0.18);
+            cursor: pointer;
+            font-weight: 900;
+            transition: 180ms ease;
+        }
+
+        .update-btn:hover,
+        .delete-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .update-btn:hover {
+            box-shadow: 0 20px 42px rgba(34, 211, 238, 0.3);
+        }
+
+        .delete-btn:hover {
+            border-color: rgba(251, 113, 133, 0.62);
+            background: rgba(251, 113, 133, 0.28);
+        }
+
+        .empty {
+            grid-column: 1 / -1;
+            min-height: 220px;
+            display: grid;
+            place-items: center;
+            padding: 30px;
+            border-radius: 24px;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.7;
+        }
+
+        @media (max-width: 1080px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+                height: auto;
+            }
+
+            .menu {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                margin-top: 22px;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .main {
+                padding: 18px;
+            }
+
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .dispatch-badge {
+                width: 112px;
+                height: 112px;
+            }
+
+            .analytics,
+            .menu {
+                grid-template-columns: 1fr;
+            }
+
+            .section-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="orders">
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <span class="logo-mark"><i class="fa-solid fa-truck-fast"></i></span>
+                Orders
+            </div>
+
+            <nav class="menu">
+                <a href="/shopkeeper"><i class="fa-solid fa-store"></i> Seller Panel</a>
+                <a href="/seller_products"><i class="fa-solid fa-box"></i> Products</a>
+                <a href="/shopkeeper_orders" class="active"><i class="fa-solid fa-cart-shopping"></i> Orders</a>
+                <a href="/seller_maps"><i class="fa-solid fa-map-location-dot"></i> Maps</a>
+                <a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Analytics</a>
+                <a href="/home"><i class="fa-solid fa-house"></i> Home</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <section class="topbar">
+                <div>
+                    <div class="eyebrow">
+                        <span class="pulse-dot"></span>
+                        Dispatch center online
+                    </div>
+                    <h1>Manage <span>live orders</span> beautifully.</h1>
+                    <p>Review customer details, payment method, delivery address, and update order progress from one clean panel.</p>
+                </div>
+                <div class="dispatch-badge" aria-hidden="true">
+                    <i class="fa-solid fa-route"></i>
+                </div>
+            </section>
+
+            <section class="analytics">
+                <article class="stat-card" style="--accent: var(--cyan); --index: 0;">
+                    <div class="stat-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                    <h2>{{ total_orders|default(0) }}</h2>
+                    <p>Total Orders</p>
+                </article>
+                <article class="stat-card" style="--accent: var(--green); --index: 1;">
+                    <div class="stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                    <h2>Rs. {{ revenue|default(0) }}</h2>
+                    <p>Total Revenue</p>
+                </article>
+                <article class="stat-card" style="--accent: var(--amber); --index: 2;">
+                    <div class="stat-icon"><i class="fa-solid fa-truck"></i></div>
+                    <h2>{{ delivered|default(0) }}</h2>
+                    <p>Delivered Orders</p>
+                </article>
+            </section>
+
+            <div class="section-head">
+                <div>
+                    <h2>Order Queue</h2>
+                    <p>Update each order status as it moves through packing, dispatch, and delivery.</p>
+                </div>
+            </div>
+
+            <section class="orders">
+                {% if orders %}
+                    {% for order in orders %}
+                        <article class="order-card" style="--index: {{ loop.index0 }};">
+                            <div class="image-wrap">
+                                <img src="{{ order['product_image'] }}" alt="{{ order['product_name'] }}">
+                                <span class="status-chip">{{ order['status'] }}</span>
+                            </div>
+
+                            <div class="content">
+                                <h2>{{ order['product_name'] }}</h2>
+                                <div class="price">Rs. {{ order['price'] }}</div>
+
+                                <div class="details">
+                                    <div><i class="fa-solid fa-user"></i><span>{{ order['customer_name'] }}</span></div>
+                                    <div><i class="fa-solid fa-location-dot"></i><span>{{ order['address'] }}</span></div>
+                                    <div><i class="fa-solid fa-credit-card"></i><span>{{ order['payment_method'] }}</span></div>
+                                    <div><i class="fa-solid fa-truck-fast"></i><span>Current Status: {{ order['status'] }}</span></div>
+                                </div>
+
+                                <form action="/update_status/{{ order['id'] }}" method="POST">
+                                    <select name="status" class="status">
+                                        <option {% if order['status'] == 'Order Confirmed' %}selected{% endif %}>Order Confirmed</option>
+                                        <option {% if order['status'] == 'Packed' %}selected{% endif %}>Packed</option>
+                                        <option {% if order['status'] == 'Out For Delivery' %}selected{% endif %}>Out For Delivery</option>
+                                        <option {% if order['status'] == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                    </select>
+
+                                    <button class="update-btn" type="submit">
+                                        <i class="fa-solid fa-rotate"></i>
+                                        Update Status
+                                    </button>
+                                </form>
+
+                                <form action="/delete_order/{{ order['id'] }}" method="POST">
+                                    <button class="delete-btn" type="submit">
+                                        <i class="fa-solid fa-trash"></i>
+                                        Delete Order
+                                    </button>
+                                </form>
+                            </div>
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty">
+                        No orders yet. New customer purchases will appear here automatically.
+                    </div>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+</body>
+</html>

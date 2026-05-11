@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Live Chat</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <meta http-equiv="refresh" content="2">
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Poppins',sans-serif;
+        }
+
+        body{
+
+            background:#020b45;
+
+            display:flex;
+            justify-content:center;
+            align-items:center;
+
+            height:100vh;
+
+        }
+
+        .chat-container{
+
+            width:550px;
+            height:750px;
+
+            background:rgba(255,255,255,0.08);
+
+            border-radius:30px;
+
+            overflow:hidden;
+
+            backdrop-filter:blur(15px);
+
+            display:flex;
+            flex-direction:column;
+
+        }
+
+        .header{
+
+            background:linear-gradient(45deg,#00d4ff,#2962ff);
+
+            color:white;
+
+            text-align:center;
+
+            padding:25px;
+
+            font-size:30px;
+            font-weight:700;
+
+        }
+
+        .messages{
+
+            flex:1;
+
+            overflow-y:auto;
+
+            padding:25px;
+
+        }
+
+        .message{
+
+            margin-bottom:18px;
+
+            padding:15px 20px;
+
+            border-radius:18px;
+
+            width:fit-content;
+
+            max-width:80%;
+
+            color:white;
+
+        }
+
+        .customer{
+
+            background:#00d4ff;
+
+            margin-left:auto;
+
+            color:black;
+
+        }
+
+        .shopkeeper{
+
+            background:#1f2a7a;
+
+        }
+
+        .form{
+
+            display:flex;
+            flex-direction:column;
+
+            gap:15px;
+
+            padding:20px;
+
+            background:rgba(255,255,255,0.05);
+
+        }
+
+        select,input{
+
+            padding:16px;
+
+            border:none;
+
+            border-radius:15px;
+
+            outline:none;
+
+            font-size:16px;
+
+        }
+
+        button{
+
+            padding:18px;
+
+            border:none;
+
+            border-radius:15px;
+
+            background:linear-gradient(45deg,#00d4ff,#2962ff);
+
+            color:white;
+
+            font-size:18px;
+            font-weight:600;
+
+            cursor:pointer;
+
+        }
+
+    </style>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+
+<body data-panel="chat">
+
+<div class="chat-container">
+
+    <div class="header">
+
+        💬 Live Customer Chat
+
+    </div>
+
+    <div class="messages">
+
+        {% for chat in chats %}
+
+            <div class="message {{ chat['sender'] }}">
+
+                <b>{{ chat['sender'] }}</b><br><br>
+
+                {{ chat['message'] }}
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+    <form
+    action="/send_message"
+    method="POST"
+    class="form">
+
+        <select name="sender">
+
+            <option value="customer">
+
+                Customer
+
+            </option>
+
+            <option value="shopkeeper">
+
+                Shopkeeper
+
+            </option>
+
+        </select>
+
+        <input
+        type="text"
+        name="message"
+        placeholder="Type message..."
+        required>
+
+        <button>
+
+            Send Message
+
+        </button>
+
+    </form>
+
+</div>
+
+</body>
+
+</html>

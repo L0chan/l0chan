@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android Download - Nearby Price Finder</title>
+    <meta name="theme-color" content="#16a34a">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="{{ url_for('static', filename='app-icon.svg') }}" type="image/svg+xml">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #0b1220;
+            color: #f8fafc;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        main {
+            width: min(720px, 100%);
+            background: #111827;
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 8px;
+            padding: 26px;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: clamp(30px, 8vw, 48px);
+            line-height: 1;
+        }
+
+        p,
+        li {
+            color: #cbd5e1;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .notice {
+            margin: 18px 0;
+            padding: 14px;
+            border-radius: 8px;
+            background: rgba(250,204,21,.12);
+            color: #fde68a;
+        }
+
+        a,
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+            margin: 8px 8px 0 0;
+            padding: 0 18px;
+            border-radius: 999px;
+            background: #16a34a;
+            color: #fff;
+            border: 0;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .secondary {
+            background: #2563eb;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="download">
+    <main>
+        <h1>Android Download</h1>
+        <p>The Android APK file has not been built yet, so there is no direct APK download available in this project folder.</p>
+
+        <div class="notice">
+            For mobile install without an APK, Android Chrome needs the app to open from HTTPS. Local links like http://192.168.x.x:5000 usually do not show Install App.
+        </div>
+
+        <p>Use one of these options:</p>
+        <ol>
+            <li>Open the app through an HTTPS tunnel or hosted website, then tap Install App.</li>
+            <li>Build an APK with PWABuilder after hosting the app on HTTPS.</li>
+            <li>Place the APK at release/NearbyPriceFinder-Android.apk and this button will become a real download.</li>
+        </ol>
+
+        <button type="button" id="android-install">Try Install App</button>
+        <a class="secondary" href="/download_app">Back to Downloads</a>
+    </main>
+
+    <script src="{{ url_for('static', filename='pwa.js') }}"></script>
+    <script>
+        document.getElementById("android-install").addEventListener("click", () => {
+            window.NPF_PWA.promptInstall();
+        });
+    </script>
+</body>
+</html>

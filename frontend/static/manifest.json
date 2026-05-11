@@ -1,0 +1,51 @@
+{
+  "name": "Nearby Price Finder",
+  "short_name": "Nearby Price",
+  "description": "Find nearby products, compare prices, buy from local shops, and track orders.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#16a34a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Search Products",
+      "short_name": "Search",
+      "url": "/customer",
+      "description": "Open the customer search page."
+    },
+    {
+      "name": "Seller Dashboard",
+      "short_name": "Seller",
+      "url": "/shopkeeper_dashboard",
+      "description": "Open seller product and order tools."
+    },
+    {
+      "name": "Track Orders",
+      "short_name": "Orders",
+      "url": "/shopkeeper_orders",
+      "description": "Open seller orders and delivery tracking."
+    }
+  ]
+}

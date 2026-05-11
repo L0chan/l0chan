@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#16a34a">
+  <title>Nearby Price Finder</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/app-icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="background-flow" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="brand" data-view="home" aria-label="Nearby Price Finder home">
+        <img src="assets/app-icon.svg" alt="">
+        <span>Nearby Price Finder</span>
+      </button>
+
+      <nav class="nav-links" aria-label="Desktop navigation">
+        <button data-view="home">Home</button>
+        <button data-view="customer">Customer</button>
+        <button data-view="seller">Seller</button>
+        <button data-view="orders">Orders</button>
+        <button data-view="analytics">Analytics</button>
+        <button data-view="admin">Admin</button>
+        <button data-view="chat">Chat</button>
+        <button data-view="auth">Login</button>
+      </nav>
+
+      <div class="account-chip" id="accountChip">Guest</div>
+    </header>
+
+    <main id="app" tabindex="-1"></main>
+
+    <nav class="tabs" aria-label="Mobile navigation">
+      <button data-view="home" class="active">Home</button>
+      <button data-view="customer">Search</button>
+      <button data-view="seller">Seller</button>
+      <button data-view="orders">Orders</button>
+      <button data-view="chat">Chat</button>
+    </nav>
+  </div>
+
+  <template id="homeView">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="pulse-dot"></span> Live local prices, offline app</p>
+        <h1>Discover nearby <span>products</span> instantly.</h1>
+        <p class="lead">Search products, compare shop prices, add seller inventory, place demo orders, confirm delivery OTPs, and chat without running a Flask server.</p>
+        <div class="hero-actions">
+          <button data-view="customer">Start Shopping</button>
+          <button class="ghost" data-view="seller">Open Seller Panel</button>
+        </div>
+      </div>
+      <div class="phone-card">
+        <div class="map-top">
+          <strong>Nearby Map</strong>
+          <span class="live-chip"><span class="pulse-dot"></span> Active</span>
+        </div>
+        <div class="map-scene">
+          <div class="route"></div>
+          <div class="pin one">S</div>
+          <div class="pin two">P</div>
+          <div class="mini-result">
+            <img src="assets/charger.jpg" alt="">
+            <div>
+              <strong>Best match found</strong>
+              <span>Fast delivery from a nearby shop</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="quick-grid">
+      <button class="quick-card" data-view="customer"><strong>Customer Search</strong><span>Find products, compare prices, view map and buy.</span></button>
+      <button class="quick-card" data-view="seller"><strong>Shopkeeper Dashboard</strong><span>Add products, update stock, edit price and images.</span></button>
+      <button class="quick-card" data-view="orders"><strong>Order Tracking</strong><span>Manage status and confirm delivery with OTP.</span></button>
+      <button class="quick-card" data-view="analytics"><strong>Analytics</strong><span>See product count, orders, revenue and stock health.</span></button>
+    </section>
+
+    <section class="experience-band">
+      <div class="section-head">
+        <div><h2>Complete Marketplace Flow</h2><p>A full website-style experience running from local files.</p></div>
+      </div>
+      <div class="workflow-grid">
+        <article><span>01</span><strong>Search Nearby</strong><p>Customers search product names and compare stock, price, shop and location.</p></article>
+        <article><span>02</span><strong>Seller Upload</strong><p>Shopkeepers add multiple products at once, including images and map coordinates.</p></article>
+        <article><span>03</span><strong>Checkout</strong><p>Orders get local rider assignment, payment mode, delivery address and OTP.</p></article>
+        <article><span>04</span><strong>Track & Manage</strong><p>Seller, admin and analytics panels update from the same local data.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <div><h2>Available Products</h2><p>Featured local inventory stored on this device.</p></div>
+        <button class="ghost" data-view="customer">View all</button>
+      </div>
+      <div id="featuredProducts" class="product-grid"></div>
+    </section>
+  </template>
+
+  <template id="authView">
+    <section class="auth-layout">
+      <div class="brand-panel">
+        <p class="eyebrow">Welcome back</p>
+        <h1>Login to your local marketplace workspace.</h1>
+        <p class="lead">Use any username and password for this offline version. Pick customer, seller, or admin to open that workspace.</p>
+      </div>
+      <form id="loginForm" class="panel form-panel">
+        <h2>Login</h2>
+        <input name="username" placeholder="Username" value="admin" required>
+        <input name="password" type="password" placeholder="Password" value="admin@123" required>
+        <select name="role">
+          <option value="customer">Customer</option>
+          <option value="seller">Seller</option>
+          <option value="admin">Owner Admin</option>
+        </select>
+        <button type="submit">Continue</button>
+      </form>
+    </section>
+  </template>
+
+  <template id="customerView">
+    <section class="hero compact">
+      <div>
+        <p class="eyebrow"><span class="pulse-dot"></span> Customer panel</p>
+        <h1>Search nearby shops and compare prices.</h1>
+        <form id="searchForm" class="search-form">
+          <input id="searchInput" type="search" placeholder="Search rice, milk, laptop, bag..." autocomplete="off">
+          <button type="submit">Search</button>
+        </form>
+      </div>
+      <div class="search-preview">
+        <strong>Smart local assistant</strong>
+        <p>Try: charger, bag, mobile, cheap, delivery, order tracking.</p>
+        <button class="ghost" data-view="chat">Ask Chat</button>
+      </div>
+    </section>
+    <section class="panel-strip">
+      <article><strong>Price Compare</strong><span>Sort visually by shop, price and stock.</span></article>
+      <article><strong>Local Map</strong><span>Coordinates stay attached to each item.</span></article>
+      <article><strong>Fast Checkout</strong><span>Creates a trackable order instantly.</span></article>
+    </section>
+    <div id="searchResults" class="product-grid"></div>
+  </template>
+
+  <template id="sellerView">
+    <section class="dashboard-layout">
+      <aside class="sidebar">
+        <strong class="sidebar-title">Dashboard</strong>
+        <button data-view="seller">Overview</button>
+        <button data-view="orders">Orders</button>
+        <button data-view="analytics">Analytics</button>
+        <button data-view="admin">Admin</button>
+        <button id="resetDemo" class="danger">Reset Demo</button>
+      </aside>
+      <div>
+        <section class="hero compact">
+          <div>
+            <p class="eyebrow"><span class="pulse-dot"></span> Shopkeeper command center</p>
+            <h1>Control products and <span>live orders</span> in one place.</h1>
+            <p class="lead">Upload product images, stock, price, shop location, and map coordinates locally.</p>
+          </div>
+          <div id="sellerStats" class="stat-grid"></div>
+        </section>
+        <section class="panel">
+          <div class="section-head">
+            <div><h2>Add Multiple Products</h2><p>Enter shop details once, then add as many product rows as you need.</p></div>
+            <button id="addProductRow" type="button" class="ghost">Add Row</button>
+          </div>
+          <form id="productForm" class="multi-product-form">
+            <div class="form-block">
+              <h3>Shop Details</h3>
+              <div class="form-grid">
+                <input name="shopName" placeholder="Shop name" required>
+                <input name="location" placeholder="Location" required>
+                <input name="latitude" inputmode="decimal" placeholder="Latitude">
+                <input name="longitude" inputmode="decimal" placeholder="Longitude">
+              </div>
+            </div>
+            <div class="form-block">
+              <h3>Product Rows</h3>
+              <div id="productRows" class="product-rows"></div>
+            </div>
+            <div class="form-actions">
+              <button id="addProductRowBottom" type="button" class="ghost">Add Another Product</button>
+              <button type="submit">Save All Products</button>
+            </div>
+          </form>
+        </section>
+        <section class="panel-strip">
+          <article><strong>Bulk Upload</strong><span>Add many product rows in one save.</span></article>
+          <article><strong>Inventory Control</strong><span>Edit price and stock from each card.</span></article>
+          <article><strong>Seller Analytics</strong><span>Orders and revenue update live.</span></article>
+        </section>
+        <div class="section-head"><div><h2>Product Inventory</h2><p>Manage uploaded products, prices, stock, and visibility.</p></div></div>
+        <div id="sellerProducts" class="product-grid"></div>
+      </div>
+    </section>
+  </template>
+
+  <template id="ordersView">
+    <section class="hero compact">
+      <div>
+        <p class="eyebrow"><span class="pulse-dot"></span> Tracking and delivery</p>
+        <h1>Orders, riders, status and OTP verification.</h1>
+        <p class="lead">Place an order from the customer panel. Seller can move it from preparing to delivered after OTP confirmation.</p>
+      </div>
+      <div id="orderStats" class="stat-grid"></div>
+    </section>
+    <section class="panel-strip">
+      <article><strong>Rider Assigned</strong><span>Every order gets local delivery details.</span></article>
+      <article><strong>OTP Secure</strong><span>Delivered status requires customer OTP.</span></article>
+      <article><strong>Status Flow</strong><span>Preparing, packed, out for delivery, delivered.</span></article>
+    </section>
+    <div id="ordersList" class="order-list"></div>
+  </template>
+
+  <template id="analyticsView">
+    <section class="hero compact">
+      <div>
+        <p class="eyebrow">Analytics dashboard</p>
+        <h1>Know what is happening in your local store.</h1>
+        <p class="lead">This mirrors the previous analytics page with local-only numbers.</p>
+      </div>
+      <div id="analyticsStats" class="stat-grid"></div>
+    </section>
+    <section class="panel-strip">
+      <article><strong>Revenue Pulse</strong><span>Tracks all local checkout value.</span></article>
+      <article><strong>Stock Health</strong><span>Flags products moving toward low stock.</span></article>
+      <article><strong>Activity Feed</strong><span>Orders, chats and catalog changes.</span></article>
+    </section>
+    <section class="analytics-grid">
+      <div class="panel"><h2>Top Products</h2><div id="topProducts" class="table-list"></div></div>
+      <div class="panel"><h2>Recent Activity</h2><div id="activityList" class="table-list"></div></div>
+    </section>
+  </template>
+
+  <template id="adminView">
+    <section class="hero compact">
+      <div>
+        <p class="eyebrow">Owner admin</p>
+        <h1>Full local marketplace control panel.</h1>
+        <p class="lead">View all products, orders, revenue, users and maintenance tools without a server.</p>
+      </div>
+      <div id="adminStats" class="stat-grid"></div>
+    </section>
+    <section class="panel-strip">
+      <article><strong>Owner View</strong><span>All products and orders in one place.</span></article>
+      <article><strong>User Roles</strong><span>Customer, seller and admin states.</span></article>
+      <article><strong>Local Control</strong><span>No backend process required.</span></article>
+    </section>
+    <section class="analytics-grid">
+      <div class="panel"><h2>All Products</h2><div id="adminProducts" class="table-list"></div></div>
+      <div class="panel"><h2>All Orders</h2><div id="adminOrders" class="table-list"></div></div>
+    </section>
+  </template>
+
+  <template id="chatView">
+    <section class="chat-layout">
+      <div class="panel assistant-panel">
+        <p class="eyebrow">AI shopping assistant</p>
+        <h1>Ask for products, cheap options, stock, or tracking help.</h1>
+        <div class="assistant-prompts">
+          <button data-chat="show cheap charger">Cheap charger</button>
+          <button data-chat="track my order">Track order</button>
+          <button data-chat="seller help">Seller help</button>
+        </div>
+      </div>
+      <section class="panel chat-panel">
+        <h2>Live Chat</h2>
+        <div id="chatMessages" class="messages"></div>
+        <form id="chatForm" class="chat-form">
+          <select name="sender">
+            <option value="customer">Customer</option>
+            <option value="seller">Seller</option>
+          </select>
+          <input name="message" placeholder="Type a message..." required>
+          <button type="submit">Send</button>
+        </form>
+      </section>
+    </section>
+  </template>
+
+  <dialog id="checkoutDialog">
+    <form method="dialog" id="checkoutForm" class="dialog-card">
+      <button class="close" value="cancel" aria-label="Close">x</button>
+      <h2 id="checkoutTitle">Checkout</h2>
+      <input name="customerName" placeholder="Customer name" required>
+      <textarea name="address" placeholder="Delivery address" required></textarea>
+      <select name="payment">
+        <option>Cash on Delivery</option>
+        <option>UPI</option>
+        <option>Card</option>
+      </select>
+      <button value="confirm">Place Order</button>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='flow-ui.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="otp">
+    <div class="motion-layer" aria-hidden="true">
+        <span class="tile" style="--left: 10%; --size: 80px; --duration: 18s; --delay: -2s;"></span>
+        <span class="tile" style="--left: 52%; --size: 62px; --duration: 15s; --delay: -7s;"></span>
+        <span class="tile" style="--left: 84%; --size: 94px; --duration: 22s; --delay: -5s;"></span>
+    </div>
+
+    <main class="auth-shell">
+        <section class="brand-panel">
+            <div class="eyebrow"><span class="pulse-dot"></span> OTP checkpoint</div>
+            <h1>Verify your <span>secure code.</span></h1>
+            <p class="lead">Enter the OTP sent to your mobile number to open your marketplace session.</p>
+            <div class="feature-stack">
+                <div class="feature-item"><span class="feature-icon" style="--accent: var(--green);"><i class="fa-solid fa-lock"></i></span><div><strong>Protected login</strong><span>Only the verified phone can continue.</span></div></div>
+            </div>
+        </section>
+
+        <section class="form-panel">
+            <div class="eyebrow"><span class="pulse-dot"></span> Verify OTP</div>
+            <h1>Enter <span>code</span></h1>
+            <p class="lead">Use the 6-digit OTP to continue.</p>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="flash-box">{{ messages[0] }}</div>
+                {% endif %}
+            {% endwith %}
+
+            <form action="/verify_otp" method="POST">
+                <div class="field">
+                    <label for="otp">OTP Code</label>
+                    <input id="otp" type="text" name="otp" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="------" required>
+                </div>
+
+                <button class="primary-btn" type="submit"><i class="fa-solid fa-check"></i> Verify OTP</button>
+            </form>
+
+            <div class="switch-link"><a href="/otp_login">Change phone number</a></div>
+        </section>
+    </main>
+</body>
+</html>

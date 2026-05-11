@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Search Product</title>
+
+    <style>
+
+        body{
+
+            background:#020b2d;
+
+            display:flex;
+
+            justify-content:center;
+
+            align-items:center;
+
+            height:100vh;
+
+            font-family:Arial;
+        }
+
+        .box{
+
+            width:600px;
+
+            background:white;
+
+            padding:40px;
+
+            border-radius:25px;
+
+            text-align:center;
+        }
+
+        h1{
+
+            margin-bottom:30px;
+        }
+
+        input{
+
+            width:100%;
+
+            padding:18px;
+
+            font-size:20px;
+
+            border-radius:12px;
+
+            border:1px solid gray;
+
+            margin-bottom:20px;
+        }
+
+        button{
+
+            width:100%;
+
+            padding:18px;
+
+            background:#2563eb;
+
+            color:white;
+
+            border:none;
+
+            border-radius:12px;
+
+            font-size:22px;
+
+            cursor:pointer;
+        }
+
+    </style>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+
+<body data-panel="search">
+
+    <div class="box">
+
+        <h1>
+
+            Search Product
+
+        </h1>
+
+        <form method="POST" action="/search">
+
+            <input type="text"
+
+            name="search"
+
+            placeholder="Enter Product Name"
+
+            required>
+
+            <button type="submit">
+
+                Search
+
+            </button>
+
+        </form>
+
+    </div>
+
+</body>
+
+</html>

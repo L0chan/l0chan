@@ -1,0 +1,11 @@
+{
+  "appId": "com.nearbypricefinder.app",
+  "appName": "Nearby Price Finder",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}
