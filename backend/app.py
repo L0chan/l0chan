@@ -153,6 +153,10 @@ def _setup_database():
     _safe_alter(cursor, "orders",   "product_image","TEXT")
     _safe_alter(cursor, "orders",   "address",      "TEXT")
     _safe_alter(cursor, "orders",   "payment_method","TEXT")
+    _safe_alter(cursor, "orders",   "status",        "TEXT DEFAULT 'Order Confirmed'")
+    _safe_alter(cursor, "orders",   "product_name",  "TEXT")
+    _safe_alter(cursor, "orders",   "price",         "TEXT")
+    _safe_alter(cursor, "orders",   "customer_name", "TEXT")
     _safe_alter(cursor, "orders",   "created_at",    "TEXT")
     _safe_alter(cursor, "orders",   "customer_phone","TEXT")
     _safe_alter(cursor, "cart",     "unit",          "TEXT")
@@ -741,56 +745,57 @@ def place_order():
     rider_name, rider_phone = assign_delivery_rider()
     delivery_otp = generate_delivery_otp()
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    try:
+        conn = sqlite3.connect(DATABASE_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
 
-    cursor = conn.cursor()
+        cursor.execute("""
+        INSERT INTO orders(
+            customer_name,
+            customer_phone,
+            product_name,
+            price,
+            product_image,
+            address,
+            payment_method,
+            status,
+            rider_name,
+            rider_phone,
+            delivery_otp,
+            otp_verified,
+            created_at
+        )
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """, (
+            customer_name,
+            customer_phone,
+            product_name,
+            price,
+            product_image,
+            address,
+            payment,
+            "Order Confirmed",
+            rider_name,
+            rider_phone,
+            delivery_otp,
+            "No",
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        ))
 
-    cursor.execute("""
-    INSERT INTO orders(
-        customer_name,
-        customer_phone,
-        product_name,
-        price,
-        product_image,
-        address,
-        payment_method,
-        status,
-        rider_name,
-        rider_phone,
-        delivery_otp,
-        otp_verified
-    )
+        conn.commit()
+        order_id = cursor.lastrowid
+        conn.close()
 
-    VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
-    """, (
-        customer_name,
-        customer_phone,
-        product_name,
-        price,
-        product_image,
-        address,
-        payment,
-        "Order Confirmed",
-        rider_name,
-        rider_phone,
-        delivery_otp,
-        "No",
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    ))
-
-    conn.commit()
-
-    order_id = cursor.lastrowid
-
-    conn.close()
-
-    return render_template(
-        "success.html",
-        order_id=order_id,
-        delivery_otp=delivery_otp,
-        rider_name=rider_name
-    )
+        return render_template(
+            "success.html",
+            order_id=order_id,
+            delivery_otp=delivery_otp,
+            rider_name=rider_name
+        )
+    except Exception as e:
+        if 'conn' in locals(): conn.close()
+        return f"Database Error: {str(e)}", 500
 
 
 @app.route("/online_payment/<int:product_id>", methods=["POST"])
@@ -1989,58 +1994,62 @@ def checkout():
         flash("Please enter a delivery address.")
         return redirect("/cart")
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    try:
+        conn = sqlite3.connect(DATABASE_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM cart WHERE customer_name=?", (customer,))
-    items = cursor.fetchall()
+        cursor.execute("SELECT * FROM cart WHERE customer_name=?", (customer,))
+        items = cursor.fetchall()
 
-    if not items:
-        flash("Your cart is empty.")
+        if not items:
+            flash("Your cart is empty.")
+            conn.close()
+            return redirect("/cart")
+
+        order_ids = []
+        for item in items:
+            rider_name, rider_phone = assign_delivery_rider()
+            delivery_otp = generate_delivery_otp()
+
+            cursor.execute("""
+            INSERT INTO orders(
+                customer_name, product_name, price, product_image,
+                address, payment_method, status,
+                rider_name, rider_phone, delivery_otp, otp_verified, created_at
+            )
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+            """, (
+                customer,
+                item["product_name"],
+                str(float(item["price"] or 0) * int(item["quantity"] or 1)),
+                item["product_image"],
+                address,
+                payment,
+                "Order Confirmed",
+                rider_name,
+                rider_phone,
+                delivery_otp,
+                "No",
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            ))
+            order_ids.append(cursor.lastrowid)
+
+        # Clear cart after successful checkout
+        cursor.execute("DELETE FROM cart WHERE customer_name=?", (customer,))
+        conn.commit()
         conn.close()
-        return redirect("/cart")
 
-    order_ids = []
-    for item in items:
-        rider_name, rider_phone = assign_delivery_rider()
-        delivery_otp = generate_delivery_otp()
-
-        cursor.execute("""
-        INSERT INTO orders(
-            customer_name, product_name, price, product_image,
-            address, payment_method, status,
-            rider_name, rider_phone, delivery_otp, otp_verified, created_at
+        return render_template(
+            "checkout_success.html",
+            order_ids=order_ids,
+            item_count=len(items),
+            address=address,
+            payment=payment,
         )
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
-        """, (
-            customer,
-            item["product_name"],
-            str(float(item["price"] or 0) * int(item["quantity"] or 1)),
-            item["product_image"],
-            address,
-            payment,
-            "Order Confirmed",
-            rider_name,
-            rider_phone,
-            delivery_otp,
-            "No",
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        ))
-        order_ids.append(cursor.lastrowid)
-
-    # Clear cart after successful checkout
-    cursor.execute("DELETE FROM cart WHERE customer_name=?", (customer,))
-    conn.commit()
-    conn.close()
-
-    return render_template(
-        "checkout_success.html",
-        order_ids=order_ids,
-        item_count=len(items),
-        address=address,
-        payment=payment,
-    )
+    except Exception as e:
+        if 'conn' in locals(): conn.close()
+        return f"Checkout Database Error: {str(e)}", 500
 
 
 # ================= NEARBY PRODUCTS API =================

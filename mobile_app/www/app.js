@@ -31,44 +31,43 @@ async function migrateOldData(manual = false) {
     if (manual) showToast("No offline data found on this phone.");
     return;
   }
-  
+
   if (manual || confirm(`Found ${oldData.products.length} items saved on this phone. Would you like to upload them to the live website?`)) {
-      if (state.account.name === "Guest") {
-        showToast("Please log in first to upload items.");
-        setView("auth");
-        return;
-      }
-      
-      showToast("Syncing old items...");
-      for (const p of oldData.products) {
-        try {
-          const formData = new FormData();
-          formData.append("shop_name", p.shopName);
-          formData.append("location", p.location);
-          formData.append("latitude", p.latitude);
-          formData.append("longitude", p.longitude);
-          formData.append("product_name", p.productName);
-          formData.append("price", p.price);
-          formData.append("stock", p.stock);
-          formData.append("unit", p.unit || "unit");
-          // Images in old data were dataURLs, we can't easily convert back to File objects for the backend as it expects
-          // But the backend 'add_product' might handle it if we modify it, or we just upload without images
-          // For now, let's try to send them.
-          
-          await fetch(`${API_URL}/add_product`, {
-            method: "POST",
-            body: formData,
-            credentials: "include"
-          });
-        } catch (err) {
-          console.error("Migration error for product:", p.productName, err);
-        }
-      }
-      // Clear old data after migration
-      localStorage.removeItem(STORE_KEY);
-      showToast("Sync complete!");
-      await syncState();
+    if (state.account.name === "Guest") {
+      showToast("Please log in first to upload items.");
+      setView("auth");
+      return;
     }
+
+    showToast("Syncing old items...");
+    for (const p of oldData.products) {
+      try {
+        const formData = new FormData();
+        formData.append("shop_name", p.shopName);
+        formData.append("location", p.location);
+        formData.append("latitude", p.latitude);
+        formData.append("longitude", p.longitude);
+        formData.append("product_name", p.productName);
+        formData.append("price", p.price);
+        formData.append("stock", p.stock);
+        formData.append("unit", p.unit || "unit");
+        // Images in old data were dataURLs, we can't easily convert back to File objects for the backend as it expects
+        // But the backend 'add_product' might handle it if we modify it, or we just upload without images
+        // For now, let's try to send them.
+
+        await fetch(`${API_URL}/add_product`, {
+          method: "POST",
+          body: formData,
+          credentials: "include"
+        });
+      } catch (err) {
+        console.error("Migration error for product:", p.productName, err);
+      }
+    }
+    // Clear old data after migration
+    localStorage.removeItem(STORE_KEY);
+    showToast("Sync complete!");
+    await syncState();
   }
 }
 
@@ -83,7 +82,7 @@ async function syncState() {
       const oData = await oRes.json();
       state.orders = oData.orders || [];
     }
-    
+
     // Check for migration
     await migrateOldData();
   } catch (err) {
@@ -129,12 +128,12 @@ function renderAuth() {
     const form = new FormData(event.currentTarget);
     const username = form.get("username").trim();
     const role = form.get("role");
-    
+
     try {
       const res = await fetch(`${API_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password: "password123" }) 
+        body: JSON.stringify({ username, password: "password123" })
       });
       const data = await res.json();
       if (data.success) {
@@ -182,7 +181,7 @@ function renderSeller() {
     ["Orders", stats.orders],
     ["Revenue", money(stats.revenue)]
   ]);
-  
+
   const syncBtn = document.createElement("button");
   syncBtn.className = "wide";
   syncBtn.style.marginBottom = "20px";
@@ -244,7 +243,7 @@ function renderSeller() {
       formData.append("location", location);
       formData.append("latitude", latitude);
       formData.append("longitude", longitude);
-      
+
       // Note: Backend expects getlist for product_name, price, stock, unit
       rows.forEach(row => {
         const pName = row.querySelector("[name='productName']").value.trim();
@@ -252,7 +251,7 @@ function renderSeller() {
         const pStock = row.querySelector("[name='stock']").value;
         const pUnit = "unit"; // default
         const pImage = row.querySelector("[name='image']").files[0];
-        
+
         if (pName && pPrice) {
           formData.append("product_name", pName);
           formData.append("price", pPrice);
@@ -261,7 +260,7 @@ function renderSeller() {
           if (pImage) formData.append("product_image", pImage);
         }
       });
-      
+
       // We also need shop_image (for simplicity use the first product image or a placeholder)
       const firstImage = rows.find(r => r.querySelector("[name='image']").files[0])?.querySelector("[name='image']").files[0];
       // Refactoring this to match the backend's multipart form.
@@ -508,7 +507,7 @@ checkoutDialog.addEventListener("close", async () => {
   if (checkoutDialog.returnValue !== "confirm" || !checkoutProductId) return;
   const product = state.products.find((item) => item.id === checkoutProductId);
   const form = new FormData(checkoutForm);
-  
+
   try {
     const res = await fetch(`${API_URL}/place_order`, {
       method: "POST",
@@ -523,7 +522,7 @@ checkoutDialog.addEventListener("close", async () => {
         payment: form.get("payment")
       })
     });
-    
+
     if (res.ok) {
       showToast("Order placed on live server!");
       setView("orders");
@@ -534,7 +533,7 @@ checkoutDialog.addEventListener("close", async () => {
     console.error("Checkout error:", err);
     showToast("Server connection error.");
   }
-  
+
   checkoutForm.reset();
   checkoutProductId = null;
 });
