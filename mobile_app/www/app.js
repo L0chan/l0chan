@@ -25,10 +25,14 @@ let state = {
   ]
 };
 
-async function migrateOldData() {
+async function migrateOldData(manual = false) {
   const oldData = JSON.parse(localStorage.getItem(STORE_KEY));
-  if (oldData && oldData.products && oldData.products.length > 0) {
-    if (confirm(`Found ${oldData.products.length} items saved on this phone. Would you like to upload them to the live website?`)) {
+  if (!oldData || !oldData.products || oldData.products.length === 0) {
+    if (manual) showToast("No offline data found on this phone.");
+    return;
+  }
+  
+  if (manual || confirm(`Found ${oldData.products.length} items saved on this phone. Would you like to upload them to the live website?`)) {
       if (state.account.name === "Guest") {
         showToast("Please log in first to upload items.");
         setView("auth");
@@ -178,6 +182,14 @@ function renderSeller() {
     ["Orders", stats.orders],
     ["Revenue", money(stats.revenue)]
   ]);
+  
+  const syncBtn = document.createElement("button");
+  syncBtn.className = "wide";
+  syncBtn.style.marginBottom = "20px";
+  syncBtn.textContent = "🔄 Sync Offline Data from Phone";
+  syncBtn.onclick = () => migrateOldData(true);
+  document.querySelector("#sellerStats").after(syncBtn);
+
   renderProductGrid(document.querySelector("#sellerProducts"), state.products, "seller");
 
   const productRows = document.querySelector("#productRows");
