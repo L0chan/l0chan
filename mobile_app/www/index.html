@@ -151,6 +151,41 @@
 
         <div class="auth-footer">
           <p>Don't have an account? <a href="#" id="gotoSignup">Join now</a></p>
+          <p style="margin-top: 10px;"><a href="#" id="gotoOtp">Login with Phone OTP</a></p>
+        </div>
+      </div>
+    </section>
+  </template>
+
+  <template id="otpView">
+    <section class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-logo"><img src="assets/app-icon.svg" alt=""></div>
+          <h1>Phone Login</h1>
+          <p>Enter your number to receive a code</p>
+        </div>
+
+        <form id="otpSendForm" class="auth-form">
+          <div class="input-group">
+            <input name="phone" type="tel" placeholder=" " required id="otpPhone" value="+91">
+            <label for="otpPhone">Mobile Number</label>
+            <div class="input-focus"></div>
+          </div>
+          <button type="submit" class="auth-submit">Send Code</button>
+        </form>
+
+        <form id="otpVerifyForm" class="auth-form" style="display: none; margin-top: 20px;">
+          <div class="input-group">
+            <input name="otp" type="number" placeholder=" " required id="otpCode">
+            <label for="otpCode">6-Digit Code</label>
+            <div class="input-focus"></div>
+          </div>
+          <button type="submit" class="auth-submit">Verify & Login</button>
+        </form>
+
+        <div class="auth-footer">
+          <p><a href="#" data-view="auth">Back to Username Login</a></p>
         </div>
       </div>
     </section>

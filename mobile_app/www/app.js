@@ -109,6 +109,7 @@ async function setView(viewName) {
   ({
     home: renderHome,
     auth: renderAuth,
+    otp: renderOtp,
     customer: renderCustomer,
     seller: renderSeller,
     orders: renderOrders,
@@ -144,6 +145,7 @@ function renderAuth() {
   toggleLogin.onclick = () => { isLogin = true; updateUI(); };
   toggleSignup.onclick = () => { isLogin = false; updateUI(); };
   gotoSignup.onclick = (e) => { e.preventDefault(); isLogin = false; updateUI(); };
+  document.querySelector("#gotoOtp").onclick = (e) => { e.preventDefault(); setView("otp"); };
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -173,6 +175,56 @@ function renderAuth() {
       state.account = { name: username || "Guest", role };
       saveLocalAccount();
       setView(role === "admin" ? "admin" : role === "seller" ? "seller" : "customer");
+    }
+  });
+}
+
+function renderOtp() {
+  const sendForm = document.querySelector("#otpSendForm");
+  const verifyForm = document.querySelector("#otpVerifyForm");
+
+  sendForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const phone = new FormData(sendForm).get("phone");
+    showToast("Sending OTP...");
+    try {
+      const res = await fetch(`${API_URL}/send_otp`, {
+        method: "POST",
+        body: new URLSearchParams({ phone }),
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }
+      });
+      if (res.ok) {
+        showToast("Code sent to " + phone);
+        sendForm.style.display = "none";
+        verifyForm.style.display = "grid";
+      } else {
+        showToast("Failed to send OTP.");
+      }
+    } catch (err) {
+      showToast("Server error.");
+    }
+  });
+
+  verifyForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const otp = new FormData(verifyForm).get("otp");
+    showToast("Verifying...");
+    try {
+      const res = await fetch(`${API_URL}/verify_otp`, {
+        method: "POST",
+        body: new URLSearchParams({ otp }),
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }
+      });
+      if (res.ok) {
+        showToast("Login Successful!");
+        state.account = { name: "Phone User", role: "customer" };
+        saveLocalAccount();
+        setView("customer");
+      } else {
+        showToast("Invalid OTP code.");
+      }
+    } catch (err) {
+      showToast("Verification error.");
     }
   });
 }
