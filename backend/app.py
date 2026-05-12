@@ -1312,40 +1312,7 @@ def seller_products():
 @app.route("/seller_orders")
 @role_required("seller")
 def seller_orders():
-
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
-
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    SELECT * FROM orders
-    ORDER BY id DESC
-    """)
-
-    orders = cursor.fetchall()
-
-    cursor.execute("SELECT COUNT(*) FROM orders")
-    total_orders = cursor.fetchone()[0]
-
-    cursor.execute("SELECT SUM(price) FROM orders")
-    revenue = cursor.fetchone()[0]
-
-    if revenue is None:
-        revenue = 0
-
-    cursor.execute("SELECT COUNT(*) FROM orders WHERE status='Delivered'")
-    delivered = cursor.fetchone()[0]
-
-    conn.close()
-
-    return render_template(
-        "shopkeeper_orders.html",
-        orders=orders,
-        total_orders=total_orders,
-        revenue=revenue,
-        delivered=delivered
-    )
+    return redirect("/shopkeeper_orders")
 
 # ================= MAPS PANEL =================
 
@@ -1444,23 +1411,6 @@ def seller_settings():
     Seller Settings Coming Soon ⚙️
     </h1>
     '''
-@app.route("/buy")
-@role_required("customer", "seller", "admin")
-def buy():
-    product_name = request.args.get("product_name")
-    price = request.args.get("price")
-    product_image = request.args.get("product_image")
-    
-    if not product_name or not price:
-        flash("Product details missing.")
-        return redirect("/customer")
-        
-    return render_template(
-        "buy.html",
-        product_name=product_name,
-        price=price,
-        product_image=product_image
-    )
 
 @app.route("/payment_demo")
 def payment_demo():
@@ -2060,9 +2010,9 @@ def checkout():
         INSERT INTO orders(
             customer_name, product_name, price, product_image,
             address, payment_method, status,
-            rider_name, rider_phone, delivery_otp, otp_verified
+            rider_name, rider_phone, delivery_otp, otp_verified, created_at
         )
-        VALUES(?,?,?,?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             customer,
             item["product_name"],
