@@ -717,6 +717,9 @@
                     </div>
                     <h1>Upload products with a <span>premium seller flow.</span></h1>
                     <p>Add product details, stock, shop location, and images. New products appear in customer search after upload.</p>
+                    <button onclick="migrateOldData(true)" style="margin-top:20px; padding:12px 24px; background:linear-gradient(135deg, var(--cyan), var(--green)); color:var(--ink); border:none; border-radius:14px; cursor:pointer; font-weight:900; box-shadow: 0 10px 20px rgba(34, 211, 238, 0.2);">
+                        🔄 Sync Offline Data from Phone
+                    </button>
                 </div>
 
                 <div class="preview-card" aria-hidden="true">
@@ -865,6 +868,7 @@
         const longitudeInput = document.getElementById("longitude");
         const productRows = document.getElementById("product-rows");
         const addProductRow = document.getElementById("add-product-row");
+        const STORE_KEY = "npf.mobile.state.v2";
 
         const sellerMap = L.map("seller-map").setView(defaultPosition, 5);
         let shopMarker = null;
@@ -873,6 +877,35 @@
             maxZoom: 19,
             attribution: "&copy; OpenStreetMap contributors",
         }).addTo(sellerMap);
+
+        async function migrateOldData(manual = false) {
+            const oldData = JSON.parse(localStorage.getItem(STORE_KEY));
+            if (!oldData || !oldData.products || oldData.products.length === 0) {
+                if (manual) alert("No offline data found on this phone.");
+                return;
+            }
+            if (manual || confirm(`Found ${oldData.products.length} items saved on this phone. Would you like to upload them to the live website?`)) {
+                for (const p of oldData.products) {
+                    try {
+                        const formData = new FormData();
+                        formData.append("shop_name", p.shopName);
+                        formData.append("location", p.location);
+                        formData.append("latitude", p.latitude);
+                        formData.append("longitude", p.longitude);
+                        formData.append("product_name", p.productName);
+                        formData.append("price", p.price);
+                        formData.append("stock", p.stock);
+                        formData.append("unit", p.unit || "unit");
+                        await fetch(`/add_product`, { method: "POST", body: formData });
+                    } catch (err) { console.error("Migration error:", err); }
+                }
+                localStorage.removeItem(STORE_KEY);
+                alert("Sync complete! Please refresh the page.");
+                location.reload();
+            }
+        }
+
+        window.addEventListener('load', () => setTimeout(() => migrateOldData(false), 1000));
 
         function setShopLocation(latitude, longitude, label) {
             latitudeInput.value = latitude.toFixed(6);
