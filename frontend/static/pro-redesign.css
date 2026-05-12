@@ -476,8 +476,8 @@ textarea::placeholder {
 }
 
 .auth-card {
-    width: min(460px, 100%);
-    padding: 40px;
+    width: min(480px, 100%);
+    padding: 48px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 28px;
     background: rgba(10, 18, 35, 0.65);

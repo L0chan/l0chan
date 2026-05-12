@@ -30,8 +30,8 @@
                 <div class="auth-logo">
                     <img src="{{ url_for('static', filename='app-icon.svg') }}" alt="">
                 </div>
-                <h1 id="authTitle">Welcome Back</h1>
-                <p id="authSubtitle">Sign in to your account</p>
+                <h1>Welcome Back</h1>
+                <p>Login to your account</p>
             </div>
 
             <form action="/login" method="POST" class="auth-form">
@@ -48,14 +48,16 @@
                 </div>
 
                 <button type="submit" class="auth-submit">
-                    <span>Login</span>
+                    <span>Sign In</span>
                     <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </form>
 
             <div class="auth-footer">
-                <p>New here? <a href="/register">Create an account</a></p>
-                <p style="margin-top: 10px;"><a href="/otp_login" style="opacity: 0.7;">Login with Mobile OTP</a></p>
+                <p>New user? <a href="/register">Create account</a></p>
+                <div style="margin-top: 15px; opacity: 0.6; font-size: 13px;">
+                    <a href="/otp_login">Login with OTP</a>
+                </div>
             </div>
         </div>
     </main>
