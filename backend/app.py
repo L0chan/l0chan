@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from flask import render_template, render_template_string, request, redirect, session, flash, send_from_directory
+from flask import Flask, render_template, render_template_string, request, redirect, session, flash, send_from_directory
 import base64
+from flask_cors import CORS
 import sqlite3
 import os
 import re
@@ -21,6 +22,8 @@ DATABASE_PATH = str(BASE_DIR / "database.db")
 UPLOAD_FOLDER = str(FRONTEND_DIR / "static" / "uploads")
 
 from backend.app_factory import app
+CORS(app, supports_credentials=True)
+
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
 def allowed_file(filename):
@@ -72,7 +75,8 @@ def _setup_database():
         product_image TEXT,
         shop_image    TEXT,
         latitude      TEXT,
-        longitude     TEXT
+        longitude     TEXT,
+        unit          TEXT
     )
     """)
 
@@ -81,6 +85,7 @@ def _setup_database():
     CREATE TABLE IF NOT EXISTS orders(
         id             INTEGER PRIMARY KEY AUTOINCREMENT,
         customer_name  TEXT,
+        customer_phone TEXT,
         product_name   TEXT,
         price          TEXT,
         product_image  TEXT,
@@ -116,6 +121,7 @@ def _setup_database():
         product_image TEXT,
         shop_name     TEXT,
         quantity      INTEGER DEFAULT 1,
+        unit          TEXT,
         added_at      TEXT
     )
     """)
@@ -138,6 +144,7 @@ def _setup_database():
     _safe_alter(cursor, "users",    "role",         "TEXT DEFAULT 'customer'")
     _safe_alter(cursor, "products", "latitude",     "TEXT")
     _safe_alter(cursor, "products", "longitude",    "TEXT")
+    _safe_alter(cursor, "products", "unit",         "TEXT")
     _safe_alter(cursor, "chats",    "created_at",   "TEXT")
     _safe_alter(cursor, "orders",   "rider_name",   "TEXT")
     _safe_alter(cursor, "orders",   "rider_phone",  "TEXT")
@@ -147,6 +154,8 @@ def _setup_database():
     _safe_alter(cursor, "orders",   "address",      "TEXT")
     _safe_alter(cursor, "orders",   "payment_method","TEXT")
     _safe_alter(cursor, "orders",   "created_at",    "TEXT")
+    _safe_alter(cursor, "orders",   "customer_phone","TEXT")
+    _safe_alter(cursor, "cart",     "unit",          "TEXT")
 
     conn.commit()
     conn.close()
@@ -218,19 +227,24 @@ def role_required(*roles):
 
             current_role = normalize_role(session.get("role"))
 
-            if current_role == "admin" and session.get("is_owner_admin"):
+            if session.get("is_owner_admin"):
                 return view_func(*args, **kwargs)
+
 
             if current_role in allowed_roles:
                 return view_func(*args, **kwargs)
 
-            # Fail-safe: Avoid infinite redirect loop if dashboard_for_role returns current path
+            # Fail-safe: Avoid infinite redirect loop
             target = dashboard_for_role(current_role)
             if target == request.path:
-                flash(f"Access denied: Your role '{current_role}' does not have permission for this section.")
+                # If we are already on the dashboard but unauthorized, something is wrong with the session.
+                # Clear session and redirect to login to break the loop.
+                session.clear()
+                flash("Session error or unauthorized access. Please login again.")
                 return redirect("/")
 
             return redirect(target)
+
 
 
 
@@ -353,6 +367,26 @@ def login():
     else:
 
         return "Invalid Username or Password"
+
+@app.route("/api/login", methods=["POST"])
+def api_login():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+    
+    conn = sqlite3.connect(DATABASE_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username=?", (username,))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if user and user["password"] == password: # Simple check for now
+        session["user"] = username
+        session["role"] = normalize_role(user["role"])
+        return {"success": True, "user": username, "role": session["role"]}
+    
+    return {"success": False, "message": "Invalid credentials"}, 401
 
 # ================= OTP LOGIN PAGE =================
 
@@ -549,6 +583,7 @@ def add_product():
     product_names = request.form.getlist("product_name")
     prices = request.form.getlist("price")
     stocks = request.form.getlist("stock")
+    units = request.form.getlist("unit")
     latitudes = request.form.getlist("latitude")
     longitudes = request.form.getlist("longitude")
 
@@ -575,7 +610,7 @@ def add_product():
     if not allowed_file(shop_images[0].filename):
         return "Invalid shop image format.", 400
 
-    if len(prices) < len(product_names) or len(stocks) < len(product_names) or len(product_images) < len(product_names):
+    if len(prices) < len(product_names) or len(stocks) < len(product_names) or len(units) < len(product_names) or len(product_images) < len(product_names):
         return "Missing product details. Please fill all fields and upload both images.", 400
 
     shop_image = shop_images[0]
@@ -620,10 +655,11 @@ def add_product():
             product_image,
             shop_image,
             latitude,
-            longitude
+            longitude,
+            unit
         )
 
-        VALUES(?,?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?,?)
         """, (
 
             shop_names[0],
@@ -634,7 +670,8 @@ def add_product():
             product_filename,
             shop_filename,
             latitudes[0] if latitudes else "",
-            longitudes[0] if longitudes else ""
+            longitudes[0] if longitudes else "",
+            units[i] if i < len(units) else ""
 
         ))
 
@@ -694,6 +731,7 @@ def place_order():
     customer_name = session.get("user")
 
     product_name = request.form.get("product_name")
+    customer_phone = request.form.get("phone")
     address = request.form.get("address")
     payment = request.form.get("payment")
 
@@ -711,6 +749,7 @@ def place_order():
     cursor.execute("""
     INSERT INTO orders(
         customer_name,
+        customer_phone,
         product_name,
         price,
         product_image,
@@ -723,9 +762,10 @@ def place_order():
         otp_verified
     )
 
-    VALUES(?,?,?,?,?,?,?,?,?,?,?)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
     """, (
         customer_name,
+        customer_phone,
         product_name,
         price,
         product_image,
@@ -751,6 +791,77 @@ def place_order():
         delivery_otp=delivery_otp,
         rider_name=rider_name
     )
+
+
+@app.route("/online_payment/<int:product_id>", methods=["POST"])
+@role_required("customer", "seller", "admin")
+def online_payment(product_id):
+    customer_name = request.form.get("customer_name")
+    customer_phone = request.form.get("customer_phone")
+    address = request.form.get("customer_address")
+    
+    conn = sqlite3.connect(DATABASE_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM products WHERE id=?", (product_id,))
+    product = cursor.fetchone()
+    
+    if not product:
+        conn.close()
+        return "Product not found", 404
+        
+    rider_name, rider_phone = assign_delivery_rider()
+    delivery_otp = generate_delivery_otp()
+    
+    cursor.execute("""
+    INSERT INTO orders(customer_name, customer_phone, product_name, price, product_image, address, payment_method, status, rider_name, rider_phone, delivery_otp, otp_verified, created_at)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+    """, (
+        customer_name, customer_phone, product["product_name"], product["price"], product["product_image"],
+        address, "Online Paid", "Order Confirmed", rider_name, rider_phone, delivery_otp, "No",
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ))
+    conn.commit()
+    order_id = cursor.lastrowid
+    conn.close()
+    
+    return render_template("success.html", order_id=order_id, delivery_otp=delivery_otp, rider_name=rider_name)
+
+
+@app.route("/cash_on_delivery/<int:product_id>", methods=["POST"])
+@role_required("customer", "seller", "admin")
+def cash_on_delivery(product_id):
+    customer_name = request.form.get("customer_name")
+    customer_phone = request.form.get("customer_phone")
+    address = request.form.get("customer_address")
+    
+    conn = sqlite3.connect(DATABASE_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM products WHERE id=?", (product_id,))
+    product = cursor.fetchone()
+    
+    if not product:
+        conn.close()
+        return "Product not found", 404
+        
+    rider_name, rider_phone = assign_delivery_rider()
+    delivery_otp = generate_delivery_otp()
+    
+    cursor.execute("""
+    INSERT INTO orders(customer_name, customer_phone, product_name, price, product_image, address, payment_method, status, rider_name, rider_phone, delivery_otp, otp_verified, created_at)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+    """, (
+        customer_name, customer_phone, product["product_name"], product["price"], product["product_image"],
+        address, "Cash on Delivery", "Order Confirmed", rider_name, rider_phone, delivery_otp, "No",
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ))
+    conn.commit()
+    order_id = cursor.lastrowid
+    conn.close()
+    
+    return render_template("success.html", order_id=order_id, delivery_otp=delivery_otp, rider_name=rider_name)
+
 
 # ================= TRACK ORDER =================
 
@@ -1333,6 +1444,24 @@ def seller_settings():
     Seller Settings Coming Soon ⚙️
     </h1>
     '''
+@app.route("/buy")
+@role_required("customer", "seller", "admin")
+def buy():
+    product_name = request.args.get("product_name")
+    price = request.args.get("price")
+    product_image = request.args.get("product_image")
+    
+    if not product_name or not price:
+        flash("Product details missing.")
+        return redirect("/customer")
+        
+    return render_template(
+        "buy.html",
+        product_name=product_name,
+        price=price,
+        product_image=product_image
+    )
+
 @app.route("/payment_demo")
 def payment_demo():
 
@@ -1833,6 +1962,7 @@ def add_to_cart():
     price         = request.form.get("price", "0")
     product_image = request.form.get("product_image", "")
     shop_name     = request.form.get("shop_name", "")
+    unit          = request.form.get("unit", "unit")
 
     conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
@@ -1852,11 +1982,11 @@ def add_to_cart():
         flash(f"'{product_name}' quantity updated in cart.")
     else:
         cursor.execute("""
-        INSERT INTO cart(customer_name, product_id, product_name, price, product_image, shop_name, quantity, added_at)
-        VALUES(?,?,?,?,?,?,?,?)
+        INSERT INTO cart(customer_name, product_id, product_name, price, product_image, shop_name, quantity, unit, added_at)
+        VALUES(?,?,?,?,?,?,?,?,?)
         """, (
             customer, product_id, product_name, price,
-            product_image, shop_name, 1,
+            product_image, shop_name, 1, unit,
             datetime.now().strftime("%d %b %Y, %I:%M %p")
         ))
         flash(f"'{product_name}' added to cart!")
@@ -2039,6 +2169,74 @@ def api_nearby_products():
 
     results.sort(key=lambda x: x["distance_km"])
     return {"products": results, "count": len(results)}
+
+
+@app.route("/api/products")
+def api_all_products():
+    """Return all products as JSON for mobile app."""
+    conn = sqlite3.connect(DATABASE_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM products ORDER BY id DESC")
+    rows = cursor.fetchall()
+    conn.close()
+    
+    products = []
+    for r in rows:
+        products.append({
+            "id": r["id"],
+            "shopName": r["shop_name"],
+            "location": r["location"],
+            "productName": r["product_name"],
+            "price": float(r["price"] or 0),
+            "stock": r["stock"],
+            "image": f"/static/uploads/{r['product_image']}" if r["product_image"] else "assets/shop.png",
+            "latitude": r["latitude"],
+            "longitude": r["longitude"],
+            "unit": r["unit"] or "unit"
+        })
+    return {"products": products}
+
+
+@app.route("/api/orders")
+@role_required("customer", "seller", "admin")
+def api_orders():
+    """Return orders for current user as JSON."""
+    user = session.get("user")
+    role = session.get("role")
+    
+    conn = sqlite3.connect(DATABASE_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    if role == "seller":
+        # Sellers see orders for products they own (if shop_name matches or similar)
+        # For simplicity in this app, sellers see all orders or we can filter by shop_name if we knew seller's shop
+        cursor.execute("SELECT * FROM orders ORDER BY id DESC")
+    else:
+        cursor.execute("SELECT * FROM orders WHERE customer_name=? ORDER BY id DESC", (user,))
+        
+    rows = cursor.fetchall()
+    conn.close()
+    
+    orders = []
+    for r in rows:
+        orders.append({
+            "id": r["id"],
+            "productName": r["product_name"],
+            "price": float(r["price"] or 0),
+            "customerName": r["customer_name"],
+            "customerPhone": r["customer_phone"],
+            "address": r["address"],
+            "paymentMethod": r["payment_method"],
+            "status": r["status"],
+            "riderName": r["rider_name"],
+            "riderPhone": r["rider_phone"],
+            "deliveryOtp": r["delivery_otp"],
+            "otpVerified": r["otp_verified"],
+            "createdAt": r["created_at"]
+        })
+    return {"orders": orders}
 
 
 # ================= PRODUCT REVIEWS =================

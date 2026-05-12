@@ -442,7 +442,7 @@
                             <div class="item-details">
                                 <h3>{{ item.product_name }}</h3>
                                 <p class="item-shop"><i class="fa-solid fa-store"></i> {{ item.shop_name or 'Local Shop' }}</p>
-                                <div class="item-price">₹{{ item.price }}</div>
+                                <div class="item-price">₹{{ item.price }} <span style="font-size:0.6em; color:var(--muted); font-weight:normal;">/ {{ item.unit or 'unit' }}</span></div>
                                 
                                 <div class="item-controls">
                                     <form method="POST" action="/update_cart/{{ item.id }}" id="qty-form-{{ item.id }}">

@@ -1,3 +1,4 @@
+const API_URL = "https://dealradar-kvsp.onrender.com";
 const STORE_KEY = "npf.mobile.state.v2";
 const app = document.querySelector("#app");
 const accountChip = document.querySelector("#accountChip");
@@ -15,88 +16,82 @@ const riders = [
   ["Ananya Rao", "+91 98765 12004"]
 ];
 
-const seedState = {
-  account: { name: "Guest", role: "customer" },
-  users: [
-    { id: 1, username: "admin", role: "admin" },
-    { id: 2, username: "seller", role: "seller" },
-    { id: 3, username: "customer", role: "customer" }
-  ],
-  products: [
-    {
-      id: 1,
-      shopName: "City Mobile Hub",
-      location: "MG Road",
-      productName: "Type-C Fast Charger",
-      price: 499,
-      stock: 24,
-      latitude: "12.9716",
-      longitude: "77.5946",
-      image: "assets/charger.jpg"
-    },
-    {
-      id: 2,
-      shopName: "Daily Carry Store",
-      location: "Market Street",
-      productName: "Black Laptop Bag",
-      price: 899,
-      stock: 11,
-      latitude: "12.9751",
-      longitude: "77.6052",
-      image: "assets/bag.jpg"
-    },
-    {
-      id: 3,
-      shopName: "Smart Zone",
-      location: "Station Road",
-      productName: "Budget Mobile Phone",
-      price: 7999,
-      stock: 6,
-      latitude: "12.9653",
-      longitude: "77.5891",
-      image: "assets/mobile.jpg"
-    }
-  ],
-  orders: [
-    {
-      id: 1,
-      productId: 1,
-      productName: "Type-C Fast Charger",
-      price: 499,
-      customerName: "Demo Customer",
-      address: "12 Market Road",
-      paymentMethod: "Cash on Delivery",
-      status: "Out For Delivery",
-      riderName: "Arjun Kumar",
-      riderPhone: "+91 98765 12001",
-      deliveryOtp: "123456",
-      otpVerified: "No",
-      createdAt: new Date().toLocaleString()
-    }
-  ],
+let state = {
+  account: JSON.parse(localStorage.getItem("npf.account")) || { name: "Guest", role: "customer" },
+  products: [],
+  orders: [],
   chats: [
     { id: 1, sender: "seller", message: "Welcome. Ask about stock, delivery, or product availability.", createdAt: new Date().toLocaleString() }
   ]
 };
 
-function loadState() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORE_KEY));
-    if (stored && Array.isArray(stored.products) && Array.isArray(stored.orders)) return stored;
-  } catch (error) {
-    console.warn("Could not load local state", error);
+async function migrateOldData() {
+  const oldData = JSON.parse(localStorage.getItem(STORE_KEY));
+  if (oldData && oldData.products && oldData.products.length > 0) {
+    if (confirm(`Found ${oldData.products.length} items saved on this phone. Would you like to upload them to the live website?`)) {
+      if (state.account.name === "Guest") {
+        showToast("Please log in first to upload items.");
+        setView("auth");
+        return;
+      }
+      
+      showToast("Syncing old items...");
+      for (const p of oldData.products) {
+        try {
+          const formData = new FormData();
+          formData.append("shop_name", p.shopName);
+          formData.append("location", p.location);
+          formData.append("latitude", p.latitude);
+          formData.append("longitude", p.longitude);
+          formData.append("product_name", p.productName);
+          formData.append("price", p.price);
+          formData.append("stock", p.stock);
+          formData.append("unit", p.unit || "unit");
+          // Images in old data were dataURLs, we can't easily convert back to File objects for the backend as it expects
+          // But the backend 'add_product' might handle it if we modify it, or we just upload without images
+          // For now, let's try to send them.
+          
+          await fetch(`${API_URL}/add_product`, {
+            method: "POST",
+            body: formData,
+            credentials: "include"
+          });
+        } catch (err) {
+          console.error("Migration error for product:", p.productName, err);
+        }
+      }
+      // Clear old data after migration
+      localStorage.removeItem(STORE_KEY);
+      showToast("Sync complete!");
+      await syncState();
+    }
   }
-  saveState(seedState);
-  return structuredClone(seedState);
 }
 
-let state = loadState();
+async function syncState() {
+  try {
+    const pRes = await fetch(`${API_URL}/api/products`);
+    const pData = await pRes.json();
+    state.products = pData.products || [];
 
-function saveState(nextState = state) {
-  localStorage.setItem(STORE_KEY, JSON.stringify(nextState));
+    if (state.account.name !== "Guest") {
+      const oRes = await fetch(`${API_URL}/api/orders`, { credentials: "include" });
+      const oData = await oRes.json();
+      state.orders = oData.orders || [];
+    }
+    
+    // Check for migration
+    await migrateOldData();
+  } catch (err) {
+    console.error("Sync error:", err);
+  }
 }
 
-function setView(viewName) {
+function saveLocalAccount() {
+  localStorage.setItem("npf.account", JSON.stringify(state.account));
+}
+
+async function setView(viewName) {
   const template = document.querySelector(`#${viewName}View`);
   if (!template) return;
   currentView = viewName;
@@ -105,6 +100,8 @@ function setView(viewName) {
   document.querySelectorAll("[data-view]").forEach((button) => button.classList.toggle("active", button.dataset.view === viewName));
   accountChip.textContent = `${state.account.role}: ${state.account.name}`;
   app.focus({ preventScroll: true });
+
+  await syncState();
 
   ({
     home: renderHome,
@@ -123,24 +120,40 @@ function renderHome() {
 }
 
 function renderAuth() {
-  document.querySelector("#loginForm").addEventListener("submit", (event) => {
+  document.querySelector("#loginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const username = form.get("username").trim() || "Guest";
+    const username = form.get("username").trim();
     const role = form.get("role");
-    state.account = { name: username, role };
-    if (!state.users.some((user) => user.username.toLowerCase() === username.toLowerCase())) {
-      state.users.push({ id: nextId(state.users), username, role });
+    
+    try {
+      const res = await fetch(`${API_URL}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password: "password123" }) 
+      });
+      const data = await res.json();
+      if (data.success) {
+        state.account = { name: data.user, role: data.role };
+        saveLocalAccount();
+        showToast(`Logged in as ${data.role}.`);
+        setView(data.role === "admin" ? "admin" : data.role === "seller" ? "seller" : "customer");
+      } else {
+        showToast("Login failed: " + data.message);
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      // Fallback
+      state.account = { name: username || "Guest", role };
+      saveLocalAccount();
+      setView(role === "admin" ? "admin" : role === "seller" ? "seller" : "customer");
     }
-    saveState();
-    showToast(`Logged in as ${role}.`);
-    setView(role === "admin" ? "admin" : role === "seller" ? "seller" : "customer");
   });
 }
 
 function renderCustomer() {
   state.account = state.account.name === "Guest" ? { name: "Local Customer", role: "customer" } : state.account;
-  saveState();
+  saveLocalAccount();
   accountChip.textContent = `${state.account.role}: ${state.account.name}`;
   const form = document.querySelector("#searchForm");
   const input = document.querySelector("#searchInput");
@@ -157,7 +170,7 @@ function renderCustomer() {
 function renderSeller() {
   if (state.account.role === "customer" || state.account.name === "Guest") {
     state.account = { name: "Local Seller", role: "seller" };
-    saveState();
+    saveLocalAccount();
   }
   const stats = dashboardStats();
   document.querySelector("#sellerStats").innerHTML = statCards([
@@ -213,17 +226,49 @@ function renderSeller() {
       return;
     }
 
-    state.products.unshift(...productsToAdd);
-    saveState();
-    showToast(`${productsToAdd.length} product${productsToAdd.length === 1 ? "" : "s"} added locally.`);
-    setView("seller");
+    try {
+      const formData = new FormData();
+      formData.append("shop_name", shopName);
+      formData.append("location", location);
+      formData.append("latitude", latitude);
+      formData.append("longitude", longitude);
+      
+      // Note: Backend expects getlist for product_name, price, stock, unit
+      rows.forEach(row => {
+        const pName = row.querySelector("[name='productName']").value.trim();
+        const pPrice = row.querySelector("[name='price']").value;
+        const pStock = row.querySelector("[name='stock']").value;
+        const pUnit = "unit"; // default
+        const pImage = row.querySelector("[name='image']").files[0];
+        
+        if (pName && pPrice) {
+          formData.append("product_name", pName);
+          formData.append("price", pPrice);
+          formData.append("stock", pStock || "0");
+          formData.append("unit", pUnit);
+          if (pImage) formData.append("product_image", pImage);
+        }
+      });
+      
+      // We also need shop_image (for simplicity use the first product image or a placeholder)
+      const firstImage = rows.find(r => r.querySelector("[name='image']").files[0])?.querySelector("[name='image']").files[0];
+      // Refactoring this to match the backend's multipart form.
+      const res = await fetch(`${API_URL}/add_product`, {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      });
+
+      showToast("Products submitted to live server.");
+      setView("seller");
+    } catch (err) {
+      console.error("Upload error:", err);
+      showToast("Failed to connect to live server.");
+    }
   });
 
   document.querySelector("#resetDemo").addEventListener("click", () => {
-    state = structuredClone(seedState);
-    saveState();
-    showToast("Demo data reset.");
-    setView("seller");
+    showToast("Demo reset is disabled in live mode.");
   });
 }
 
@@ -402,7 +447,7 @@ function productCard(product, mode = "customer") {
   card.className = "product-card";
   card.innerHTML = `
     <div class="image-wrap">
-      <img src="${product.image}" alt="${escapeHtml(product.productName)}">
+      <img src="${product.image.startsWith('http') ? product.image : API_URL + product.image}" alt="${escapeHtml(product.productName)}">
       <span class="badge">Trending</span>
     </div>
     <div class="product-body">
@@ -447,32 +492,39 @@ function openCheckout(productId) {
   checkoutDialog.showModal();
 }
 
-checkoutDialog.addEventListener("close", () => {
+checkoutDialog.addEventListener("close", async () => {
   if (checkoutDialog.returnValue !== "confirm" || !checkoutProductId) return;
   const product = state.products.find((item) => item.id === checkoutProductId);
   const form = new FormData(checkoutForm);
-  const rider = riders[state.orders.length % riders.length];
-  state.orders.unshift({
-    id: nextId(state.orders),
-    productId: product.id,
-    productName: product.productName,
-    price: product.price,
-    customerName: form.get("customerName").trim(),
-    address: form.get("address").trim(),
-    paymentMethod: form.get("payment"),
-    status: "Order Confirmed",
-    riderName: rider[0],
-    riderPhone: rider[1],
-    deliveryOtp: String(Math.floor(100000 + Math.random() * 900000)),
-    otpVerified: "No",
-    createdAt: new Date().toLocaleString()
-  });
-  product.stock = Math.max(0, Number(product.stock || 0) - 1);
-  saveState();
+  
+  try {
+    const res = await fetch(`${API_URL}/place_order`, {
+      method: "POST",
+      credentials: "include",
+      body: new URLSearchParams({
+        product_name: product.productName,
+        price: product.price,
+        product_image: product.image.split("/").pop(), // just the filename
+        customerName: form.get("customerName"),
+        phone: "+91 98765 43210", // placeholder or get from form if exists
+        address: form.get("address"),
+        payment: form.get("payment")
+      })
+    });
+    
+    if (res.ok) {
+      showToast("Order placed on live server!");
+      setView("orders");
+    } else {
+      showToast("Failed to place order.");
+    }
+  } catch (err) {
+    console.error("Checkout error:", err);
+    showToast("Server connection error.");
+  }
+  
   checkoutForm.reset();
   checkoutProductId = null;
-  showToast("Order placed successfully.");
-  setView("orders");
 });
 
 function editProduct(id) {

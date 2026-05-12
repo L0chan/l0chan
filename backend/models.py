@@ -24,6 +24,7 @@ class Product(db.Model):
     shop_image = db.Column(db.String(255), nullable=False)
     latitude = db.Column(db.String(50), nullable=True)
     longitude = db.Column(db.String(50), nullable=True)
+    unit = db.Column(db.String(50), nullable=True)
 
 class Order(db.Model):
     __tablename__ = 'orders'

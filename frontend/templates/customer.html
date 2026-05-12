@@ -943,7 +943,7 @@
                             <div class="title">{{ product['product_name'] }}</div>
 
                             <div class="price-row">
-                                <div class="price">Rs. {{ product['price'] }}</div>
+                                <div class="price">Rs. {{ product['price'] }} <span style="font-size:0.5em; color:var(--muted); font-weight:normal;">/ {{ product['unit'] or 'unit' }}</span></div>
                                 <div class="rating">Star 4.9</div>
                             </div>
 
@@ -970,6 +970,7 @@
                                 <input type="hidden" name="price"         value="{{ product['price'] }}">
                                 <input type="hidden" name="product_image" value="{{ product['product_image'] }}">
                                 <input type="hidden" name="shop_name"     value="{{ product['shop_name'] }}">
+                                <input type="hidden" name="unit"          value="{{ product['unit'] or 'unit' }}">
                                 <button type="submit"
                                   id="add-cart-{{ product['id'] }}"
                                   style="width:100%;min-height:48px;border:1px solid rgba(124,110,245,.35);
@@ -1071,7 +1072,7 @@
                             <div class="map-popup-card">
                                 <h4>${p.product_name}</h4>
                                 <p style="font-size:0.8rem;color:#888;">${p.shop_name}</p>
-                                <div class="price">₹${p.price}</div>
+                                <div class="price">₹${p.price} <span style="font-size:0.6em; color:#888; font-weight:normal;">/ ${p.unit || 'unit'}</span></div>
                                 <p style="font-size:0.75rem;margin-bottom:8px;">📍 ${p.distance_km} km away</p>
                                 <form method="POST" action="/add_to_cart">
                                     <input type="hidden" name="product_id" value="${p.id}">

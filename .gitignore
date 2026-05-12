@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Database
+database.db
+
+# Uploads
+frontend/static/uploads/*
+!frontend/static/uploads/.gitkeep

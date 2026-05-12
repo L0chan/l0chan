@@ -488,7 +488,7 @@
 
         .product-row {
             display: grid;
-            grid-template-columns: minmax(180px, 1.2fr) minmax(130px, 0.7fr) minmax(120px, 0.6fr) minmax(180px, 1fr) 46px;
+            grid-template-columns: minmax(150px, 1.2fr) minmax(100px, 0.7fr) minmax(100px, 0.7fr) minmax(100px, 0.6fr) minmax(150px, 1fr) 46px;
             gap: 14px;
             align-items: end;
             padding: 16px;
@@ -817,6 +817,11 @@
                                     </div>
 
                                     <div class="input-box">
+                                        <label>Unit</label>
+                                        <input type="text" name="unit" placeholder="kg, unit, liter" required>
+                                    </div>
+
+                                    <div class="input-box">
                                         <label>Stock Left</label>
                                         <input type="number" name="stock" min="0" placeholder="25" required>
                                     </div>
@@ -935,6 +940,11 @@
                 <div class="input-box">
                     <label>Price</label>
                     <input type="number" name="price" min="0" step="0.01" placeholder="199" required>
+                </div>
+
+                <div class="input-box">
+                    <label>Unit</label>
+                    <input type="text" name="unit" placeholder="kg, unit, liter" required>
                 </div>
 
                 <div class="input-box">

@@ -14,3 +14,13 @@ app = Flask(
 )
 app.secret_key = os.environ.get("NPF_SECRET_KEY", "nearbypricefinder")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+# --- SESSION CONFIG FOR PRODUCTION ---
+# Ensures cookies work correctly behind proxies like Render
+if os.environ.get("RENDER") or not os.environ.get("NPF_DEV"):
+    app.config.update(
+        SESSION_COOKIE_SECURE=True,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE='Lax',
+    )
+
