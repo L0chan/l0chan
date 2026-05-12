@@ -23,39 +23,39 @@
         <span class="tile" style="--left: 82%; --size: 96px; --duration: 22s; --delay: -5s;"></span>
     </div>
 
-    <main class="auth-shell">
-        <section class="brand-panel">
-            <div class="eyebrow"><span class="pulse-dot"></span> Mobile verification</div>
-            <h1>Login with your <span>phone number.</span></h1>
-            <p class="lead">Enter your mobile number and continue with a one-time password.</p>
-            <div class="feature-stack">
-                <div class="feature-item"><span class="feature-icon" style="--accent: var(--cyan);"><i class="fa-solid fa-mobile-screen"></i></span><div><strong>Phone first</strong><span>No password needed for OTP access.</span></div></div>
-                <div class="feature-item"><span class="feature-icon" style="--accent: var(--green);"><i class="fa-solid fa-shield-halved"></i></span><div><strong>Secure session</strong><span>OTP confirms your login request.</span></div></div>
+    <main class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <img src="{{ url_for('static', filename='app-icon.svg') }}" alt="">
+                </div>
+                <h1>Phone Login</h1>
+                <p>Verify your mobile number</p>
             </div>
-        </section>
-
-        <section class="form-panel">
-            <div class="eyebrow"><span class="pulse-dot"></span> Send OTP</div>
-            <h1>Mobile <span>login</span></h1>
-            <p class="lead">Use a 10-digit mobile number for verification.</p>
 
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
-                    <div class="flash-box">{{ messages[0] }}</div>
+                    <div class="flash-box" style="margin-bottom: 20px; color: var(--np-cyan); font-weight: 700;">{{ messages[0] }}</div>
                 {% endif %}
             {% endwith %}
 
-            <form action="/send_otp" method="POST">
-                <div class="field">
-                    <label for="phone">Mobile Number</label>
-                    <input id="phone" type="tel" name="phone" placeholder="Enter mobile number" autocomplete="tel" required>
+            <form action="/send_otp" method="POST" class="auth-form">
+                <div class="input-group">
+                    <input name="phone" type="tel" placeholder=" " required id="otpPhone" value="+91">
+                    <label for="otpPhone">Mobile Number</label>
+                    <div class="input-focus"></div>
                 </div>
 
-                <button class="primary-btn" type="submit"><i class="fa-solid fa-paper-plane"></i> Send OTP</button>
+                <button type="submit" class="auth-submit">
+                    <span>Send Code</span>
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
             </form>
 
-            <div class="switch-link"><a href="/">Back to password login</a></div>
-        </section>
+            <div class="auth-footer">
+                <p><a href="/">Back to password login</a></p>
+            </div>
+        </div>
     </main>
     <script src="{{ url_for('static', filename='pwa.js') }}"></script>
 </body>

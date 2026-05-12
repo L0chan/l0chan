@@ -19,38 +19,39 @@
         <span class="tile" style="--left: 84%; --size: 94px; --duration: 22s; --delay: -5s;"></span>
     </div>
 
-    <main class="auth-shell">
-        <section class="brand-panel">
-            <div class="eyebrow"><span class="pulse-dot"></span> OTP checkpoint</div>
-            <h1>Verify your <span>secure code.</span></h1>
-            <p class="lead">Enter the OTP sent to your mobile number to open your marketplace session.</p>
-            <div class="feature-stack">
-                <div class="feature-item"><span class="feature-icon" style="--accent: var(--green);"><i class="fa-solid fa-lock"></i></span><div><strong>Protected login</strong><span>Only the verified phone can continue.</span></div></div>
+    <main class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <img src="{{ url_for('static', filename='app-icon.svg') }}" alt="">
+                </div>
+                <h1>Enter Code</h1>
+                <p>Verify your 6-digit OTP</p>
             </div>
-        </section>
-
-        <section class="form-panel">
-            <div class="eyebrow"><span class="pulse-dot"></span> Verify OTP</div>
-            <h1>Enter <span>code</span></h1>
-            <p class="lead">Use the 6-digit OTP to continue.</p>
 
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
-                    <div class="flash-box">{{ messages[0] }}</div>
+                    <div class="flash-box" style="margin-bottom: 20px; color: var(--np-cyan); font-weight: 700;">{{ messages[0] }}</div>
                 {% endif %}
             {% endwith %}
 
-            <form action="/verify_otp" method="POST">
-                <div class="field">
-                    <label for="otp">OTP Code</label>
-                    <input id="otp" type="text" name="otp" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="------" required>
+            <form action="/verify_otp" method="POST" class="auth-form">
+                <div class="input-group">
+                    <input name="otp" type="number" placeholder=" " required id="otpCode">
+                    <label for="otpCode">OTP Code</label>
+                    <div class="input-focus"></div>
                 </div>
 
-                <button class="primary-btn" type="submit"><i class="fa-solid fa-check"></i> Verify OTP</button>
+                <button type="submit" class="auth-submit">
+                    <span>Verify Code</span>
+                    <i class="fa-solid fa-check"></i>
+                </button>
             </form>
 
-            <div class="switch-link"><a href="/otp_login">Change phone number</a></div>
-        </section>
+            <div class="auth-footer">
+                <p><a href="/otp_login">Change phone number</a></p>
+            </div>
+        </div>
     </main>
 </body>
 </html>
