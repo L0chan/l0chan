@@ -24,41 +24,40 @@
         <span class="tile" style="--left: 82%; --size: 72px; --duration: 20s; --delay: -10s;"></span>
     </div>
 
-    <main class="auth-shell">
-        <section class="brand-panel">
-            <div class="eyebrow"><span class="pulse-dot"></span> Smart local shopping</div>
-            <h1>Welcome back to <span>Nearby Price Finder.</span></h1>
-            <p class="lead">Login once and jump into the right workspace automatically, whether you shop, sell, or manage the marketplace.</p>
-            <div class="feature-stack">
-                <div class="feature-item"><span class="feature-icon" style="--accent: var(--cyan);"><i class="fa-solid fa-bag-shopping"></i></span><div><strong>Customer portal</strong><span>Search, compare, buy, chat, and track orders.</span></div></div>
-                <div class="feature-item"><span class="feature-icon" style="--accent: var(--green);"><i class="fa-solid fa-store"></i></span><div><strong>Seller workspace</strong><span>Manage inventory, stock, maps, and live orders.</span></div></div>
-                <div class="feature-item"><span class="feature-icon" style="--accent: var(--amber);"><i class="fa-solid fa-chart-line"></i></span><div><strong>Admin control</strong><span>Monitor users, products, orders, and platform health.</span></div></div>
+    <main class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <img src="{{ url_for('static', filename='app-icon.svg') }}" alt="">
+                </div>
+                <h1 id="authTitle">Welcome Back</h1>
+                <p id="authSubtitle">Sign in to your account</p>
             </div>
-        </section>
 
-        <section class="form-panel">
-            <div class="eyebrow"><span class="pulse-dot"></span> Account login</div>
-            <h1>Sign <span>in</span></h1>
-            <p class="lead">Use your username and password. Your account role decides which dashboard opens.</p>
-
-            <form action="/login" method="POST">
-                <div class="field">
-                    <label for="username">Username</label>
-                    <input id="username" type="text" name="username" placeholder="Enter username" required>
+            <form action="/login" method="POST" class="auth-form">
+                <div class="input-group">
+                    <input name="username" type="text" placeholder=" " required id="loginUser">
+                    <label for="loginUser">Username</label>
+                    <div class="input-focus"></div>
+                </div>
+                
+                <div class="input-group">
+                    <input name="password" type="password" placeholder=" " required id="loginPass">
+                    <label for="loginPass">Password</label>
+                    <div class="input-focus"></div>
                 </div>
 
-                <div class="field">
-                    <label for="password">Password</label>
-                    <input id="password" type="password" name="password" placeholder="Enter password" required>
-                </div>
-
-                <button class="primary-btn" type="submit"><i class="fa-solid fa-arrow-right-to-bracket"></i> Login</button>
+                <button type="submit" class="auth-submit">
+                    <span>Login</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
             </form>
 
-            <a class="secondary-btn" href="/otp_login"><i class="fa-solid fa-mobile-screen"></i> Login with Mobile OTP</a>
-
-            <div class="switch-link">New here? <a href="/register">Create an account</a></div>
-        </section>
+            <div class="auth-footer">
+                <p>New here? <a href="/register">Create an account</a></p>
+                <p style="margin-top: 10px;"><a href="/otp_login" style="opacity: 0.7;">Login with Mobile OTP</a></p>
+            </div>
+        </div>
     </main>
     <script src="{{ url_for('static', filename='pwa.js') }}"></script>
 </body>

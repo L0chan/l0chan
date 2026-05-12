@@ -123,13 +123,36 @@ function renderHome() {
 }
 
 function renderAuth() {
-  document.querySelector("#loginForm").addEventListener("submit", async (event) => {
+  const form = document.querySelector("#loginForm");
+  const title = document.querySelector("#authTitle");
+  const subtitle = document.querySelector("#authSubtitle");
+  const toggleLogin = document.querySelector("#toggleLogin");
+  const toggleSignup = document.querySelector("#toggleSignup");
+  const gotoSignup = document.querySelector("#gotoSignup");
+  const submitBtn = form.querySelector(".auth-submit span");
+
+  let isLogin = true;
+
+  const updateUI = () => {
+    title.textContent = isLogin ? "Welcome Back" : "Create Account";
+    subtitle.textContent = isLogin ? "Login to your account to continue" : "Join our local marketplace today";
+    submitBtn.textContent = isLogin ? "Continue" : "Create Account";
+    toggleLogin.classList.toggle("active", isLogin);
+    toggleSignup.classList.toggle("active", !isLogin);
+  };
+
+  toggleLogin.onclick = () => { isLogin = true; updateUI(); };
+  toggleSignup.onclick = () => { isLogin = false; updateUI(); };
+  gotoSignup.onclick = (e) => { e.preventDefault(); isLogin = false; updateUI(); };
+
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const username = form.get("username").trim();
-    const role = form.get("role");
+    const formData = new FormData(event.currentTarget);
+    const username = formData.get("username").trim();
+    const role = formData.get("role");
 
     try {
+      showToast(isLogin ? "Signing in..." : "Creating account...");
       const res = await fetch(`${API_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -139,14 +162,14 @@ function renderAuth() {
       if (data.success) {
         state.account = { name: data.user, role: data.role };
         saveLocalAccount();
-        showToast(`Logged in as ${data.role}.`);
+        showToast(`Welcome, ${data.user}!`);
         setView(data.role === "admin" ? "admin" : data.role === "seller" ? "seller" : "customer");
       } else {
-        showToast("Login failed: " + data.message);
+        showToast(data.message || "Authentication failed");
       }
     } catch (err) {
-      console.error("Login error:", err);
-      // Fallback
+      console.error("Auth error:", err);
+      // Fallback for offline testing
       state.account = { name: username || "Guest", role };
       saveLocalAccount();
       setView(role === "admin" ? "admin" : role === "seller" ? "seller" : "customer");

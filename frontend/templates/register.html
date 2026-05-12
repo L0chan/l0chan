@@ -23,70 +23,46 @@
         <span class="tile" style="--left: 76%; --size: 64px; --duration: 17s; --delay: -6s;"></span>
     </div>
 
-    <main class="auth-shell">
-        <section class="brand-panel">
-            <div class="eyebrow"><span class="pulse-dot"></span> Join the marketplace</div>
-            <h1>Create your <span>marketplace workspace.</span></h1>
-            <p class="lead">Choose customer or seller access. The admin control panel is private and available only to the owner account.</p>
-            <div class="feature-stack">
-                <div class="feature-item"><span class="feature-icon" style="--accent: var(--cyan);"><i class="fa-solid fa-store"></i></span><div><strong>Local stores</strong><span>Connect with nearby sellers.</span></div></div>
-                <div class="feature-item"><span class="feature-icon" style="--accent: var(--green);"><i class="fa-solid fa-cart-shopping"></i></span><div><strong>Quick checkout</strong><span>Place orders in a simple flow.</span></div></div>
-                <div class="feature-item"><span class="feature-icon" style="--accent: var(--amber);"><i class="fa-solid fa-route"></i></span><div><strong>Order tracking</strong><span>Track delivery after purchase.</span></div></div>
+    <main class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <img src="{{ url_for('static', filename='app-icon.svg') }}" alt="">
+                </div>
+                <h1>Create Account</h1>
+                <p>Join the marketplace today</p>
             </div>
-        </section>
 
-        <section class="form-panel">
-            <div class="eyebrow"><span class="pulse-dot"></span> New account</div>
-            <h1>Register <span>now</span></h1>
-            <p class="lead">Choose a username, password, and the workspace you need.</p>
-
-            <form action="/register_user" method="POST">
-                <div class="field">
-                    <label for="username">Username</label>
-                    <input id="username" type="text" name="username" placeholder="Create username" required>
+            <form action="/register_user" method="POST" class="auth-form">
+                <div class="input-group">
+                    <input name="username" type="text" placeholder=" " required id="regUser">
+                    <label for="regUser">Username</label>
+                    <div class="input-focus"></div>
+                </div>
+                
+                <div class="input-group">
+                    <input name="password" type="password" placeholder=" " required id="regPass">
+                    <label for="regPass">Password</label>
+                    <div class="input-focus"></div>
                 </div>
 
-                <div class="field">
-                    <label for="password">Password</label>
-                    <input id="password" type="password" name="password" placeholder="Create password" required>
+                <div class="input-group role-group">
+                    <select name="role">
+                        <option value="customer">I am a Customer</option>
+                        <option value="seller">I am a Shopkeeper</option>
+                    </select>
                 </div>
 
-                <div class="field">
-                    <label>Account Role</label>
-                    <div class="role-grid">
-                        <label class="role-card" style="--accent: var(--cyan);">
-                            <input type="radio" name="role" value="customer" checked>
-                            <i class="fa-solid fa-bag-shopping"></i>
-                            <span>
-                                <strong>Customer</strong>
-                                <span>Search products, compare shops, order, and track delivery.</span>
-                            </span>
-                        </label>
-
-                        <label class="role-card" style="--accent: var(--green);">
-                            <input type="radio" name="role" value="seller">
-                            <i class="fa-solid fa-store"></i>
-                            <span>
-                                <strong>Seller</strong>
-                                <span>Add products, manage stock, update orders, and chat live.</span>
-                            </span>
-                        </label>
-
-                        <div class="role-card" style="--accent: var(--amber); cursor: default; opacity: 0.74;">
-                            <i class="fa-solid fa-lock"></i>
-                            <span>
-                                <strong>Admin is owner only</strong>
-                                <span>The control panel cannot be created from public registration.</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="primary-btn" type="submit"><i class="fa-solid fa-user-plus"></i> Create Account</button>
+                <button type="submit" class="auth-submit">
+                    <span>Sign Up</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
             </form>
 
-            <div class="switch-link">Already registered? <a href="/">Login here</a></div>
-        </section>
+            <div class="auth-footer">
+                <p>Already have an account? <a href="/">Login here</a></p>
+            </div>
+        </div>
     </main>
     <script src="{{ url_for('static', filename='pwa.js') }}"></script>
 </body>

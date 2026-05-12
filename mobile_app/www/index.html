@@ -107,23 +107,52 @@
   </template>
 
   <template id="authView">
-    <section class="auth-layout">
-      <div class="brand-panel">
-        <p class="eyebrow">Welcome back</p>
-        <h1>Login to your local marketplace workspace.</h1>
-        <p class="lead">Use any username and password for this offline version. Pick customer, seller, or admin to open that workspace.</p>
+    <section class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-logo">
+            <img src="assets/app-icon.svg" alt="">
+          </div>
+          <h1 id="authTitle">Welcome Back</h1>
+          <p id="authSubtitle">Login to your account to continue</p>
+        </div>
+
+        <div class="auth-tabs">
+          <button id="toggleLogin" class="active">Login</button>
+          <button id="toggleSignup">Sign Up</button>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <div class="input-group">
+            <input name="username" type="text" placeholder=" " required id="loginUser">
+            <label for="loginUser">Username</label>
+            <div class="input-focus"></div>
+          </div>
+          
+          <div class="input-group">
+            <input name="password" type="password" placeholder=" " required id="loginPass">
+            <label for="loginPass">Password</label>
+            <div class="input-focus"></div>
+          </div>
+
+          <div class="input-group role-group">
+            <select name="role">
+              <option value="customer">I am a Customer</option>
+              <option value="seller">I am a Shopkeeper</option>
+              <option value="admin">I am an Admin</option>
+            </select>
+          </div>
+
+          <button type="submit" class="auth-submit">
+            <span>Continue</span>
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          <p>Don't have an account? <a href="#" id="gotoSignup">Join now</a></p>
+        </div>
       </div>
-      <form id="loginForm" class="panel form-panel">
-        <h2>Login</h2>
-        <input name="username" placeholder="Username" value="admin" required>
-        <input name="password" type="password" placeholder="Password" value="admin@123" required>
-        <select name="role">
-          <option value="customer">Customer</option>
-          <option value="seller">Seller</option>
-          <option value="admin">Owner Admin</option>
-        </select>
-        <button type="submit">Continue</button>
-      </form>
     </section>
   </template>
 

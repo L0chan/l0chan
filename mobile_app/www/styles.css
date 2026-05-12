@@ -329,12 +329,154 @@ button:not(.brand):not(.ghost):not(.close):not(.quick-card) {
 .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin: 28px 0 16px; }
 .panel, .brand-panel { padding: 22px; }
 
-.auth-layout, .chat-layout, .dashboard-layout {
-  display: grid;
-  grid-template-columns: 0.95fr 1.05fr;
-  gap: 18px;
-  align-items: start;
+.auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  padding: 20px;
+  animation: authFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+@keyframes authFadeIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.auth-card {
+  width: min(440px, 100%);
+  padding: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  background: rgba(10, 18, 35, 0.65);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(40px);
+  text-align: center;
+  animation: authFloat 6s ease-in-out infinite;
+}
+
+@keyframes authFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.auth-header { margin-bottom: 32px; }
+.auth-logo {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  padding: 12px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--panel-a), var(--panel-b));
+  box-shadow: 0 12px 32px var(--panel-glow);
+}
+.auth-logo img { width: 100%; height: 100%; filter: brightness(0) invert(1); }
+
+.auth-header h1 { font-size: 32px; margin: 0; }
+.auth-header p { color: var(--muted); margin-top: 8px; font-size: 16px; }
+
+.auth-tabs {
+  display: flex;
+  padding: 4px;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.auth-tabs button {
+  flex: 1;
+  min-height: 40px !important;
+  border-radius: 8px !important;
+  color: var(--muted);
+  background: transparent !important;
+  font-size: 14px;
+  transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.auth-tabs button.active {
+  color: var(--ink) !important;
+  background: linear-gradient(135deg, var(--panel-a), var(--panel-b)) !important;
+  box-shadow: 0 4px 12px var(--panel-glow);
+}
+
+.auth-form { display: grid; gap: 20px; }
+
+.input-group { position: relative; width: 100%; }
+
+.input-group input {
+  width: 100%;
+  padding: 24px 16px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-size: 16px;
+  transition: 0.2s;
+}
+
+.input-group label {
+  position: absolute;
+  left: 16px;
+  top: 18px;
+  color: var(--muted);
+  font-size: 16px;
+  pointer-events: none;
+  transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-group input:focus ~ label,
+.input-group input:not(:placeholder-shown) ~ label {
+  top: 8px;
+  font-size: 12px;
+  color: var(--panel-a);
+  font-weight: 700;
+}
+
+.input-group input:focus {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--panel-a);
+}
+
+.input-focus {
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--panel-a), var(--panel-b));
+  opacity: 0;
+  transition: 0.3s;
+}
+.input-group input:focus ~ .input-focus { opacity: 0.3; filter: blur(8px); }
+
+.role-group select {
+  height: 54px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  font-size: 15px;
+}
+
+.auth-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 56px;
+  margin-top: 8px;
+  border-radius: 14px !important;
+  font-size: 18px;
+  box-shadow: 0 12px 32px var(--panel-glow);
+}
+
+.auth-submit svg { transition: transform 0.3s ease; }
+.auth-submit:hover svg { transform: translateX(4px); }
+
+.auth-footer { margin-top: 24px; color: var(--muted); font-size: 14px; }
+.auth-footer a { color: var(--panel-a); text-decoration: none; font-weight: 700; }
+.auth-footer a:hover { text-decoration: underline; }
+
+.auth-layout, .chat-layout, .dashboard-layout {
 .dashboard-layout { grid-template-columns: 250px minmax(0, 1fr); }
 
 .sidebar { position: sticky; top: 88px; display: grid; gap: 10px; padding: 16px; }
