@@ -991,13 +991,15 @@ def shopkeeper_dashboard():
 @role_required("seller")
 def delete_product(id):
 
+    seller = session.get("user")
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
 
+    # Only delete if the product belongs to this seller
     cursor.execute("""
     DELETE FROM products
-    WHERE id=?
-    """, (id,))
+    WHERE id=? AND seller_username=?
+    """, (id, seller))
 
     conn.commit()
     conn.close()
@@ -1034,8 +1036,10 @@ def edit_product(id):
 # ================= UPDATE PRODUCT =================
 
 @app.route("/update_product/<int:id>", methods=["POST"])
+@role_required("seller")
 def update_product(id):
 
+    seller = session.get("user")
     product_name = request.form.get("product_name")
     price = request.form.get("price")
     stock = request.form.get("stock")
@@ -1043,15 +1047,17 @@ def update_product(id):
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
 
+    # Only update if the product belongs to this seller
     cursor.execute("""
     UPDATE products
     SET product_name=?, price=?, stock=?
-    WHERE id=?
+    WHERE id=? AND seller_username=?
     """, (
         product_name,
         price,
         stock,
-        id
+        id,
+        seller
     ))
 
     conn.commit()
@@ -1226,28 +1232,32 @@ def delete_order(order_id):
 # ================= ANALYTICS DASHBOARD =================
 
 @app.route("/dashboard")
+@role_required("seller", "admin")
 def dashboard():
 
     conn = sqlite3.connect(DATABASE_PATH)
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    cursor.execute(
-        "SELECT COUNT(*) FROM products"
-    )
+    seller = session.get("user")
+    is_owner = session.get("is_owner_admin", False)
 
-    total_products = cursor.fetchone()[0]
-
-    cursor.execute(
-        "SELECT COUNT(*) FROM users"
-    )
-
-    total_users = cursor.fetchone()[0]
-
-    cursor.execute(
-        "SELECT COUNT(*) FROM orders"
-    )
-
-    total_orders = cursor.fetchone()[0]
+    if is_owner:
+        # Owner/admin sees global stats
+        cursor.execute("SELECT COUNT(*) FROM products")
+        total_products = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM users")
+        total_users = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM orders")
+        total_orders = cursor.fetchone()[0]
+    else:
+        # Sellers see only their own stats
+        cursor.execute("SELECT COUNT(*) FROM products WHERE seller_username=?", (seller,))
+        total_products = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM users")
+        total_users = cursor.fetchone()[0]  # total platform users is fine to show
+        cursor.execute("SELECT COUNT(*) FROM orders WHERE seller_username=?", (seller,))
+        total_orders = cursor.fetchone()[0]
 
     conn.close()
 
@@ -2195,9 +2205,8 @@ def api_orders():
     cursor = conn.cursor()
     
     if role == "seller":
-        # Sellers see orders for products they own (if shop_name matches or similar)
-        # For simplicity in this app, sellers see all orders or we can filter by shop_name if we knew seller's shop
-        cursor.execute("SELECT * FROM orders ORDER BY id DESC")
+        # Sellers only see orders for their own products (filtered by seller_username)
+        cursor.execute("SELECT * FROM orders WHERE seller_username=? ORDER BY id DESC", (user,))
     else:
         cursor.execute("SELECT * FROM orders WHERE customer_name=? ORDER BY id DESC", (user,))
         
