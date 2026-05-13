@@ -45,6 +45,7 @@
                 </div>
 
                 <form action="/place_order" method="POST">
+                    <input type="hidden" name="product_id" value="{{ product_id }}">
                     <input type="hidden" name="product_name" value="{{ product_name }}">
                     <input type="hidden" name="price" value="{{ price }}">
                     <input type="hidden" name="product_image" value="{{ product_image }}">

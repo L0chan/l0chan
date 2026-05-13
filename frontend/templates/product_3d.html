@@ -333,7 +333,7 @@
                 <img src="{{ url_for('static', filename='uploads/' ~ product['product_image']) }}" alt="{{ product['product_name'] }}">
             </div>
 
-            <a class="buy-btn" href="/buy?product_name={{ product['product_name'] }}&price={{ product['price'] }}&product_image={{ url_for('static', filename='uploads/' ~ product['product_image']) }}">Buy Now</a>
+            <a class="buy-btn" href="/buy?product_id={{ product['id'] }}&product_name={{ product['product_name'] }}&price={{ product['price'] }}&product_image={{ url_for('static', filename='uploads/' ~ product['product_image']) }}">Buy Now</a>
         </aside>
     </main>
 

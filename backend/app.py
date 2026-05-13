@@ -160,6 +160,8 @@ def _setup_database():
     _safe_alter(cursor, "orders",   "created_at",    "TEXT")
     _safe_alter(cursor, "orders",   "customer_phone","TEXT")
     _safe_alter(cursor, "cart",     "unit",          "TEXT")
+    _safe_alter(cursor, "products", "seller_username", "TEXT")
+    _safe_alter(cursor, "orders",   "seller_username", "TEXT")
 
     conn.commit()
     conn.close()
@@ -582,6 +584,7 @@ def shopkeeper():
 @role_required("seller")
 def add_product():
 
+    seller_username = session.get("user")
     shop_names = request.form.getlist("shop_name")
     locations = request.form.getlist("location")
     product_names = request.form.getlist("product_name")
@@ -660,10 +663,11 @@ def add_product():
             shop_image,
             latitude,
             longitude,
-            unit
+            unit,
+            seller_username
         )
 
-        VALUES(?,?,?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?)
         """, (
 
             shop_names[0],
@@ -675,7 +679,8 @@ def add_product():
             shop_filename,
             latitudes[0] if latitudes else "",
             longitudes[0] if longitudes else "",
-            units[i] if i < len(units) else ""
+            units[i] if i < len(units) else "",
+            seller_username
 
         ))
 
@@ -740,6 +745,7 @@ def place_order():
     payment = request.form.get("payment")
 
     price = request.form.get("price", "0")
+    product_id = request.form.get("product_id")
 
     product_image = request.form.get("product_image", "")
     rider_name, rider_phone = assign_delivery_rider()
@@ -749,6 +755,13 @@ def place_order():
         conn = sqlite3.connect(DATABASE_PATH)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
+
+        seller_username = ""
+        if product_id:
+            cursor.execute("SELECT seller_username FROM products WHERE id=?", (product_id,))
+            prod = cursor.fetchone()
+            if prod and prod["seller_username"]:
+                seller_username = prod["seller_username"]
 
         cursor.execute("""
         INSERT INTO orders(
@@ -764,9 +777,10 @@ def place_order():
             rider_phone,
             delivery_otp,
             otp_verified,
-            created_at
+            created_at,
+            seller_username
         )
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             customer_name,
             customer_phone,
@@ -780,7 +794,8 @@ def place_order():
             rider_phone,
             delivery_otp,
             "No",
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            seller_username
         ))
 
         conn.commit()
@@ -819,12 +834,12 @@ def online_payment(product_id):
     delivery_otp = generate_delivery_otp()
     
     cursor.execute("""
-    INSERT INTO orders(customer_name, customer_phone, product_name, price, product_image, address, payment_method, status, rider_name, rider_phone, delivery_otp, otp_verified, created_at)
-    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+    INSERT INTO orders(customer_name, customer_phone, product_name, price, product_image, address, payment_method, status, rider_name, rider_phone, delivery_otp, otp_verified, created_at, seller_username)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (
         customer_name, customer_phone, product["product_name"], product["price"], product["product_image"],
         address, "Online Paid", "Order Confirmed", rider_name, rider_phone, delivery_otp, "No",
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"), product["seller_username"]
     ))
     conn.commit()
     order_id = cursor.lastrowid
@@ -854,12 +869,12 @@ def cash_on_delivery(product_id):
     delivery_otp = generate_delivery_otp()
     
     cursor.execute("""
-    INSERT INTO orders(customer_name, customer_phone, product_name, price, product_image, address, payment_method, status, rider_name, rider_phone, delivery_otp, otp_verified, created_at)
-    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+    INSERT INTO orders(customer_name, customer_phone, product_name, price, product_image, address, payment_method, status, rider_name, rider_phone, delivery_otp, otp_verified, created_at, seller_username)
+    VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (
         customer_name, customer_phone, product["product_name"], product["price"], product["product_image"],
         address, "Cash on Delivery", "Order Confirmed", rider_name, rider_phone, delivery_otp, "No",
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"), product["seller_username"]
     ))
     conn.commit()
     order_id = cursor.lastrowid
@@ -948,16 +963,17 @@ def shopkeeper_dashboard():
 
     cursor = conn.cursor()
 
+    seller = session.get("user")
     cursor.execute("""
-    SELECT * FROM products
-    """)
+    SELECT * FROM products WHERE seller_username=?
+    """, (seller,))
 
     products = cursor.fetchall()
 
     cursor.execute("""
-    SELECT * FROM orders
+    SELECT * FROM orders WHERE seller_username=?
     ORDER BY id DESC
-    """)
+    """, (seller,))
 
     orders = cursor.fetchall()
 
@@ -1122,22 +1138,23 @@ def shopkeeper_orders():
 
     cursor = conn.cursor()
 
+    seller = session.get("user")
     cursor.execute("""
-    SELECT * FROM orders
+    SELECT * FROM orders WHERE seller_username=?
     ORDER BY id DESC
-    """)
+    """, (seller,))
 
     orders = cursor.fetchall()
 
     cursor.execute("""
-    SELECT COUNT(*) FROM orders
-    """)
+    SELECT COUNT(*) FROM orders WHERE seller_username=?
+    """, (seller,))
 
     total_orders = cursor.fetchone()[0]
 
     cursor.execute("""
-    SELECT SUM(price) FROM orders
-    """)
+    SELECT SUM(price) FROM orders WHERE seller_username=?
+    """, (seller,))
 
     revenue = cursor.fetchone()[0]
 
@@ -1146,8 +1163,8 @@ def shopkeeper_orders():
 
     cursor.execute("""
     SELECT COUNT(*) FROM orders
-    WHERE status='Delivered'
-    """)
+    WHERE status='Delivered' AND seller_username=?
+    """, (seller,))
 
     delivered = cursor.fetchone()[0]
 
@@ -1245,12 +1262,14 @@ def dashboard():
 @app.route("/buy")
 def buy():
 
+    product_id = request.args.get("product_id")
     product_name = request.args.get("product_name")
     price = request.args.get("price")
     product_image = request.args.get("product_image")
 
     return render_template(
         "buy.html",
+        product_id=product_id,
         product_name=product_name,
         price=price,
         product_image=product_image
@@ -1266,13 +1285,14 @@ def seller_dashboard():
 
     cursor = conn.cursor()
 
-    cursor.execute("SELECT COUNT(*) FROM products")
+    seller = session.get("user")
+    cursor.execute("SELECT COUNT(*) FROM products WHERE seller_username=?", (seller,))
     total_products = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM orders")
+    cursor.execute("SELECT COUNT(*) FROM orders WHERE seller_username=?", (seller,))
     total_orders = cursor.fetchone()[0]
 
-    cursor.execute("SELECT SUM(price) FROM orders")
+    cursor.execute("SELECT SUM(price) FROM orders WHERE seller_username=?", (seller,))
     revenue = cursor.fetchone()[0]
 
     if revenue is None:
@@ -1298,10 +1318,11 @@ def seller_products():
 
     cursor = conn.cursor()
 
+    seller = session.get("user")
     cursor.execute("""
-    SELECT * FROM products
+    SELECT * FROM products WHERE seller_username=?
     ORDER BY id DESC
-    """)
+    """, (seller,))
 
     products = cursor.fetchall()
 
@@ -1330,14 +1351,16 @@ def seller_maps():
 
     cursor = conn.cursor()
 
+    seller = session.get("user")
     cursor.execute("""
     SELECT * FROM products
     WHERE latitude IS NOT NULL
     AND latitude != ''
     AND longitude IS NOT NULL
     AND longitude != ''
+    AND seller_username = ?
     ORDER BY id DESC
-    """)
+    """, (seller,))
 
     products = cursor.fetchall()
 
@@ -1516,28 +1539,30 @@ def seller_stats():
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
+    seller = session.get("user")
     # 1. Revenue over last 7 days
     revenue_data = []
     labels = []
     for i in range(6, -1, -1):
         day = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
-        cursor.execute("SELECT SUM(price) FROM orders WHERE created_at LIKE ?", (f"{day}%",))
+        cursor.execute("SELECT SUM(price) FROM orders WHERE created_at LIKE ? AND seller_username=?", (f"{day}%", seller))
         rev = cursor.fetchone()[0] or 0
         revenue_data.append(rev)
         labels.append((datetime.now() - timedelta(days=i)).strftime("%b %d"))
 
     # 2. Order Status Breakdown
-    cursor.execute("SELECT status, COUNT(*) as count FROM orders GROUP BY status")
+    cursor.execute("SELECT status, COUNT(*) as count FROM orders WHERE seller_username=? GROUP BY status", (seller,))
     status_counts = {row["status"]: row["count"] for row in cursor.fetchall()}
 
     # 3. Top 5 Products
     cursor.execute("""
         SELECT product_name, COUNT(*) as count 
         FROM orders 
+        WHERE seller_username=?
         GROUP BY product_name 
         ORDER BY count DESC 
         LIMIT 5
-    """)
+    """, (seller,))
     top_products = [{"name": row["product_name"], "count": row["count"]} for row in cursor.fetchall()]
 
     conn.close()
@@ -1563,7 +1588,8 @@ def seller_notifications():
         while True:
             conn = sqlite3.connect(DATABASE_PATH)
             cursor = conn.cursor()
-            cursor.execute("SELECT MAX(id) FROM orders")
+            seller = session.get("user")
+            cursor.execute("SELECT MAX(id) FROM orders WHERE seller_username=?", (seller,))
             max_id = cursor.fetchone()[0] or 0
             conn.close()
 
