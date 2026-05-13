@@ -385,25 +385,17 @@
             rimLight.position.set(-4, 2, 3);
             scene.add(rimLight);
 
-            const productGeometry = new THREE.BoxGeometry(2.4, 2.9, 0.45, 6, 6, 2);
-            const edgeGeometry = new THREE.EdgesGeometry(productGeometry);
+            const productGeometry = new THREE.SphereGeometry(1.4, 64, 64);
             const textureLoader = new THREE.TextureLoader();
             const baseMaterial = new THREE.MeshStandardMaterial({
-                color: 0xeaf8ff,
+                color: 0xffffff,
                 roughness: 0.42,
                 metalness: 0.08,
             });
 
             const productMesh = new THREE.Mesh(productGeometry, baseMaterial);
+            productMesh.scale.set(1, 1.25, 1); // Make it slightly egg-shaped
             group.add(productMesh);
-
-            const edges = new THREE.LineSegments(
-                edgeGeometry,
-                new THREE.LineBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.34 })
-            );
-            group.add(edges);
-
-
 
             textureLoader.load(
                 window.productViewerData.image,
@@ -411,19 +403,9 @@
                     texture.colorSpace = THREE.SRGBColorSpace;
                     texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
                     
-                    // Map texture to all faces of the product box
-                    const materials = [
-                        new THREE.MeshStandardMaterial({ color: 0xeaf8ff, roughness: 0.42, metalness: 0.08 }), // right
-                        new THREE.MeshStandardMaterial({ color: 0xeaf8ff, roughness: 0.42, metalness: 0.08 }), // left
-                        new THREE.MeshStandardMaterial({ color: 0xeaf8ff, roughness: 0.42, metalness: 0.08 }), // top
-                        new THREE.MeshStandardMaterial({ color: 0xeaf8ff, roughness: 0.42, metalness: 0.08 }), // bottom
-                        new THREE.MeshStandardMaterial({ map: texture, roughness: 0.42, metalness: 0.08 }), // front
-                        new THREE.MeshStandardMaterial({ map: texture, roughness: 0.42, metalness: 0.08 })  // back
-                    ];
+                    baseMaterial.map = texture;
+                    baseMaterial.needsUpdate = true;
                     
-                    productMesh.material = materials;
-                    
-
                     loadingState.classList.add("hidden");
                 },
                 undefined,
