@@ -900,14 +900,30 @@ def track_order(order_id):
 
     order = cursor.fetchone()
 
+    if order is None:
+        conn.close()
+        return "Order not found", 404
+
+    # Compute this customer's personal order number (1st, 2nd, 3rd...)
+    customer_name = order["customer_name"]
+    cursor.execute("""
+    SELECT COUNT(*) FROM orders
+    WHERE customer_name=? AND id <= ?
+    """, (customer_name, order_id))
+    customer_order_number = cursor.fetchone()[0]
+
     conn.close()
 
-    if order is None:
-        return "Order not found", 404
+    # Ordinal suffix: 1st, 2nd, 3rd, 4th...
+    def ordinal(n):
+        if 11 <= (n % 100) <= 13:
+            return f"{n}th"
+        return {1: f"{n}st", 2: f"{n}nd", 3: f"{n}rd"}.get(n % 10, f"{n}th")
 
     return render_template(
         "track.html",
         order_id=order_id,
+        order_label=ordinal(customer_order_number),
         status=order["status"],
         order=order
     )
