@@ -1,77 +1,95 @@
 # Nearby Price Finder
 
-Nearby Price Finder is a Flask app for local product discovery, seller inventory management, checkout, order tracking, live chat, and an AI shopping assistant.
+Nearby Price Finder is a comprehensive, full-stack marketplace and local product discovery application. It connects customers with local shopkeepers, enabling seamless inventory management, geographical product tracking, secure authentication, and a modern shopping experience.
 
-## Run the app
+## ✨ Key Features
 
+*   **Role-Based Access Control (RBAC):** Secure, dedicated dashboards for `Customers`, `Shopkeepers`, and `Owner Admins`. Strict routing prevents unauthorized access to restricted panels.
+*   **Twilio OTP Authentication:** Phone number verification and secure login flows using SMS-based One-Time Passwords.
+*   **Interactive 3D Product Viewer:** Customers can view products in a fully interactive 360-degree 3D environment built with `Three.js`.
+*   **Geolocation & Live Maps:** Interactive maps to track order delivery status and find nearby seller locations.
+*   **AI Shopping Assistant:** Integrated OpenAI-powered chatbot to assist customers with product discovery and queries.
+*   **Clean Dark Theme UI:** A professional, fully responsive, "man-made" dark theme, offering an impressive and structured aesthetic across all devices.
+*   **Live Chat:** Real-time messaging system allowing direct communication between buyers and sellers.
+*   **Progressive Web App (PWA):** Installable on desktops and mobile devices directly from the browser for a native-like experience.
+
+## 🛠️ Technology Stack
+
+*   **Backend:** Python, Flask, Flask-SQLAlchemy (ORM), Flask-Login
+*   **Database:** SQLite (Local development)
+*   **Frontend:** HTML5, Vanilla CSS (Clean Dark Theme), JavaScript (ES6)
+*   **Libraries & APIs:** Three.js (3D Rendering), Twilio API (SMS Auth), OpenAI API (Chatbot), Leaflet.js (Maps)
+
+## 📁 Project Structure
+
+```text
+NearbyPriceFinder/
+├── backend/                  # Flask application factory, routes, and models
+│   ├── auth/                 # Authentication & OTP logic
+│   ├── shopkeeper/           # Seller inventory and dashboard logic
+│   └── models.py             # SQLAlchemy database models
+├── frontend/                 # Static assets and templates
+│   ├── static/               # CSS themes, JavaScript, and uploaded images
+│   └── templates/            # Jinja2 HTML templates
+├── mobile_app/               # Capacitor/offline-first mobile wrapper
+├── app.py                    # Main application entry point
+├── database.db               # SQLite Database
+└── requirements.txt          # Python dependencies
+```
+
+## 🚀 Run the Web App Locally
+
+1. **Install dependencies:**
 ```powershell
 python -m pip install -r requirements.txt
+```
+
+2. **Run the server:**
+```powershell
 python app.py
 ```
 
-Open:
+3. **Open in browser:**
+Navigate to `http://127.0.0.1:5000`
 
-```text
-http://127.0.0.1:5000
-```
-
-Download page:
-
-```text
-http://127.0.0.1:5000/download_app
-```
-
-Default owner admin login:
-
+### Default Admin Login
 ```text
 username: admin
 password: admin@123
 ```
+*(You can override these values using the `NPF_ADMIN_USERNAME` and `NPF_ADMIN_PASSWORD` environment variables.)*
 
-You can override those values with `NPF_ADMIN_USERNAME` and `NPF_ADMIN_PASSWORD`.
+## ⚙️ Environment Variables
 
-## Install as an app
+For production or full feature functionality, set the following environment variables (e.g., in a `.env` file):
 
-The project includes a web manifest and service worker. Run the Flask server, open the site in Chrome or Edge, then use the browser install option to add it to your desktop or mobile home screen.
+```text
+NPF_SECRET_KEY=change-this-for-production
+NPF_ADMIN_USERNAME=admin
+NPF_ADMIN_PASSWORD=admin@123
+OPENAI_API_KEY=your-openai-key
+OPENAI_MODEL=gpt-4o-mini
+TWILIO_ACCOUNT_SID=your-twilio-sid
+TWILIO_AUTH_TOKEN=your-twilio-token
+TWILIO_FROM_NUMBER=your-twilio-phone-number
+```
 
-## Create Windows download
+## 📱 Desktop & Mobile Installation
 
-Run:
+### Install as a PWA
+The project includes a web manifest and service worker. Run the Flask server, open the site in Chrome or Edge, and click the "Install App" icon in the URL bar to add it to your desktop or mobile home screen.
 
+### Create Windows Executable (.exe)
+To package the web application into a standalone Windows app:
 ```powershell
 .\make_downloads.bat
 ```
+The Windows package is created at `release\NearbyPriceFinder-Windows.zip`. Extract it and run `NearbyPriceFinder.exe`.
 
-The Windows package is created at:
+### Offline-First Mobile App (iOS / Android)
+The `mobile_app` folder contains a separate offline-first mobile version that uses `localStorage` instead of a Python backend. 
 
-```text
-release\NearbyPriceFinder-Windows.zip
-```
-
-Share that zip file. On another Windows computer, extract it and run:
-
-```text
-NearbyPriceFinder.exe
-```
-
-## Android download
-
-Android can install this project as a PWA from Chrome. See `ANDROID_DOWNLOAD.md`.
-
-For a real `.apk`, deploy the app to HTTPS and wrap it with PWABuilder or Android Studio Trusted Web Activity.
-
-## No-server Android/iOS app
-
-The `mobile_app` folder contains a separate offline-first mobile version that does not run Flask, Python, SQLite, or any server process. It stores products, orders, seller inventory, chat, and demo account state on the device with `localStorage`.
-
-Open directly:
-
-```text
-mobile_app\www\index.html
-```
-
-Generate native Android/iOS wrappers with Capacitor after installing Node.js LTS:
-
+To generate native wrappers using Capacitor (requires Node.js):
 ```powershell
 cd mobile_app
 npm install
@@ -79,34 +97,6 @@ npm run android:add
 npm run sync
 npm run open:android
 ```
+*(For iOS, replace `android` with `ios`. macOS and Xcode are required.)*
 
-iOS builds require macOS and Xcode:
-
-```bash
-cd mobile_app
-npm install
-npm run ios:add
-npm run sync
-npm run open:ios
-```
-
-You can also start from the project root:
-
-```powershell
-.\build_mobile.ps1
-```
-
-Note: because this version is truly no-server, data is local to each device. A shared live marketplace across many customers and sellers still needs a hosted backend or cloud database.
-
-## Optional environment variables
-
-```text
-NPF_SECRET_KEY=change-this-for-production
-NPF_ADMIN_USERNAME=admin
-NPF_ADMIN_PASSWORD=admin@123
-OPENAI_API_KEY=your-openai-key
-OPENAI_MODEL=gpt-5.4-mini
-TWILIO_ACCOUNT_SID=your-twilio-sid
-TWILIO_AUTH_TOKEN=your-twilio-token
-TWILIO_FROM_NUMBER=your-twilio-phone-number
-```
+*Note: The Capacitor build is a no-server client. To connect a mobile app to a shared live marketplace, you must point the mobile frontend API calls to your hosted Flask backend URL.*
