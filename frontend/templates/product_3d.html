@@ -403,23 +403,27 @@
             );
             group.add(edges);
 
-            const imagePlaneGeometry = new THREE.PlaneGeometry(2.18, 2.62);
-            const imageMaterial = new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                roughness: 0.7,
-                metalness: 0,
-            });
-            const imagePlane = new THREE.Mesh(imagePlaneGeometry, imageMaterial);
-            imagePlane.position.z = 0.236;
-            group.add(imagePlane);
+
 
             textureLoader.load(
                 window.productViewerData.image,
                 (texture) => {
                     texture.colorSpace = THREE.SRGBColorSpace;
                     texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-                    imageMaterial.map = texture;
-                    imageMaterial.needsUpdate = true;
+                    
+                    // Map texture to all faces of the product box
+                    const materials = [
+                        new THREE.MeshStandardMaterial({ color: 0xeaf8ff, roughness: 0.42, metalness: 0.08 }), // right
+                        new THREE.MeshStandardMaterial({ color: 0xeaf8ff, roughness: 0.42, metalness: 0.08 }), // left
+                        new THREE.MeshStandardMaterial({ color: 0xeaf8ff, roughness: 0.42, metalness: 0.08 }), // top
+                        new THREE.MeshStandardMaterial({ color: 0xeaf8ff, roughness: 0.42, metalness: 0.08 }), // bottom
+                        new THREE.MeshStandardMaterial({ map: texture, roughness: 0.42, metalness: 0.08 }), // front
+                        new THREE.MeshStandardMaterial({ map: texture, roughness: 0.42, metalness: 0.08 })  // back
+                    ];
+                    
+                    productMesh.material = materials;
+                    
+
                     loadingState.classList.add("hidden");
                 },
                 undefined,
