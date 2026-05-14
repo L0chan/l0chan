@@ -4,7 +4,7 @@ from flask import Flask, render_template, render_template_string, request, redir
 import base64
 from flask_cors import CORS
 import sqlite3
-import libsql
+import libsql_client
 import os
 import re
 import secrets
@@ -23,6 +23,66 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 DATABASE_AUTH_TOKEN = os.environ.get("DATABASE_AUTH_TOKEN")
 DATABASE_PATH = os.environ.get("DATABASE_PATH", str(BASE_DIR / "database.db"))
 
+class LibsqlSyncWrapper:
+    def __init__(self, client):
+        self.client = client
+    def __getattr__(self, name):
+        if name in ('commit', 'rollback'): return lambda: None
+        return getattr(self.client, name)
+    def cursor(self):
+        return LibsqlSyncCursor(self.client)
+    def __enter__(self): return self
+    def __exit__(self, *args): self.close()
+
+class LibsqlSyncCursor:
+    def __init__(self, client):
+        self.client = client
+        self.last_res = None
+        self.description = None
+        self._iterator = None
+    def execute(self, sql, params=()):
+        # Handle cases where params is None or not a tuple/list
+        if params is None: params = ()
+        if not isinstance(params, (tuple, list)): params = (params,)
+        
+        # Turso uses ? placeholders just like sqlite3
+        res = self.client.execute(sql, params)
+        self.last_res = res
+        self._iterator = iter(res.rows)
+        if res.columns:
+            self.description = [(col, None, None, None, None, None, None) for col in res.columns]
+        return self
+    def fetchone(self):
+        if not self._iterator: return None
+        try:
+            row = next(self._iterator)
+            return self._to_dict(row)
+        except StopIteration:
+            return None
+    def fetchall(self):
+        if not self.last_res: return []
+        return [self._to_dict(r) for r in self.last_res.rows]
+    def __iter__(self):
+        if not self._iterator: return
+        for row in self._iterator:
+            yield self._to_dict(row)
+    def _to_dict(self, row):
+        d = {}
+        for idx, col in enumerate(self.last_res.columns):
+            d[col] = row[idx]
+        return d
+
+def get_db_conn():
+    """Returns a database connection. Uses Turso if DATABASE_URL is set, otherwise local SQLite."""
+    if DATABASE_URL and (DATABASE_URL.startswith("libsql://") or DATABASE_URL.startswith("wss://") or DATABASE_URL.startswith("https://")):
+        client = libsql_client.create_client_sync(DATABASE_URL, auth_token=DATABASE_AUTH_TOKEN)
+        return LibsqlSyncWrapper(client)
+    else:
+        conn = sqlite3.connect(DATABASE_PATH)
+        conn.row_factory = sqlite3.Row
+        # We still use DictConnection for local SQLite to ensure consistent behavior
+        return DictConnection(conn)
+
 class DictConnection:
     def __init__(self, conn):
         self.conn = conn
@@ -30,10 +90,8 @@ class DictConnection:
         return getattr(self.conn, name)
     def cursor(self):
         return DictCursor(self.conn.cursor())
-    def __enter__(self):
-        return self
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.conn.close()
+    def __enter__(self): return self
+    def __exit__(self, *args): self.conn.close()
 
 class DictCursor:
     def __init__(self, cursor):
@@ -42,30 +100,11 @@ class DictCursor:
         return getattr(self.cursor, name)
     def fetchone(self):
         row = self.cursor.fetchone()
-        if row is None: return None
-        return self._to_dict(row)
+        return row
     def fetchall(self):
-        rows = self.cursor.fetchall()
-        return [self._to_dict(r) for r in rows]
+        return self.cursor.fetchall()
     def __iter__(self):
-        for row in self.cursor:
-            yield self._to_dict(row)
-    def _to_dict(self, row):
-        if hasattr(row, 'keys'): return row
-        d = {}
-        for idx, col in enumerate(self.cursor.description):
-            d[col[0]] = row[idx]
-        return d
-
-def get_db_conn():
-    """Returns a database connection. Uses Turso if DATABASE_URL is set, otherwise local SQLite."""
-    if DATABASE_URL and (DATABASE_URL.startswith("libsql://") or DATABASE_URL.startswith("wss://") or DATABASE_URL.startswith("https://")):
-        conn = libsql.connect(DATABASE_URL, auth_token=DATABASE_AUTH_TOKEN)
-        return DictConnection(conn)
-    else:
-        conn = sqlite3.connect(DATABASE_PATH)
-        conn.row_factory = sqlite3.Row
-        return DictConnection(conn)
+        return iter(self.cursor)
 
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER_PATH", str(FRONTEND_DIR / "static" / "uploads"))
 
