@@ -75,7 +75,12 @@ class LibsqlSyncCursor:
 def get_db_conn():
     """Returns a database connection. Uses Turso if DATABASE_URL is set, otherwise local SQLite."""
     if DATABASE_URL and (DATABASE_URL.startswith("libsql://") or DATABASE_URL.startswith("wss://") or DATABASE_URL.startswith("https://")):
-        client = libsql_client.create_client_sync(DATABASE_URL, auth_token=DATABASE_AUTH_TOKEN)
+        # Convert libsql:// or wss:// to https:// for better stability on Render
+        url = DATABASE_URL
+        if url.startswith("libsql://"): url = url.replace("libsql://", "https://")
+        if url.startswith("wss://"): url = url.replace("wss://", "https://")
+        
+        client = libsql_client.create_client_sync(url, auth_token=DATABASE_AUTH_TOKEN)
         return LibsqlSyncWrapper(client)
     else:
         conn = sqlite3.connect(DATABASE_PATH)
