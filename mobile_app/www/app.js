@@ -105,6 +105,7 @@ async function setView(viewName) {
   app.focus({ preventScroll: true });
 
   await syncState();
+  updateNavVisibility();
 
   ({
     home: renderHome,
@@ -121,6 +122,43 @@ async function setView(viewName) {
 
 function renderHome() {
   renderProductGrid(document.querySelector("#featuredProducts"), state.products.slice(0, 6));
+  
+  // Hide seller buttons if customer
+  const sellerBtns = document.querySelectorAll("[data-view='seller'], [data-view='analytics'], [data-view='admin']");
+  sellerBtns.forEach(btn => {
+    if (state.account.role === 'customer') {
+      // If it's a quick card or hero button, hide it
+      if (btn.classList.contains('quick-card') || btn.closest('.hero-actions')) {
+        btn.style.display = 'none';
+      }
+    } else {
+      btn.style.display = '';
+    }
+  });
+}
+
+function updateNavVisibility() {
+  const role = state.account.role;
+  const navLinks = document.querySelectorAll(".nav-links [data-view], .tabs [data-view]");
+  
+  navLinks.forEach(link => {
+    const view = link.dataset.view;
+    if (role === 'customer') {
+      if (['seller', 'analytics', 'admin'].includes(view)) {
+        link.style.display = 'none';
+      } else {
+        link.style.display = '';
+      }
+    } else if (role === 'seller') {
+      if (['admin'].includes(view)) {
+        link.style.display = 'none';
+      } else {
+        link.style.display = '';
+      }
+    } else {
+      link.style.display = '';
+    }
+  });
 }
 
 function renderAuth() {

@@ -1,12 +1,12 @@
-﻿const { useEffect, useMemo, useRef, useState } = React;
+const { useEffect, useMemo, useRef, useState } = React;
 
         const account = window.NPF_ACCOUNT || { role: "customer", user: "Guest", isOwnerAdmin: false };
 
         const navLinks = [
             { label: "Customer", href: "/customer" },
-            { label: "Shopkeeper", href: "/shopkeeper" },
-            { label: "Dashboard", href: "/shopkeeper_dashboard" },
-            { label: "Analytics", href: "/dashboard" },
+            { label: "Shopkeeper", href: "/shopkeeper", roles: ["seller", "admin"] },
+            { label: "Dashboard", href: "/shopkeeper_dashboard", roles: ["seller", "admin"] },
+            { label: "Analytics", href: "/dashboard", roles: ["seller", "admin"] },
             { label: "Owner Panel", href: "/admin", roles: ["admin"] },
             { label: "Live Chat", href: "/live_chat" },
             { label: "Logout", href: "/logout" },
@@ -342,28 +342,30 @@
 
         function SearchModalContent() {
             const [query, setQuery] = useState("");
+            const [results, setResults] = useState([]);
+            const [loading, setLoading] = useState(false);
             const normalized = query.trim().toLowerCase();
-            const result = useMemo(() => {
-                if (!normalized) return null;
 
-                if (normalized === "rice") {
-                    return {
-                        title: "Rice available nearby",
-                        lines: ["Fresh Mart - Rs. 50 - 1 KM", "Super Shop - Rs. 55 - 2 KM"],
-                    };
+            useEffect(() => {
+                if (!normalized) {
+                    setResults([]);
+                    return;
                 }
 
-                if (normalized === "milk") {
-                    return {
-                        title: "Milk available nearby",
-                        lines: ["Dairy Fresh - Rs. 30 - 500 m"],
-                    };
-                }
+                const delayDebounceFn = setTimeout(async () => {
+                    setLoading(true);
+                    try {
+                        const response = await fetch(`/api/nearby_products?q=${encodeURIComponent(normalized)}&lat=0&lng=0&radius_km=10000`);
+                        const data = await response.json();
+                        setResults(data.products || []);
+                    } catch (error) {
+                        console.error("Search error:", error);
+                    } finally {
+                        setLoading(false);
+                    }
+                }, 300);
 
-                return {
-                    title: "Product not found nearby",
-                    lines: ["Try rice or milk in this demo search."],
-                };
+                return () => clearTimeout(delayDebounceFn);
             }, [normalized]);
 
             return (
@@ -372,17 +374,35 @@
                         className="modal-input"
                         value={query}
                         onChange={(event) => setQuery(event.target.value)}
-                        placeholder="Search product"
+                        placeholder="Search product (e.g. egg, milk, laptop)"
                         autoFocus
                     />
-                    {result && (
-                        <div className="result-card">
-                            <strong>{result.title}</strong>
-                            {result.lines.map((line) => (
-                                <div key={line}>{line}</div>
-                            ))}
-                        </div>
-                    )}
+                    <div className="search-results-modal" style={{marginTop: '20px', maxHeight: '400px', overflowY: 'auto'}}>
+                        {loading && <div style={{textAlign: 'center', padding: '20px'}}>Searching...</div>}
+                        {!loading && normalized && results.length === 0 && (
+                            <div style={{textAlign: 'center', padding: '20px', color: '#888'}}>No products found nearby.</div>
+                        )}
+                        {results.map((product) => (
+                            <a 
+                                href={`/search?search=${encodeURIComponent(product.product_name)}`} 
+                                key={product.id} 
+                                className="result-card"
+                                style={{display: 'block', marginBottom: '10px', textDecoration: 'none'}}
+                            >
+                                <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
+                                    <img 
+                                        src={`/static/uploads/${product.product_image}`} 
+                                        style={{width: '50px', height: '50px', borderRadius: '10px', objectFit: 'cover'}}
+                                        onError={(e) => {e.target.src = '/static/app-icon.svg'}}
+                                    />
+                                    <div>
+                                        <strong>{product.product_name}</strong>
+                                        <div style={{fontSize: '12px', color: '#22d3ee'}}>Rs. {product.price} - {product.shop_name}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        ))}
+                    </div>
                 </>
             );
         }
@@ -623,7 +643,9 @@
                                 </p>
                                 <div className="actions">
                                     <a className="btn primary" href="/customer">Explore Products</a>
-                                    <a className="btn secondary" href="/shopkeeper">Upload Products</a>
+                                    {account.role !== 'customer' && (
+                                        <a className="btn secondary" href="/shopkeeper">Upload Products</a>
+                                    )}
                                 </div>
                             </div>
 

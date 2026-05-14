@@ -694,10 +694,18 @@ def add_product():
 @app.route("/customer")
 @role_required("customer", "admin")
 def customer():
+    conn = sqlite3.connect(DATABASE_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    # Show last 24 products by default
+    cursor.execute("SELECT * FROM products ORDER BY id DESC LIMIT 24")
+    products = cursor.fetchall()
+    conn.close()
 
     return render_template(
         "customer.html",
-        products=[]
+        products=products
     )
 
 # ================= SEARCH PRODUCTS =================
@@ -705,30 +713,36 @@ def customer():
 @app.route("/search", methods=["GET", "POST"])
 @role_required("customer", "admin")
 def search():
-
     products = []
+    search_term = ""
 
     if request.method == "POST":
+        search_term = request.form.get("search", "").strip()
+    else:
+        search_term = request.args.get("search", "").strip()
 
-        search = request.form.get("search")
-
+    if search_term:
         conn = sqlite3.connect(DATABASE_PATH)
         conn.row_factory = sqlite3.Row
-
         cursor = conn.cursor()
 
+        # Using lower() for more robust case-insensitive matching
         cursor.execute("""
         SELECT * FROM products
-        WHERE product_name LIKE ?
-        """, ('%' + search + '%',))
+        WHERE lower(product_name) LIKE ?
+        OR lower(shop_name) LIKE ?
+        OR lower(location) LIKE ?
+        """, (f'%{search_term.lower()}%', f'%{search_term.lower()}%', f'%{search_term.lower()}%'))
 
         products = cursor.fetchall()
-
         conn.close()
+    else:
+        return redirect("/customer")
 
     return render_template(
         "customer.html",
-        products=products
+        products=products,
+        search_term=search_term
     )
 
 # ================= PLACE ORDER =================
