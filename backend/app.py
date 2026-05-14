@@ -1755,7 +1755,7 @@ def seller_notifications():
 # ================= INVOICE GENERATOR =================
 
 @app.route("/invoice/<int:order_id>")
-@role_required("seller")
+@role_required("customer", "seller", "admin")
 def generate_invoice(order_id):
     conn = get_db_conn()
     # conn.row_factory handled in get_db_conn()
@@ -1767,6 +1767,23 @@ def generate_invoice(order_id):
 
     if not order:
         return "Order not found", 404
+
+    # Security check: Ensure the user is authorized to view this invoice
+    current_user = session.get("user")
+    current_role = session.get("role")
+    
+    is_owner = (
+        current_role == "admin" or 
+        (order['customer_name'] and order['customer_name'] == current_user) or
+        (order['seller_username'] and order['seller_username'] == current_user)
+    )
+
+    if not is_owner:
+        # Special case: If order has no names (legacy/broken data), we allow viewing if they have the link
+        if order['customer_name'] or order['seller_username']:
+            flash("You are not authorized to view this invoice.")
+            return redirect("/")
+
 
     return render_template_string("""
     <!DOCTYPE html>
