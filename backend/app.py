@@ -63,8 +63,8 @@ def get_db_conn():
         conn = libsql.connect(DATABASE_URL, auth_token=DATABASE_AUTH_TOKEN)
         return DictConnection(conn)
     else:
-        conn = get_db_conn()
-        # conn.row_factory handled in get_db_conn()
+        conn = sqlite3.connect(DATABASE_PATH)
+        conn.row_factory = sqlite3.Row
         return DictConnection(conn)
 
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER_PATH", str(FRONTEND_DIR / "static" / "uploads"))
