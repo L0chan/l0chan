@@ -34,34 +34,47 @@ class PostgresWrapper:
     def __enter__(self): return self
     def __exit__(self, *args): self.conn.close()
 
+class PostgresRow:
+    def __init__(self, data):
+        self.data = data
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return list(self.data.values())[key]
+        return self.data[key]
+    def keys(self):
+        return self.data.keys()
+    def __iter__(self):
+        return iter(self.data.values())
+    def __len__(self):
+        return len(self.data)
+
 class PostgresCursor:
     def __init__(self, cursor):
         self.cursor = cursor
     def __getattr__(self, name):
         return getattr(self.cursor, name)
     def execute(self, sql, params=()):
-        # Convert SQLite '?' placeholders to Postgres '%s'
-        # We use regex to avoid replacing '?' inside quotes if possible
-        # For simplicity in this app, we'll do a direct replace since SQL is controlled
         sql = sql.replace('?', '%s')
-        
-        # PostgreSQL doesn't like AUTOINCREMENT in CREATE TABLE, it uses SERIAL
-        # But setup_database only runs if DB is empty. 
-        # We'll handle common SQLite-isms here.
         sql = sql.replace('AUTOINCREMENT', '')
         sql = sql.replace('INTEGER PRIMARY KEY', 'SERIAL PRIMARY KEY')
         
+        # PostgreSQL LIKE is case-sensitive, so we use ILIKE for search parity with SQLite
+        # Use regex to be safer with spaces/case
+        sql = re.sub(r'\bLIKE\b', 'ILIKE', sql, flags=re.IGNORECASE)
+        
         if params is None: params = ()
         if not isinstance(params, (tuple, list)): params = (params,)
-        
         self.cursor.execute(sql, params)
         return self
     def fetchone(self):
-        return self.cursor.fetchone()
+        row = self.cursor.fetchone()
+        return PostgresRow(row) if row else None
     def fetchall(self):
-        return self.cursor.fetchall()
+        rows = self.cursor.fetchall()
+        return [PostgresRow(r) for r in rows]
     def __iter__(self):
-        return iter(self.cursor)
+        for row in self.cursor:
+            yield PostgresRow(row)
 
 def get_db_conn():
     """Returns a database connection. Uses Postgres if DATABASE_URL starts with postgres://, otherwise local SQLite."""
