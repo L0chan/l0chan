@@ -18,8 +18,11 @@ from werkzeug.utils import secure_filename
 BASE_DIR = Path(__file__).resolve().parents[1]
 FRONTEND_DIR = BASE_DIR / "frontend"
 RELEASE_DIR = BASE_DIR / "release"
-DATABASE_PATH = str(BASE_DIR / "database.db")
-UPLOAD_FOLDER = str(FRONTEND_DIR / "static" / "uploads")
+DATABASE_PATH = os.environ.get("DATABASE_URL", str(BASE_DIR / "database.db"))
+# Handle 'sqlite:///' prefix if provided by Render or other services
+if DATABASE_PATH.startswith("sqlite:///"):
+    DATABASE_PATH = DATABASE_PATH.replace("sqlite:///", "")
+UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER_PATH", str(FRONTEND_DIR / "static" / "uploads"))
 
 from backend.app_factory import app
 CORS(app, supports_credentials=True)
