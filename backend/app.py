@@ -4,6 +4,7 @@ from flask import Flask, render_template, render_template_string, request, redir
 import base64
 from flask_cors import CORS
 import sqlite3
+import libsql
 import os
 import re
 import secrets
@@ -18,10 +19,54 @@ from werkzeug.utils import secure_filename
 BASE_DIR = Path(__file__).resolve().parents[1]
 FRONTEND_DIR = BASE_DIR / "frontend"
 RELEASE_DIR = BASE_DIR / "release"
-DATABASE_PATH = os.environ.get("DATABASE_URL", str(BASE_DIR / "database.db"))
-# Handle 'sqlite:///' prefix if provided by Render or other services
-if DATABASE_PATH.startswith("sqlite:///"):
-    DATABASE_PATH = DATABASE_PATH.replace("sqlite:///", "")
+DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_AUTH_TOKEN = os.environ.get("DATABASE_AUTH_TOKEN")
+DATABASE_PATH = os.environ.get("DATABASE_PATH", str(BASE_DIR / "database.db"))
+
+class DictConnection:
+    def __init__(self, conn):
+        self.conn = conn
+    def __getattr__(self, name):
+        return getattr(self.conn, name)
+    def cursor(self):
+        return DictCursor(self.conn.cursor())
+    def __enter__(self):
+        return self
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.conn.close()
+
+class DictCursor:
+    def __init__(self, cursor):
+        self.cursor = cursor
+    def __getattr__(self, name):
+        return getattr(self.cursor, name)
+    def fetchone(self):
+        row = self.cursor.fetchone()
+        if row is None: return None
+        return self._to_dict(row)
+    def fetchall(self):
+        rows = self.cursor.fetchall()
+        return [self._to_dict(r) for r in rows]
+    def __iter__(self):
+        for row in self.cursor:
+            yield self._to_dict(row)
+    def _to_dict(self, row):
+        if hasattr(row, 'keys'): return row
+        d = {}
+        for idx, col in enumerate(self.cursor.description):
+            d[col[0]] = row[idx]
+        return d
+
+def get_db_conn():
+    """Returns a database connection. Uses Turso if DATABASE_URL is set, otherwise local SQLite."""
+    if DATABASE_URL and (DATABASE_URL.startswith("libsql://") or DATABASE_URL.startswith("wss://") or DATABASE_URL.startswith("https://")):
+        conn = libsql.connect(DATABASE_URL, auth_token=DATABASE_AUTH_TOKEN)
+        return DictConnection(conn)
+    else:
+        conn = get_db_conn()
+        # conn.row_factory handled in get_db_conn()
+        return DictConnection(conn)
+
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER_PATH", str(FRONTEND_DIR / "static" / "uploads"))
 
 from backend.app_factory import app
@@ -52,7 +97,7 @@ if not os.path.exists(UPLOAD_FOLDER):
 def _setup_database():
     """Create all tables with full columns on first run.
     ALTER TABLE is used only to add genuinely new columns to existing DBs."""
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_conn()
     cursor = conn.cursor()
 
     # USERS TABLE — full schema
@@ -339,10 +384,10 @@ def login():
 
         return redirect("/admin")
 
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_conn()
     cursor = conn.cursor()
 
-    conn.row_factory = sqlite3.Row
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -383,8 +428,8 @@ def api_login():
     username = data.get("username")
     password = data.get("password")
     
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE username=?", (username,))
     user = cursor.fetchone()
@@ -543,7 +588,7 @@ def register_user():
     password = request.form["password"]
     role = normalize_public_role(request.form.get("role"))
 
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_conn()
     cursor = conn.cursor()
 
     from werkzeug.security import generate_password_hash
@@ -628,7 +673,7 @@ def add_product():
     shop_path = os.path.join(UPLOAD_FOLDER, shop_filename)
     shop_image.save(shop_path)
 
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_conn()
     cursor = conn.cursor()
 
     for i in product_rows:
@@ -697,8 +742,8 @@ def add_product():
 @app.route("/customer")
 @role_required("customer", "admin")
 def customer():
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
     
     # Show last 24 products by default
@@ -725,8 +770,8 @@ def search():
         search_term = request.args.get("search", "").strip()
 
     if search_term:
-        conn = sqlite3.connect(DATABASE_PATH)
-        conn.row_factory = sqlite3.Row
+        conn = get_db_conn()
+        # conn.row_factory handled in get_db_conn()
         cursor = conn.cursor()
 
         # Using lower() for more robust case-insensitive matching
@@ -769,8 +814,8 @@ def place_order():
     delivery_otp = generate_delivery_otp()
 
     try:
-        conn = sqlite3.connect(DATABASE_PATH)
-        conn.row_factory = sqlite3.Row
+        conn = get_db_conn()
+        # conn.row_factory handled in get_db_conn()
         cursor = conn.cursor()
 
         seller_username = ""
@@ -837,8 +882,8 @@ def online_payment(product_id):
     customer_phone = request.form.get("customer_phone")
     address = request.form.get("customer_address")
     
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM products WHERE id=?", (product_id,))
     product = cursor.fetchone()
@@ -872,8 +917,8 @@ def cash_on_delivery(product_id):
     customer_phone = request.form.get("customer_phone")
     address = request.form.get("customer_address")
     
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM products WHERE id=?", (product_id,))
     product = cursor.fetchone()
@@ -905,8 +950,8 @@ def cash_on_delivery(product_id):
 @app.route("/track/<int:order_id>")
 def track_order(order_id):
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
 
     cursor = conn.cursor()
 
@@ -949,8 +994,8 @@ def track_order(order_id):
 @app.route("/track_status/<int:order_id>")
 def track_status(order_id):
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
 
     cursor = conn.cursor()
 
@@ -991,8 +1036,8 @@ def track_status(order_id):
 @role_required("seller")
 def shopkeeper_dashboard():
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
 
     cursor = conn.cursor()
 
@@ -1025,7 +1070,7 @@ def shopkeeper_dashboard():
 def delete_product(id):
 
     seller = session.get("user")
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_conn()
     cursor = conn.cursor()
 
     # Only delete if the product belongs to this seller
@@ -1044,8 +1089,8 @@ def delete_product(id):
 @app.route("/edit_product/<int:id>")
 def edit_product(id):
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
 
     cursor = conn.cursor()
 
@@ -1077,7 +1122,7 @@ def update_product(id):
     price = request.form.get("price")
     stock = request.form.get("stock")
 
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_conn()
     cursor = conn.cursor()
 
     # Only update if the product belongs to this seller
@@ -1109,7 +1154,7 @@ def update_order_status(id):
         flash("Enter the customer's delivery OTP to mark this order as Delivered.")
         return redirect("/shopkeeper_dashboard")
 
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_conn()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -1132,8 +1177,8 @@ def confirm_delivery(id):
 
     entered_otp = request.form.get("delivery_otp", "").strip()
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -1172,8 +1217,8 @@ def confirm_delivery(id):
 @role_required("seller")
 def shopkeeper_orders():
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
 
     cursor = conn.cursor()
 
@@ -1229,7 +1274,7 @@ def update_status(order_id):
         flash("Use the delivery OTP confirmation form to mark an order as Delivered.")
         return redirect("/shopkeeper_orders")
 
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_conn()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -1249,7 +1294,7 @@ def update_status(order_id):
 @role_required("seller")
 def delete_order(order_id):
 
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_conn()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -1268,8 +1313,8 @@ def delete_order(order_id):
 @role_required("seller", "admin")
 def dashboard():
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
 
     seller = session.get("user")
@@ -1324,8 +1369,8 @@ def buy():
 @role_required("seller")
 def seller_dashboard():
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
 
     cursor = conn.cursor()
 
@@ -1357,8 +1402,8 @@ def seller_dashboard():
 @role_required("seller")
 def seller_products():
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
 
     cursor = conn.cursor()
 
@@ -1390,8 +1435,8 @@ def seller_orders():
 @role_required("seller")
 def seller_maps():
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
 
     cursor = conn.cursor()
 
@@ -1421,8 +1466,8 @@ def seller_maps():
 @role_required("customer", "seller", "admin")
 def product_map(product_id):
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
 
     cursor = conn.cursor()
 
@@ -1450,8 +1495,8 @@ def product_map(product_id):
 @role_required("customer", "seller", "admin")
 def product_3d(product_id):
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
 
     cursor = conn.cursor()
 
@@ -1513,8 +1558,8 @@ def find_matching_products(user_message):
         if len(word) > 2 and word not in ignored_words
     ]
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
 
     products = []
@@ -1579,8 +1624,8 @@ def local_chatbot_reply(user_message, products):
 def seller_stats():
     # In a real app, we'd filter by the current seller's products
     # For this project, we'll show global stats for the dashboard demo
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
 
     seller = session.get("user")
@@ -1630,7 +1675,7 @@ def seller_notifications():
         # Simple polling-based SSE for development
         last_order_id = 0
         while True:
-            conn = sqlite3.connect(DATABASE_PATH)
+            conn = get_db_conn()
             cursor = conn.cursor()
             seller = session.get("user")
             cursor.execute("SELECT MAX(id) FROM orders WHERE seller_username=?", (seller,))
@@ -1654,8 +1699,8 @@ def seller_notifications():
 @app.route("/invoice/<int:order_id>")
 @role_required("seller")
 def generate_invoice(order_id):
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM orders WHERE id=?", (order_id,))
@@ -1825,8 +1870,8 @@ def live_chat():
 @app.route("/chat_messages")
 def chat_messages():
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -1865,7 +1910,7 @@ def send_message():
     if not message:
         return {"success": False, "error": "Message is required."}, 400
 
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_conn()
 
     cursor = conn.cursor()
 
@@ -1910,8 +1955,8 @@ def logout():
 @role_required("admin")
 def admin():
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
 
     cursor = conn.cursor()
 
@@ -1960,8 +2005,8 @@ def admin():
 @role_required("customer", "admin")
 def view_cart():
     customer = session.get("user", "Guest")
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -1989,8 +2034,8 @@ def add_to_cart():
     shop_name     = request.form.get("shop_name", "")
     unit          = request.form.get("unit", "unit")
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
 
     # If already in cart, increment quantity
@@ -2026,7 +2071,7 @@ def add_to_cart():
 @role_required("customer", "admin")
 def remove_from_cart(item_id):
     customer = session.get("user", "Guest")
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_conn()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM cart WHERE id=? AND customer_name=?", (item_id, customer))
     conn.commit()
@@ -2043,7 +2088,7 @@ def update_cart(item_id):
     if qty < 1:
         qty = 1
 
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_conn()
     cursor = conn.cursor()
     cursor.execute("""
     UPDATE cart SET quantity=? WHERE id=? AND customer_name=?
@@ -2065,8 +2110,8 @@ def checkout():
         return redirect("/cart")
 
     try:
-        conn = sqlite3.connect(DATABASE_PATH)
-        conn.row_factory = sqlite3.Row
+        conn = get_db_conn()
+        # conn.row_factory handled in get_db_conn()
         cursor = conn.cursor()
 
         cursor.execute("SELECT * FROM cart WHERE customer_name=?", (customer,))
@@ -2153,8 +2198,8 @@ def api_nearby_products():
     radius_km = float(request.args.get("radius_km", 15))
     search_q  = request.args.get("q", "").strip()
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
 
     if search_q:
@@ -2203,8 +2248,8 @@ def api_nearby_products():
 @app.route("/api/products")
 def api_all_products():
     """Return all products as JSON for mobile app."""
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM products ORDER BY id DESC")
     rows = cursor.fetchall()
@@ -2234,8 +2279,8 @@ def api_orders():
     user = session.get("user")
     role = session.get("role")
     
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
     
     if role == "seller":
@@ -2272,8 +2317,8 @@ def api_orders():
 @app.route("/leave_review/<int:order_id>")
 @role_required("customer", "admin")
 def leave_review_page(order_id):
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM orders WHERE id=?", (order_id,))
     order = cursor.fetchone()
@@ -2297,8 +2342,8 @@ def submit_review(order_id):
     rating      = int(request.form.get("rating", 5))
     review_text = request.form.get("review_text", "").strip()
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
 
     cursor.execute("SELECT product_name FROM orders WHERE id=?", (order_id,))
@@ -2324,8 +2369,8 @@ def submit_review(order_id):
 def api_product_reviews():
     """Return reviews for a product by name."""
     product_name = request.args.get("product", "")
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db_conn()
+    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
     cursor.execute("""
     SELECT customer_name, rating, review_text, created_at
