@@ -219,7 +219,8 @@ def _safe_alter(cursor, table, column, definition):
     """Add a column to an existing table; silently skip if already present."""
     try:
         cursor.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
-    except sqlite3.OperationalError:
+    except Exception:
+        # Ignore errors (like 'duplicate column') to allow smooth startup on both SQLite and Turso
         pass
 
 
