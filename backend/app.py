@@ -4,7 +4,8 @@ from flask import Flask, render_template, render_template_string, request, redir
 import base64
 from flask_cors import CORS
 import sqlite3
-import libsql_client
+import psycopg2
+from psycopg2 import extras
 import os
 import re
 import secrets
@@ -23,69 +24,54 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 DATABASE_AUTH_TOKEN = os.environ.get("DATABASE_AUTH_TOKEN")
 DATABASE_PATH = os.environ.get("DATABASE_PATH", str(BASE_DIR / "database.db"))
 
-class LibsqlSyncWrapper:
-    def __init__(self, client):
-        self.client = client
+class PostgresWrapper:
+    def __init__(self, conn):
+        self.conn = conn
     def __getattr__(self, name):
-        if name in ('commit', 'rollback'): return lambda: None
-        return getattr(self.client, name)
+        return getattr(self.conn, name)
     def cursor(self):
-        return LibsqlSyncCursor(self.client)
+        return PostgresCursor(self.conn.cursor(cursor_factory=extras.RealDictCursor))
     def __enter__(self): return self
-    def __exit__(self, *args): self.close()
+    def __exit__(self, *args): self.conn.close()
 
-class LibsqlSyncCursor:
-    def __init__(self, client):
-        self.client = client
-        self.last_res = None
-        self.description = None
-        self._iterator = None
+class PostgresCursor:
+    def __init__(self, cursor):
+        self.cursor = cursor
+    def __getattr__(self, name):
+        return getattr(self.cursor, name)
     def execute(self, sql, params=()):
-        # Handle cases where params is None or not a tuple/list
+        # Convert SQLite '?' placeholders to Postgres '%s'
+        # We use regex to avoid replacing '?' inside quotes if possible
+        # For simplicity in this app, we'll do a direct replace since SQL is controlled
+        sql = sql.replace('?', '%s')
+        
+        # PostgreSQL doesn't like AUTOINCREMENT in CREATE TABLE, it uses SERIAL
+        # But setup_database only runs if DB is empty. 
+        # We'll handle common SQLite-isms here.
+        sql = sql.replace('AUTOINCREMENT', '')
+        sql = sql.replace('INTEGER PRIMARY KEY', 'SERIAL PRIMARY KEY')
+        
         if params is None: params = ()
         if not isinstance(params, (tuple, list)): params = (params,)
         
-        # Turso uses ? placeholders just like sqlite3
-        res = self.client.execute(sql, params)
-        self.last_res = res
-        self._iterator = iter(res.rows)
-        if res.columns:
-            self.description = [(col, None, None, None, None, None, None) for col in res.columns]
+        self.cursor.execute(sql, params)
         return self
     def fetchone(self):
-        if not self._iterator: return None
-        try:
-            row = next(self._iterator)
-            return self._to_dict(row)
-        except StopIteration:
-            return None
+        return self.cursor.fetchone()
     def fetchall(self):
-        if not self.last_res: return []
-        return [self._to_dict(r) for r in self.last_res.rows]
+        return self.cursor.fetchall()
     def __iter__(self):
-        if not self._iterator: return
-        for row in self._iterator:
-            yield self._to_dict(row)
-    def _to_dict(self, row):
-        d = {}
-        for idx, col in enumerate(self.last_res.columns):
-            d[col] = row[idx]
-        return d
+        return iter(self.cursor)
 
 def get_db_conn():
-    """Returns a database connection. Uses Turso if DATABASE_URL is set, otherwise local SQLite."""
-    if DATABASE_URL and (DATABASE_URL.startswith("libsql://") or DATABASE_URL.startswith("wss://") or DATABASE_URL.startswith("https://")):
-        # Convert libsql:// or wss:// to https:// for better stability on Render
-        url = DATABASE_URL
-        if url.startswith("libsql://"): url = url.replace("libsql://", "https://")
-        if url.startswith("wss://"): url = url.replace("wss://", "https://")
-        
-        client = libsql_client.create_client_sync(url, auth_token=DATABASE_AUTH_TOKEN)
-        return LibsqlSyncWrapper(client)
+    """Returns a database connection. Uses Postgres if DATABASE_URL starts with postgres://, otherwise local SQLite."""
+    if DATABASE_URL and (DATABASE_URL.startswith("postgres://") or DATABASE_URL.startswith("postgresql://")):
+        conn = psycopg2.connect(DATABASE_URL)
+        conn.autocommit = True
+        return PostgresWrapper(conn)
     else:
         conn = sqlite3.connect(DATABASE_PATH)
         conn.row_factory = sqlite3.Row
-        # We still use DictConnection for local SQLite to ensure consistent behavior
         return DictConnection(conn)
 
 class DictConnection:
