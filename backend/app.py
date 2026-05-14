@@ -51,20 +51,34 @@ class PostgresRow:
 class PostgresCursor:
     def __init__(self, cursor):
         self.cursor = cursor
+        self.lastrowid = None
     def __getattr__(self, name):
         return getattr(self.cursor, name)
     def execute(self, sql, params=()):
+        # PostgreSQL doesn't have lastrowid, so we append RETURNING id to INSERTS
+        is_insert = sql.strip().upper().startswith('INSERT')
+        if is_insert and 'RETURNING' not in sql.upper():
+            sql = sql.rstrip().rstrip(';') + ' RETURNING id'
+            
         sql = sql.replace('?', '%s')
         sql = sql.replace('AUTOINCREMENT', '')
         sql = sql.replace('INTEGER PRIMARY KEY', 'SERIAL PRIMARY KEY')
-        
-        # PostgreSQL LIKE is case-sensitive, so we use ILIKE for search parity with SQLite
-        # Use regex to be safer with spaces/case
         sql = re.sub(r'\bLIKE\b', 'ILIKE', sql, flags=re.IGNORECASE)
         
         if params is None: params = ()
         if not isinstance(params, (tuple, list)): params = (params,)
+        
         self.cursor.execute(sql, params)
+        
+        if is_insert:
+            try:
+                row = self.cursor.fetchone()
+                if row:
+                    # row is a dict due to RealDictCursor
+                    self.lastrowid = list(row.values())[0]
+            except Exception:
+                pass
+                
         return self
     def fetchone(self):
         row = self.cursor.fetchone()
