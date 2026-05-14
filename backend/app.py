@@ -562,7 +562,7 @@ def register_user():
 # ================= HOME PAGE =================
 
 @app.route("/home")
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def home():
     return render_template("home.html")
 
@@ -692,7 +692,7 @@ def add_product():
 # ================= CUSTOMER PAGE =================
 
 @app.route("/customer")
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def customer():
 
     return render_template(
@@ -703,7 +703,7 @@ def customer():
 # ================= SEARCH PRODUCTS =================
 
 @app.route("/search", methods=["GET", "POST"])
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def search():
 
     products = []
@@ -734,7 +734,7 @@ def search():
 # ================= PLACE ORDER =================
 
 @app.route("/place_order", methods=["POST"])
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def place_order():
 
     customer_name = session.get("user")
@@ -814,7 +814,7 @@ def place_order():
 
 
 @app.route("/online_payment/<int:product_id>", methods=["POST"])
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def online_payment(product_id):
     customer_name = request.form.get("customer_name")
     customer_phone = request.form.get("customer_phone")
@@ -849,7 +849,7 @@ def online_payment(product_id):
 
 
 @app.route("/cash_on_delivery/<int:product_id>", methods=["POST"])
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def cash_on_delivery(product_id):
     customer_name = request.form.get("customer_name")
     customer_phone = request.form.get("customer_phone")
@@ -1286,6 +1286,7 @@ def dashboard():
 # ================= BUY PAGE =================
 
 @app.route("/buy")
+@role_required("customer", "admin")
 def buy():
 
     product_id = request.args.get("product_id")
@@ -1478,7 +1479,7 @@ def payment_demo():
 # ================= AI CHATBOT =================
 
 @app.route("/chatbot")
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def chatbot():
 
     return render_template("chatbot.html")
@@ -1939,7 +1940,7 @@ def admin():
 # ================= SHOPPING CART =================
 
 @app.route("/cart")
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def view_cart():
     customer = session.get("user", "Guest")
     conn = sqlite3.connect(DATABASE_PATH)
@@ -1961,7 +1962,7 @@ def view_cart():
 
 
 @app.route("/add_to_cart", methods=["POST"])
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def add_to_cart():
     customer = session.get("user", "Guest")
     product_id    = request.form.get("product_id", "")
@@ -2005,7 +2006,7 @@ def add_to_cart():
 
 
 @app.route("/remove_from_cart/<int:item_id>", methods=["POST"])
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def remove_from_cart(item_id):
     customer = session.get("user", "Guest")
     conn = sqlite3.connect(DATABASE_PATH)
@@ -2018,7 +2019,7 @@ def remove_from_cart(item_id):
 
 
 @app.route("/update_cart/<int:item_id>", methods=["POST"])
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def update_cart(item_id):
     customer = session.get("user", "Guest")
     qty = int(request.form.get("quantity", 1))
@@ -2036,7 +2037,7 @@ def update_cart(item_id):
 
 
 @app.route("/checkout", methods=["POST"])
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def checkout():
     customer = session.get("user", "Guest")
     address  = request.form.get("address", "")
@@ -2252,7 +2253,7 @@ def api_orders():
 # ================= PRODUCT REVIEWS =================
 
 @app.route("/leave_review/<int:order_id>")
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def leave_review_page(order_id):
     conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
@@ -2273,7 +2274,7 @@ def leave_review_page(order_id):
 
 
 @app.route("/submit_review/<int:order_id>", methods=["POST"])
-@role_required("customer", "seller", "admin")
+@role_required("customer", "admin")
 def submit_review(order_id):
     customer    = session.get("user", "Guest")
     rating      = int(request.form.get("rating", 5))

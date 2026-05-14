@@ -568,10 +568,14 @@
 
             <nav class="menu">
                 <a href="/dashboard" class="active"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
-                <a href="/home"><i class="fa-solid fa-house"></i> Home</a>
+                {% if session.get('role') == 'admin' %}
+                    <a href="/home"><i class="fa-solid fa-house"></i> Home</a>
+                {% endif %}
                 <a href="/shopkeeper"><i class="fa-solid fa-shop"></i> Seller Panel</a>
                 <a href="/shopkeeper_orders"><i class="fa-solid fa-cart-shopping"></i> Orders</a>
-                <a href="/customer"><i class="fa-solid fa-users"></i> Customers</a>
+                {% if session.get('role') == 'admin' %}
+                    <a href="/customer"><i class="fa-solid fa-users"></i> Customers</a>
+                {% endif %}
             </nav>
         </aside>
 
@@ -669,7 +673,9 @@
                     <div class="quick-actions">
                         <a href="/shopkeeper">Add Products <i class="fa-solid fa-arrow-right"></i></a>
                         <a href="/shopkeeper_orders">Manage Orders <i class="fa-solid fa-arrow-right"></i></a>
-                        <a href="/customer">Open Customer Panel <i class="fa-solid fa-arrow-right"></i></a>
+                        {% if session.get('role') == 'admin' %}
+                            <a href="/customer">Open Customer Panel <i class="fa-solid fa-arrow-right"></i></a>
+                        {% endif %}
                     </div>
                 </aside>
             </section>
