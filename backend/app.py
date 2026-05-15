@@ -800,18 +800,40 @@ def add_product():
 @app.route("/customer")
 @role_required("customer", "admin")
 def customer():
+    user_lat = request.args.get("lat")
+    user_lng = request.args.get("lng")
+
     conn = get_db_conn()
-    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
     
-    # Show last 24 products by default
-    cursor.execute("SELECT * FROM products ORDER BY id DESC LIMIT 24")
-    products = cursor.fetchall()
+    # Fetch all products to sort them by distance
+    cursor.execute("SELECT * FROM products")
+    rows = cursor.fetchall()
     conn.close()
+
+    products = [dict(r) for r in rows]
+
+    if user_lat and user_lng:
+        try:
+            u_lat = float(user_lat)
+            u_lng = float(user_lng)
+            for p in products:
+                if p.get("latitude") and p.get("longitude"):
+                    p["distance_km"] = round(haversine_km(u_lat, u_lng, p["latitude"], p["longitude"]), 2)
+                else:
+                    p["distance_km"] = 9999
+            
+            # Sort by distance
+            products.sort(key=lambda x: x.get("distance_km", 9999))
+        except (ValueError, TypeError):
+            pass
+    else:
+        # Default sort by ID if no location
+        products.sort(key=lambda x: x["id"], reverse=True)
 
     return render_template(
         "customer.html",
-        products=products
+        products=products[:30] # Show top 30
     )
 
 # ================= SEARCH PRODUCTS =================
@@ -821,6 +843,8 @@ def customer():
 def search():
     products = []
     search_term = ""
+    user_lat = request.values.get("lat")
+    user_lng = request.values.get("lng")
 
     if request.method == "POST":
         search_term = request.form.get("search", "").strip()
@@ -829,10 +853,8 @@ def search():
 
     if search_term:
         conn = get_db_conn()
-        # conn.row_factory handled in get_db_conn()
         cursor = conn.cursor()
 
-        # Using lower() for more robust case-insensitive matching
         cursor.execute("""
         SELECT * FROM products
         WHERE lower(product_name) LIKE ?
@@ -840,8 +862,24 @@ def search():
         OR lower(location) LIKE ?
         """, (f'%{search_term.lower()}%', f'%{search_term.lower()}%', f'%{search_term.lower()}%'))
 
-        products = cursor.fetchall()
+        rows = cursor.fetchall()
         conn.close()
+
+        products = [dict(r) for r in rows]
+
+        if user_lat and user_lng:
+            try:
+                u_lat = float(user_lat)
+                u_lng = float(user_lng)
+                for p in products:
+                    if p.get("latitude") and p.get("longitude"):
+                        p["distance_km"] = round(haversine_km(u_lat, u_lng, p["latitude"], p["longitude"]), 2)
+                    else:
+                        p["distance_km"] = 9999
+                
+                products.sort(key=lambda x: x.get("distance_km", 9999))
+            except (ValueError, TypeError):
+                pass
     else:
         return redirect("/customer")
 
@@ -1433,13 +1471,20 @@ def seller_dashboard():
     cursor = conn.cursor()
 
     seller = session.get("user")
-    cursor.execute("SELECT COUNT(*) FROM products WHERE seller_username=?", (seller,))
-    total_products = cursor.fetchone()[0]
+    
+    # Fetch all products for the seller
+    cursor.execute("SELECT * FROM products WHERE seller_username=? ORDER BY id DESC", (seller,))
+    products = cursor.fetchall()
+    
+    total_products = len(products)
 
-    cursor.execute("SELECT COUNT(*) FROM orders WHERE seller_username=?", (seller,))
-    total_orders = cursor.fetchone()[0]
+    # Fetch all orders for the seller
+    cursor.execute("SELECT * FROM orders WHERE seller_username=? ORDER BY id DESC", (seller,))
+    orders = cursor.fetchall()
+    
+    total_orders = len(orders)
 
-    cursor.execute("SELECT SUM(price) FROM orders WHERE seller_username=?", (seller,))
+    cursor.execute("SELECT SUM(CAST(price AS FLOAT)) FROM orders WHERE seller_username=?", (seller,))
     revenue = cursor.fetchone()[0]
 
     if revenue is None:
@@ -1449,6 +1494,8 @@ def seller_dashboard():
 
     return render_template(
         "shopkeeper_dashboard.html",
+        products=products,
+        orders=orders,
         total_products=total_products,
         total_orders=total_orders,
         revenue=revenue
@@ -1601,35 +1648,51 @@ def payment_demo():
 @app.route("/chatbot")
 @role_required("customer", "admin")
 def chatbot():
-
     return render_template("chatbot.html")
+
+
+@app.route("/chat_response", methods=["POST"])
+def chat_response():
+    user_message = request.form.get("message", "").strip()
+    if not user_message:
+        return {"reply": "Please say something!"}
+
+    # Find relevant products from the DB
+    matching_products = find_matching_products(user_message)
+    
+    # Generate a smart reply
+    reply = local_chatbot_reply(user_message, matching_products)
+    
+    return {"reply": reply}
 
 
 def find_matching_products(user_message):
     ignored_words = {
         "show", "find", "near", "nearby", "cheap", "cheapest", "price",
         "product", "products", "available", "with", "under", "want", "need",
-        "please", "best", "lowest", "local", "shop", "shops",
+        "please", "best", "lowest", "local", "shop", "shops", "give", "me"
     }
     searchable_words = [
         word for word in user_message.lower().replace(",", " ").replace(".", " ").split()
         if len(word) > 2 and word not in ignored_words
     ]
 
+    if not searchable_words:
+        return []
+
     conn = get_db_conn()
-    # conn.row_factory handled in get_db_conn()
     cursor = conn.cursor()
 
     products = []
     seen_products = set()
 
-    for word in searchable_words[:4]:
+    for word in searchable_words[:3]:
         cursor.execute("""
         SELECT product_name, price, shop_name, location, stock
         FROM products
         WHERE lower(product_name) LIKE ?
         ORDER BY CAST(price AS INTEGER) ASC
-        LIMIT 4
+        LIMIT 3
         """, (f"%{word}%",))
 
         for product in cursor.fetchall():
@@ -1639,40 +1702,37 @@ def find_matching_products(user_message):
                 seen_products.add(key)
 
     conn.close()
-    return products[:8]
+    return products[:6]
 
 
 def local_chatbot_reply(user_message, products):
     clean_message = user_message.lower()
 
     if products:
-        lines = []
-        for product in products[:3]:
-            stock_text = f", stock: {product['stock']}" if product.get("stock") else ""
-            shop_text = product.get("shop_name") or "Nearby shop"
-            location_text = f" at {product['location']}" if product.get("location") else ""
-            lines.append(
-                f"{product['product_name']} - Rs. {product['price']} from {shop_text}{location_text}{stock_text}"
-            )
+        reply = "I found some great options nearby for you! 🛍️<br><br>"
+        for p in products[:3]:
+            stock_info = f" (Only {p['stock']} left!)" if p.get('stock') and int(p['stock']) < 10 else ""
+            reply += f"🔹 <b>{p['product_name']}</b> - ₹{p['price']} at <i>{p['shop_name']}</i> ({p['location']}){stock_info}<br>"
+        
+        reply += "<br>Would you like to see more details or should I find something else?"
+        return reply
 
-        return "I found these nearby options: " + " | ".join(lines)
+    if any(word in clean_message for word in ["hello", "hi", "hey", "greetings"]):
+        return "👋 Hello! I am your AI Shopping Assistant. I can help you find products, compare prices, and track your orders. What are you looking for today?"
 
-    if any(word in clean_message for word in ["hello", "hi", "hey"]):
-        return "Hello! Tell me what product you need and I will help you find nearby options."
+    if any(word in clean_message for word in ["status", "track", "where is my", "order"]):
+        return "📦 You can track your active orders by clicking 'Track Order' on your dashboard. If you give me an Order ID, I can tell you where to look!"
 
-    if any(word in clean_message for word in ["help", "what can you do", "how"]):
-        return "I can search products, suggest cheaper nearby items, explain order tracking, and guide you to customer or shopkeeper pages."
+    if any(word in clean_message for word in ["cheap", "lowest", "best price", "discount"]):
+        return "💰 I always look for the lowest prices! Try searching for a specific item like 'milk' or 'rice', and I'll rank them by price and distance for you."
 
-    if any(word in clean_message for word in ["cheap", "cheapest", "lowest"]):
-        return "For the lowest price, search the product name on the customer page and compare nearby shops."
+    if any(word in clean_message for word in ["location", "gps", "near me", "map"]):
+        return "📍 To find shops near you, make sure to allow location access. You can also use the 'Map View' on the home page to see all nearby stores visually."
 
-    if "track" in clean_message or "order" in clean_message:
-        return "You can track orders from the orders page after placing a product order."
+    if any(word in clean_message for word in ["thank", "thanks", "awesome", "great"]):
+        return "You're very welcome! I'm here to help. Anything else you need?"
 
-    if "shop" in clean_message or "seller" in clean_message:
-        return "Shopkeepers can upload products, stock, price, location, and images from the shopkeeper page."
-
-    return "I could not find that product yet. Try a clear product name like laptop, bag, shoes, mobile, charger, or milk."
+    return "🤔 I'm not quite sure about that yet. Could you try searching for a specific product name? (e.g., 'Do you have fresh milk?')"
 
 
 # ================= SELLER STATS API =================

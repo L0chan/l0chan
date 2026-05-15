@@ -713,6 +713,23 @@
                 </a>
             </section>
 
+            <!-- LOW STOCK ALERTS -->
+            {% set low_stock_items = [] %}
+            {% if products is defined %}
+                {% for p in products %}
+                    {% if p.stock|int < 5 %}
+                        {% do low_stock_items.append(p) %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            {% if low_stock_items %}
+            <div class="flash-message" style="border-color: var(--rose); background: rgba(251, 113, 133, 0.1); color: #ffb5c0; margin-bottom: 20px;">
+                <i class="fa-solid fa-triangle-exclamation"></i> 
+                <strong>Low Stock Alert:</strong> You have {{ low_stock_items|length }} items with critically low stock. Please update your inventory soon.
+            </div>
+            {% endif %}
+
             <section class="stats">
                 <article class="stat-card" style="--accent: var(--cyan); --index: 0;">
                     <div class="stat-icon"><i class="fa-solid fa-box"></i></div>
@@ -776,7 +793,15 @@
                                 <div class="price">Rs. {{ product['price'] }}</div>
 
                                 <div class="meta">
-                                    <div><i class="fa-solid fa-boxes-stacked"></i><span>Stock: {{ product['stock'] }}</span></div>
+                                    <div>
+                                        <i class="fa-solid fa-boxes-stacked"></i>
+                                        <span>Stock: {{ product['stock'] }}</span>
+                                        {% if product['stock']|int < 5 %}
+                                            <span style="color: var(--rose); font-weight: 800; font-size: 11px; margin-left: 8px;">
+                                                <i class="fa-solid fa-circle-exclamation"></i> LOW
+                                            </span>
+                                        {% endif %}
+                                    </div>
                                     <div><i class="fa-solid fa-location-dot"></i><span>{{ product['location'] }}</span></div>
                                 </div>
 

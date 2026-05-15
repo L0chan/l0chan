@@ -880,6 +880,8 @@
 
                 <form id="search-form" action="/search" method="POST" class="search-panel">
                     <div class="search-box">
+                        <input type="hidden" name="lat" id="form-lat">
+                        <input type="hidden" name="lng" id="form-lng">
                         <input type="text" id="search-input" name="search" placeholder="Search rice, milk, laptop, bag..." required>
                         <button class="search-btn" type="submit">Search</button>
                     </div>
@@ -931,7 +933,11 @@
             {% if products %}
                 {% for product in products %}
                     <article class="product-card" style="--index: {{ loop.index0 }};">
-                        <div class="badge">Trending</div>
+                        {% if product['distance_km'] and product['distance_km'] < 1000 %}
+                            <div class="badge" style="background: var(--green); color: var(--ink);">{{ product['distance_km'] }} km away</div>
+                        {% else %}
+                            <div class="badge">Trending</div>
+                        {% endif %}
 
                         <div class="image-wrap">
                             <img src="/static/uploads/{{ product['product_image'] }}" class="product-img" alt="{{ product['product_name'] }}">
@@ -1104,11 +1110,29 @@
 
         // Catch search form to also update map
         searchForm.onsubmit = (e) => {
+            if (userPos) {
+                document.getElementById('form-lat').value = userPos[0];
+                document.getElementById('form-lng').value = userPos[1];
+            }
             if (showMapBtn.classList.contains('active')) {
                 e.preventDefault();
                 updateMapPins(searchInput.value);
             }
         };
+
+        // Auto-detect location on load
+        window.addEventListener('DOMContentLoaded', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    userPos = [pos.coords.latitude, pos.coords.longitude];
+                    // If we are on the base /customer page without lat/lng, reload with coordinates
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (window.location.pathname === '/customer' && !urlParams.has('lat')) {
+                        window.location.href = `/customer?lat=${userPos[0]}&lng=${userPos[1]}`;
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
