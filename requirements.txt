@@ -12,3 +12,4 @@ greenlet==3.5.0
 flask-cors
 psycopg2-binary
 cloudinary
+firebase-admin
