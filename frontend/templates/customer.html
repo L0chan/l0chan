@@ -940,8 +940,17 @@
                         {% endif %}
 
                         <div class="image-wrap">
-                            <img src="/static/uploads/{{ product['product_image'] }}" class="product-img" alt="{{ product['product_name'] }}">
-                            <img src="/static/uploads/{{ product['shop_image'] }}" class="shop-image" alt="{{ product['shop_name'] }}">
+                            {% if product['product_image'].startswith('http') %}
+                                <img src="{{ product['product_image'] }}" class="product-img" alt="{{ product['product_name'] }}">
+                            {% else %}
+                                <img src="/static/uploads/{{ product['product_image'] }}" class="product-img" alt="{{ product['product_name'] }}">
+                            {% endif %}
+                            
+                            {% if product['shop_image'].startswith('http') %}
+                                <img src="{{ product['shop_image'] }}" class="shop-image" alt="{{ product['shop_name'] }}">
+                            {% else %}
+                                <img src="/static/uploads/{{ product['shop_image'] }}" class="shop-image" alt="{{ product['shop_name'] }}">
+                            {% endif %}
                         </div>
 
                         <div class="content">
@@ -1076,6 +1085,7 @@
                         
                         const popupHtml = `
                             <div class="map-popup-card">
+                                <img src="${p.product_image.startsWith('http') ? p.product_image : '/static/uploads/' + p.product_image}" style="width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px;">
                                 <h4>${p.product_name}</h4>
                                 <p style="font-size:0.8rem;color:#888;">${p.shop_name}</p>
                                 <div class="price">₹${p.price} <span style="font-size:0.6em; color:#888; font-weight:normal;">/ ${p.unit || 'unit'}</span></div>

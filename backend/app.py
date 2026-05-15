@@ -16,6 +16,8 @@ import urllib.request
 from datetime import datetime, timedelta
 from functools import wraps
 from werkzeug.utils import secure_filename
+import cloudinary
+import cloudinary.uploader
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 FRONTEND_DIR = BASE_DIR / "frontend"
@@ -299,6 +301,18 @@ def is_owner_admin_login(username, password):
         secrets.compare_digest(username or "", OWNER_ADMIN_USERNAME)
         and secrets.compare_digest(password or "", OWNER_ADMIN_PASSWORD)
     )
+
+
+def upload_to_cloudinary(file_storage):
+    """Uploads a FileStorage object to Cloudinary and returns the secure URL."""
+    if not file_storage or not file_storage.filename:
+        return None
+    try:
+        upload_result = cloudinary.uploader.upload(file_storage)
+        return upload_result.get("secure_url")
+    except Exception as e:
+        print(f"Cloudinary Upload Error: {str(e)}")
+        return None
 
 
 def generate_delivery_otp():
@@ -726,37 +740,22 @@ def add_product():
     if len(prices) < len(product_names) or len(stocks) < len(product_names) or len(units) < len(product_names) or len(product_images) < len(product_names):
         return "Missing product details. Please fill all fields and upload both images.", 400
 
-    shop_image = shop_images[0]
-    shop_filename = secure_filename(shop_image.filename)
-    shop_path = os.path.join(UPLOAD_FOLDER, shop_filename)
-    shop_image.save(shop_path)
-
     conn = get_db_conn()
     cursor = conn.cursor()
 
+    # Upload shop image once (since it's the same for all products in this batch)
+    shop_image_url = upload_to_cloudinary(shop_images[0])
+    if not shop_image_url:
+        conn.close()
+        return "Failed to upload shop image to the cloud.", 500
+
     for i in product_rows:
+        # UPLOAD PRODUCT IMAGE TO CLOUDINARY
+        product_image_url = upload_to_cloudinary(product_images[i])
 
-        # PRODUCT IMAGE
-
-        product_image = product_images[i]
-
-        if not product_image or not product_image.filename:
+        if not product_image_url:
             conn.close()
-            return "Product image is required.", 400
-        if not allowed_file(product_image.filename):
-            conn.close()
-            return "Invalid product image format.", 400
-
-        product_filename = secure_filename(
-            product_image.filename
-        )
-
-        product_path = os.path.join(
-            UPLOAD_FOLDER,
-            product_filename
-        )
-
-        product_image.save(product_path)
+            return f"Failed to upload image for {product_names[i]} to the cloud.", 500
 
         cursor.execute("""
         INSERT INTO products(
@@ -772,22 +771,19 @@ def add_product():
             unit,
             seller_username
         )
-
         VALUES(?,?,?,?,?,?,?,?,?,?,?)
         """, (
-
             shop_names[0],
             locations[0],
             product_names[i],
             prices[i],
             stocks[i],
-            product_filename,
-            shop_filename,
+            product_image_url,
+            shop_image_url,
             latitudes[0] if latitudes else "",
             longitudes[0] if longitudes else "",
             units[i] if i < len(units) else "",
             seller_username
-
         ))
 
     conn.commit()
@@ -2392,6 +2388,12 @@ def api_all_products():
     
     products = []
     for r in rows:
+        img_url = r["product_image"]
+        if img_url and not img_url.startswith("http"):
+            img_url = f"/static/uploads/{img_url}"
+        elif not img_url:
+            img_url = "assets/shop.png"
+
         products.append({
             "id": r["id"],
             "shopName": r["shop_name"],
@@ -2399,7 +2401,7 @@ def api_all_products():
             "productName": r["product_name"],
             "price": float(r["price"] or 0),
             "stock": r["stock"],
-            "image": f"/static/uploads/{r['product_image']}" if r["product_image"] else "assets/shop.png",
+            "image": img_url,
             "latitude": r["latitude"],
             "longitude": r["longitude"],
             "unit": r["unit"] or "unit"

@@ -24,3 +24,14 @@ if os.environ.get("RENDER") or not os.environ.get("NPF_DEV"):
         SESSION_COOKIE_SAMESITE='Lax',
     )
 
+import cloudinary
+import cloudinary.uploader
+from cloudinary.utils import cloudinary_url
+
+# --- CLOUDINARY CONFIGURATION ---
+cloudinary.config(
+    cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key = os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret = os.environ.get("CLOUDINARY_API_SECRET"),
+    secure = True
+)

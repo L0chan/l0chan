@@ -784,8 +784,17 @@
                     {% for product in products %}
                         <article class="product-card" style="--index: {{ loop.index0 }};">
                             <div class="image-wrap">
-                                <img src="/static/uploads/{{ product['product_image'] }}" alt="{{ product['product_name'] }}">
-                                <span class="shop-badge">{{ product['shop_name'] }}</span>
+                                {% if product['product_image'].startswith('http') %}
+                                    <img src="{{ product['product_image'] }}" class="product-img" alt="{{ product['product_name'] }}">
+                                {% else %}
+                                    <img src="/static/uploads/{{ product['product_image'] }}" class="product-img" alt="{{ product['product_name'] }}">
+                                {% endif %}
+                                
+                                {% if product['shop_image'].startswith('http') %}
+                                    <img src="{{ product['shop_image'] }}" class="shop-image" alt="{{ product['shop_name'] }}">
+                                {% else %}
+                                    <img src="/static/uploads/{{ product['shop_image'] }}" class="shop-image" alt="{{ product['shop_name'] }}">
+                                {% endif %}
                             </div>
 
                             <div class="content">
