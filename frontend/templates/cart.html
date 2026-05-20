@@ -438,7 +438,11 @@
                 <div class="cart-items">
                     {% for item in items %}
                         <div class="cart-item">
-                            <img src="/static/uploads/{{ item.product_image }}" class="item-img" alt="{{ item.product_name }}">
+                            {% if item.product_image.startswith('http') %}
+                                <img src="{{ item.product_image }}" class="item-img" alt="{{ item.product_name }}">
+                            {% else %}
+                                <img src="/static/uploads/{{ item.product_image }}" class="item-img" alt="{{ item.product_name }}">
+                            {% endif %}
                             <div class="item-details">
                                 <h3>{{ item.product_name }}</h3>
                                 <p class="item-shop"><i class="fa-solid fa-store"></i> {{ item.shop_name or 'Local Shop' }}</p>

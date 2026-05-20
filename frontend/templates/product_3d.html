@@ -330,17 +330,22 @@
             </div>
 
             <div class="preview-image">
-                <img src="{{ url_for('static', filename='uploads/' ~ product['product_image']) }}" alt="{{ product['product_name'] }}">
+                {% if product['product_image'].startswith('http') %}
+                    <img src="{{ product['product_image'] }}" alt="{{ product['product_name'] }}">
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ product['product_image']) }}" alt="{{ product['product_name'] }}">
+                {% endif %}
             </div>
 
-            <a class="buy-btn" href="/buy?product_id={{ product['id'] }}&product_name={{ product['product_name'] }}&price={{ product['price'] }}&product_image={{ url_for('static', filename='uploads/' ~ product['product_image']) }}">Buy Now</a>
+            {% set img_url = product['product_image'] if product['product_image'].startswith('http') else url_for('static', filename='uploads/' ~ product['product_image']) %}
+            <a class="buy-btn" href="/buy?product_id={{ product['id'] }}&product_name={{ product['product_name'] }}&price={{ product['price'] }}&product_image={{ img_url }}">Buy Now</a>
         </aside>
     </main>
 
     <script>
         window.productViewerData = {
             name: {{ product['product_name']|tojson }},
-            image: {{ url_for('static', filename='uploads/' ~ product['product_image'])|tojson }},
+            image: {{ (product['product_image'] if product['product_image'].startswith('http') else url_for('static', filename='uploads/' ~ product['product_image'])) | tojson }},
         };
     </script>
     <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>

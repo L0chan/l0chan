@@ -954,12 +954,17 @@
                         </div>
 
                         <div class="content">
-                            <div class="shop">{{ product['shop_name'] }}</div>
+                            <div class="shop">
+                                {{ product['shop_name'] }}
+                                {% if product['is_trusted'] %}
+                                    <span style="color:var(--yellow); font-size:12px; margin-left:4px;" title="Trusted Seller">✔️ Trusted</span>
+                                {% endif %}
+                            </div>
                             <div class="title">{{ product['product_name'] }}</div>
 
                             <div class="price-row">
                                 <div class="price">Rs. {{ product['price'] }} <span style="font-size:0.5em; color:var(--muted); font-weight:normal;">/ {{ product['unit'] or 'unit' }}</span></div>
-                                <div class="rating">Star 4.9</div>
+                                <div class="rating">⭐ {{ product['avg_rating'] }}</div>
                             </div>
 
                             <div class="meta">
@@ -973,7 +978,7 @@
                                 <a href="/product_map/{{ product['id'] }}">
                                     <span class="map-btn">📍 Map</span>
                                 </a>
-                                <a href="/buy?product_id={{ product['id'] }}&product_name={{ product['product_name'] }}&price={{ product['price'] }}&product_image=/static/uploads/{{ product['product_image'] }}">
+                                <a href="/buy?product_id={{ product['id'] }}&product_name={{ product['product_name'] }}&price={{ product['price'] }}&product_image={% if product['product_image'].startswith('http') %}{{ product['product_image'] }}{% else %}/static/uploads/{{ product['product_image'] }}{% endif %}">
                                     <span class="buy-btn">⚡ Buy Now</span>
                                 </a>
                             </div>

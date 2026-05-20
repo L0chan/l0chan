@@ -567,7 +567,13 @@
                     {% for order in orders %}
                         <article class="order-card" style="--index: {{ loop.index0 }};">
                             <div class="image-wrap">
-                                <img src="{{ order['product_image'] }}" alt="{{ order['product_name'] }}">
+                                {% if order['product_image'] and order['product_image'].startswith('http') %}
+                                    <img src="{{ order['product_image'] }}" alt="{{ order['product_name'] }}">
+                                {% elif order['product_image'] %}
+                                    <img src="/static/uploads/{{ order['product_image'] }}" alt="{{ order['product_name'] }}">
+                                {% else %}
+                                    <div style="width:58px;height:58px;border-radius:14px;background:#0b1624;display:flex;align-items:center;justify-content:center;color:#4ade80;"><i class="fa-solid fa-image"></i></div>
+                                {% endif %}
                                 <span class="status-chip">{{ order['status'] }}</span>
                             </div>
 

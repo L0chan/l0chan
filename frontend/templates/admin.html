@@ -426,7 +426,13 @@
                             {% for product in products %}
                                 <tr>
                                     <td>#{{ product['id'] }}</td>
-                                    <td><img src="/static/uploads/{{ product['product_image'] }}" alt="{{ product['product_name'] }}"></td>
+                                    <td>
+                                        {% if product['product_image'].startswith('http') %}
+                                            <img src="{{ product['product_image'] }}" alt="{{ product['product_name'] }}">
+                                        {% else %}
+                                            <img src="/static/uploads/{{ product['product_image'] }}" alt="{{ product['product_name'] }}">
+                                        {% endif %}
+                                    </td>
                                     <td>{{ product['product_name'] }}</td>
                                     <td>{{ product['shop_name'] }}</td>
                                     <td>Rs. {{ product['price'] }}</td>
