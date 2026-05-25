@@ -405,6 +405,22 @@ def clear_products():
     except Exception as e:
         return {"success": False, "error": str(e)}, 500
 
+@core_bp.route("/admin/clear_orders", methods=["POST"])
+@role_required("admin")
+def clear_orders():
+    try:
+        conn = get_db_conn()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM orders")
+        row = cursor.fetchone()
+        count = row[0] if row else 0
+        cursor.execute("DELETE FROM orders")
+        conn.commit()
+        conn.close()
+        return {"success": True, "deleted": count}
+    except Exception as e:
+        return {"success": False, "error": str(e)}, 500
+
 @core_bp.route("/admin")
 @role_required("admin")
 def admin():

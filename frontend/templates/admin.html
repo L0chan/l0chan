@@ -376,6 +376,9 @@
                     <button onclick="clearAllProducts()" id="clear-products-btn" style="padding:12px 24px; background:rgba(251,113,133,0.18); color:#fb7185; border:1px solid rgba(251,113,133,0.4); border-radius:14px; cursor:pointer; font-weight:900;">
                         🗑️ Clear All Products
                     </button>
+                    <button onclick="clearAllOrders()" id="clear-orders-btn" style="padding:12px 24px; background:rgba(251,113,133,0.18); color:#fb7185; border:1px solid rgba(251,113,133,0.4); border-radius:14px; cursor:pointer; font-weight:900;">
+                        🗑️ Clear All Orders
+                    </button>
                 </div>
             </div>
 
@@ -527,6 +530,30 @@
             }
         }
         window.addEventListener('load', () => setTimeout(() => migrateOldData(false), 1000));
+
+        async function clearAllOrders() {
+            if (!confirm('⚠️ This will permanently delete ALL orders from the database. Are you sure?')) return;
+            if (!confirm('This cannot be undone. Click OK to confirm deletion of ALL orders.')) return;
+            const btn = document.getElementById('clear-orders-btn');
+            btn.textContent = '⏳ Clearing...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/admin/clear_orders', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    alert(`✅ Done! ${data.deleted} orders deleted. Page will refresh.`);
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                    btn.textContent = '🗑️ Clear All Orders';
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                alert('Failed to clear orders: ' + e.message);
+                btn.textContent = '🗑️ Clear All Orders';
+                btn.disabled = false;
+            }
+        }
 
         async function clearAllProducts() {
             if (!confirm('⚠️ This will permanently delete ALL products from the database. Are you sure?')) return;
