@@ -33,6 +33,16 @@
                 <p>Create a new account</p>
             </div>
 
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div style="background: rgba(251, 113, 133, 0.18); color: #fb7185; border: 1px solid rgba(251, 113, 133, 0.4); padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; text-align: center; font-weight: 600;">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             <form action="/register_user" method="POST" class="auth-form">
                 <div class="input-group">
                     <input name="username" type="text" placeholder=" " required id="regUser">
