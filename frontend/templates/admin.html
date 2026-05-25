@@ -369,9 +369,14 @@
                 <div class="eyebrow"><span class="pulse-dot"></span> Private owner access</div>
                 <h1>Control users, products, and <span>orders</span>.</h1>
                 <p>This panel is locked to the owner admin account. Use it to monitor marketplace activity, inspect listings, and review order flow.</p>
-                <button onclick="migrateOldData(true)" style="margin-top:20px; padding:12px 24px; background:linear-gradient(135deg, var(--cyan), var(--green)); color:var(--ink); border:none; border-radius:14px; cursor:pointer; font-weight:900; box-shadow: 0 10px 20px rgba(34, 211, 238, 0.2);">
-                    🔄 Sync Offline Data from Phone
-                </button>
+                <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:20px;">
+                    <button onclick="migrateOldData(true)" style="padding:12px 24px; background:linear-gradient(135deg, var(--cyan), var(--green)); color:var(--ink); border:none; border-radius:14px; cursor:pointer; font-weight:900; box-shadow: 0 10px 20px rgba(34, 211, 238, 0.2);">
+                        🔄 Sync Offline Data from Phone
+                    </button>
+                    <button onclick="clearAllProducts()" id="clear-products-btn" style="padding:12px 24px; background:rgba(251,113,133,0.18); color:#fb7185; border:1px solid rgba(251,113,133,0.4); border-radius:14px; cursor:pointer; font-weight:900;">
+                        🗑️ Clear All Products
+                    </button>
+                </div>
             </div>
 
             <a class="hero-action" href="/shopkeeper_dashboard">
@@ -427,10 +432,12 @@
                                 <tr>
                                     <td>#{{ product['id'] }}</td>
                                     <td>
-                                        {% if product['product_image'].startswith('http') %}
-                                            <img src="{{ product['product_image'] }}" alt="{{ product['product_name'] }}">
+                                        {% if product['product_image'] and product['product_image'].startswith('http') %}
+                                            <img src="{{ product['product_image'] }}" alt="{{ product['product_name'] }}" onerror="this.onerror=null;this.src='/static/app-icon-512.png';">
+                                        {% elif product['product_image'] %}
+                                            <img src="/static/uploads/{{ product['product_image'] }}" alt="{{ product['product_name'] }}" onerror="this.onerror=null;this.src='/static/app-icon-512.png';">
                                         {% else %}
-                                            <img src="/static/uploads/{{ product['product_image'] }}" alt="{{ product['product_name'] }}">
+                                            <img src="/static/app-icon-512.png" alt="{{ product['product_name'] }}">
                                         {% endif %}
                                     </td>
                                     <td>{{ product['product_name'] }}</td>
@@ -520,6 +527,30 @@
             }
         }
         window.addEventListener('load', () => setTimeout(() => migrateOldData(false), 1000));
+
+        async function clearAllProducts() {
+            if (!confirm('⚠️ This will permanently delete ALL products from the database. Are you sure?')) return;
+            if (!confirm('This cannot be undone. Click OK to confirm deletion of ALL products.')) return;
+            const btn = document.getElementById('clear-products-btn');
+            btn.textContent = '⏳ Clearing...';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/admin/clear_products', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    alert(`✅ Done! ${data.deleted} products deleted. Page will refresh.`);
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                    btn.textContent = '🗑️ Clear All Products';
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                alert('Failed to clear products: ' + e.message);
+                btn.textContent = '🗑️ Clear All Products';
+                btn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>

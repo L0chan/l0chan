@@ -389,6 +389,22 @@ def send_message():
 
     return redirect("/live_chat")
 
+@core_bp.route("/admin/clear_products", methods=["POST"])
+@role_required("admin")
+def clear_products():
+    try:
+        conn = get_db_conn()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM products")
+        row = cursor.fetchone()
+        count = row[0] if row else 0
+        cursor.execute("DELETE FROM products")
+        conn.commit()
+        conn.close()
+        return {"success": True, "deleted": count}
+    except Exception as e:
+        return {"success": False, "error": str(e)}, 500
+
 @core_bp.route("/admin")
 @role_required("admin")
 def admin():
