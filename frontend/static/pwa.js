@@ -18,12 +18,12 @@ function explainInstallBlock() {
 }
 
 function createInstallButton() {
-  if (document.getElementById("npf-install-app")) {
+  if (document.getElementById("c2s-install-app")) {
     return;
   }
 
   const button = document.createElement("button");
-  button.id = "npf-install-app";
+  button.id = "c2s-install-app";
   button.type = "button";
   button.textContent = "Install App";
   button.style.cssText = [
@@ -73,17 +73,17 @@ window.addEventListener("beforeinstallprompt", (event) => {
 window.addEventListener("appinstalled", () => {
   deferredInstallPrompt = null;
 
-  const button = document.getElementById("npf-install-app");
+  const button = document.getElementById("c2s-install-app");
   if (button) {
     button.remove();
   }
 });
 
-window.NPF_PWA = {
+window.C2S_PWA = {
   getCanPromptInstall: () => Boolean(deferredInstallPrompt),
   explainInstallBlock,
   promptInstall: () => {
-    const button = document.getElementById("npf-install-app");
+    const button = document.getElementById("c2s-install-app");
 
     if (button) {
       button.click();

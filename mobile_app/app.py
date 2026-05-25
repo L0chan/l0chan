@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     url = f"http://{HOST}:{port}/index.html"
 
-    print(f"Nearby Price Finder mobile preview running at {url}")
+    print(f"COMPARE2SAVE mobile preview running at {url}")
     print("Press Ctrl+C to stop.")
     webbrowser.open(url)
 

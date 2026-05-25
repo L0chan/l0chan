@@ -1,6 +1,6 @@
 const { useEffect, useMemo, useRef, useState } = React;
 
-        const account = window.NPF_ACCOUNT || { role: "customer", user: "Guest", isOwnerAdmin: false };
+        const account = window.C2S_ACCOUNT || { role: "customer", user: "Guest", isOwnerAdmin: false };
 
         const navLinks = [
             { label: "Customer", href: "/customer" },
@@ -271,9 +271,9 @@ const { useEffect, useMemo, useRef, useState } = React;
         function Navbar() {
             return (
                 <nav className="navbar">
-                    <a className="brand" href="/home" aria-label="Nearby Price Finder home">
-                        <span className="brand-mark">NP</span>
-                        <span className="brand-text">Nearby Price Finder</span>
+                    <a className="brand" href="/home" aria-label="COMPARE2SAVE home">
+                        <span className="brand-mark">C2S</span>
+                        <span className="brand-text">COMPARE2SAVE</span>
                     </a>
                     <div className="nav-links">
                         <span className="account-chip">{account.role}: {account.user}</span>
@@ -632,7 +632,7 @@ const { useEffect, useMemo, useRef, useState } = React;
                             <div className="hero-copy">
                                 <div className="eyebrow">
                                     <span className="pulse-dot" />
-                                    Smart Nearby Shopping Platform
+                                    Smart COMPARE2SAVE Shopping Platform
                                 </div>
                                 <h1>
                                     Find nearby <span>products</span> faster than ever.

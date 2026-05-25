@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Android Download - Nearby Price Finder</title>
+    <title>Android Download - COMPARE2SAVE</title>
     <meta name="theme-color" content="#16a34a">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="{{ url_for('static', filename='app-icon.svg') }}" type="image/svg+xml">
@@ -83,7 +83,7 @@
         <ol>
             <li>Open the app through an HTTPS tunnel or hosted website, then tap Install App.</li>
             <li>Build an APK with PWABuilder after hosting the app on HTTPS.</li>
-            <li>Place the APK at release/NearbyPriceFinder-Android.apk and this button will become a real download.</li>
+            <li>Place the APK at release/COMPARE2SAVE-Android.apk and this button will become a real download.</li>
         </ol>
 
         <button type="button" id="android-install">Try Install App</button>
@@ -93,7 +93,7 @@
     <script src="{{ url_for('static', filename='pwa.js') }}"></script>
     <script>
         document.getElementById("android-install").addEventListener("click", () => {
-            window.NPF_PWA.promptInstall();
+            window.C2S_PWA.promptInstall();
         });
     </script>
 </body>

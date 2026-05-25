@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nearby Price Finder</title>
+    <title>COMPARE2SAVE</title>
     <meta name="theme-color" content="#16a34a">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="{{ url_for('static', filename='app-icon.svg') }}" type="image/svg+xml">
@@ -19,7 +19,7 @@
     <div id="root"></div>
 
     <script>
-        window.NPF_ACCOUNT = {
+        window.C2S_ACCOUNT = {
             user: {{ current_user|tojson }},
             role: {{ current_role|tojson }},
             isOwnerAdmin: {{ is_owner_admin|tojson }},

@@ -1,6 +1,6 @@
 {
-  "name": "Nearby Price Finder",
-  "short_name": "Nearby Price",
+  "name": "COMPARE2SAVE",
+  "short_name": "C2S",
   "description": "Offline local product search, seller inventory, orders, and chat.",
   "start_url": "./index.html",
   "scope": "./",

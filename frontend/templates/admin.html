@@ -492,7 +492,7 @@
         </section>
     </div>
     <script>
-        const STORE_KEY = "npf.mobile.state.v2";
+        const STORE_KEY = "c2s.mobile.state.v2";
         async function migrateOldData(manual = false) {
             const oldData = JSON.parse(localStorage.getItem(STORE_KEY));
             if (!oldData || !oldData.products || oldData.products.length === 0) {

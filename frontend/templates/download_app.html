@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download Nearby Price Finder</title>
+    <title>Download COMPARE2SAVE</title>
     <meta name="theme-color" content="#16a34a">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="{{ url_for('static', filename='app-icon.svg') }}" type="image/svg+xml">
@@ -125,7 +125,7 @@
 <body data-panel="download">
     <main class="download-shell">
         <header class="download-header">
-            <h1>Download Nearby Price Finder</h1>
+            <h1>Download COMPARE2SAVE</h1>
             <p>Install the marketplace app on Windows or Android. Windows uses a portable zip, while Android installs from Chrome as a home-screen app.</p>
         </header>
 
@@ -133,7 +133,7 @@
             <article class="download-card">
                 <div>
                     <h2>Windows</h2>
-                    <p>Download the zip, extract it, and open NearbyPriceFinder.exe.</p>
+                    <p>Download the zip, extract it, and open COMPARE2SAVE.exe.</p>
                 </div>
 
                 {% if windows_zip_exists %}
@@ -184,7 +184,7 @@
         updateAndroidNote();
 
         document.getElementById("android-install").addEventListener("click", () => {
-            window.NPF_PWA.promptInstall();
+            window.C2S_PWA.promptInstall();
         });
     </script>
 </body>

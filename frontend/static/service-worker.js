@@ -1,4 +1,4 @@
-const CACHE_NAME = "nearby-price-finder-v1";
+const CACHE_NAME = "compare2save-v1";
 const APP_SHELL = [
   "/",
   "/manifest.json",

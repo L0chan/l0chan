@@ -63,19 +63,38 @@ def add_product():
     conn = get_db_conn()
     cursor = conn.cursor()
 
+    from werkzeug.utils import secure_filename
+    
+    # Helper to handle upload or local save
+    def save_image(file_obj):
+        url = upload_to_cloudinary(file_obj)
+        if url:
+            return url
+        # Fallback to local storage
+        if file_obj and file_obj.filename:
+            filename = secure_filename(file_obj.filename)
+            # Make sure it's unique enough
+            import time
+            unique_filename = f"{int(time.time())}_{filename}"
+            file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
+            file_obj.seek(0)
+            file_obj.save(file_path)
+            return unique_filename
+        return None
+
     # Upload shop image once (since it's the same for all products in this batch)
-    shop_image_url = upload_to_cloudinary(shop_images[0])
+    shop_image_url = save_image(shop_images[0])
     if not shop_image_url:
         conn.close()
-        return "Failed to upload shop image to the cloud.", 500
+        return "Failed to save shop image.", 500
 
     for i in product_rows:
-        # UPLOAD PRODUCT IMAGE TO CLOUDINARY
-        product_image_url = upload_to_cloudinary(product_images[i])
+        # UPLOAD PRODUCT IMAGE
+        product_image_url = save_image(product_images[i])
 
         if not product_image_url:
             conn.close()
-            return f"Failed to upload image for {product_names[i]} to the cloud.", 500
+            return f"Failed to save image for {product_names[i]}.", 500
 
         cursor.execute("""
         INSERT INTO products(
@@ -372,27 +391,17 @@ def shopkeeper_orders():
 
     orders = cursor.fetchall()
 
-    cursor.execute("""
-    SELECT COUNT(*) FROM orders WHERE seller_username=?
-    """, (seller,))
-
-    total_orders = cursor.fetchone()[0]
-
-    cursor.execute("""
-    SELECT SUM(CAST(price AS FLOAT)) FROM orders WHERE seller_username=?
-    """, (seller,))
-
-    revenue = cursor.fetchone()[0]
-
-    if revenue is None:
-        revenue = 0
-
-    cursor.execute("""
-    SELECT COUNT(*) FROM orders
-    WHERE status='Delivered' AND seller_username=?
-    """, (seller,))
-
-    delivered = cursor.fetchone()[0]
+    total_orders = len(orders)
+    revenue = 0
+    delivered = 0
+    for order in orders:
+        if order["status"] == "Delivered":
+            delivered += 1
+        try:
+            if order["price"]:
+                revenue += float(order["price"])
+        except ValueError:
+            pass
 
     conn.close()
 
@@ -468,11 +477,13 @@ def seller_dashboard():
     
     total_orders = len(orders)
 
-    cursor.execute("SELECT SUM(CAST(price AS FLOAT)) FROM orders WHERE seller_username=?", (seller,))
-    revenue = cursor.fetchone()[0]
-
-    if revenue is None:
-        revenue = 0
+    revenue = 0
+    for order in orders:
+        try:
+            if order["price"]:
+                revenue += float(order["price"])
+        except ValueError:
+            pass
 
     conn.close()
 

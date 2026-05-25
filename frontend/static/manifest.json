@@ -1,7 +1,7 @@
 {
-  "name": "Nearby Price Finder",
-  "short_name": "Nearby Price",
-  "description": "Find nearby products, compare prices, buy from local shops, and track orders.",
+  "name": "COMPARE2SAVE",
+  "short_name": "COMPARE2SAVE",
+  "description": "Compare prices locally, buy from nearby shops, and track orders.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -1,6 +1,6 @@
-# Nearby Price Finder
+# COMPARE2SAVE
 
-Nearby Price Finder is a comprehensive, full-stack marketplace and local product discovery application. It connects customers with local shopkeepers, enabling seamless inventory management, geographical product tracking, secure authentication, and a modern shopping experience.
+COMPARE2SAVE is a comprehensive, full-stack marketplace and local product discovery application. It connects customers with local shopkeepers, enabling seamless inventory management, geographical product tracking, secure authentication, and a modern shopping experience.
 
 ## ✨ Key Features
 
@@ -23,7 +23,7 @@ Nearby Price Finder is a comprehensive, full-stack marketplace and local product
 ## 📁 Project Structure
 
 ```text
-NearbyPriceFinder/
+COMPARE2SAVE/
 ├── backend/                  # Flask application factory, routes, and models
 │   ├── auth/                 # Authentication & OTP logic
 │   ├── shopkeeper/           # Seller inventory and dashboard logic
@@ -57,21 +57,22 @@ Navigate to `http://127.0.0.1:5000`
 username: admin
 password: admin@123
 ```
-*(You can override these values using the `NPF_ADMIN_USERNAME` and `NPF_ADMIN_PASSWORD` environment variables.)*
+*(You can override these values using the `C2S_ADMIN_USERNAME` and `C2S_ADMIN_PASSWORD` environment variables.)*
 
 ## ⚙️ Environment Variables
 
 For production or full feature functionality, set the following environment variables (e.g., in a `.env` file):
 
 ```text
-NPF_SECRET_KEY=change-this-for-production
-NPF_ADMIN_USERNAME=admin
-NPF_ADMIN_PASSWORD=admin@123
+C2S_SECRET_KEY=change-this-for-production
+C2S_ADMIN_USERNAME=admin
+C2S_ADMIN_PASSWORD=admin@123
 OPENAI_API_KEY=your-openai-key
 OPENAI_MODEL=gpt-4o-mini
 TWILIO_ACCOUNT_SID=your-twilio-sid
 TWILIO_AUTH_TOKEN=your-twilio-token
 TWILIO_FROM_NUMBER=your-twilio-phone-number
+DATABASE_URL=postgres://user:password@host/dbname # (Optional) Use for production PostgreSQL, otherwise uses local SQLite
 ```
 
 ## 📱 Desktop & Mobile Installation
@@ -84,7 +85,7 @@ To package the web application into a standalone Windows app:
 ```powershell
 .\make_downloads.bat
 ```
-The Windows package is created at `release\NearbyPriceFinder-Windows.zip`. Extract it and run `NearbyPriceFinder.exe`.
+The Windows package is created at `release\COMPARE2SAVE-Windows.zip`. Extract it and run `COMPARE2SAVE.exe`.
 
 ### Offline-First Mobile App (iOS / Android)
 The `mobile_app` folder contains a separate offline-first mobile version that uses `localStorage` instead of a Python backend. 

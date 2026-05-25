@@ -1,5 +1,31 @@
-const API_URL = "https://dealradar-kvsp.onrender.com";
-const STORE_KEY = "npf.mobile.state.v2";
+const API_URL = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:")
+  ? "http://127.0.0.1:5000"
+  : "https://dealradar-kvsp.onrender.com";
+const STORE_KEY = "c2s.mobile.state.v2";
+
+function dataURLtoFile(dataurl, filename = "file.png") {
+  if (!dataurl || !dataurl.startsWith("data:")) return null;
+  try {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  } catch (e) {
+    console.error("Failed to convert dataURL to file:", e);
+    return null;
+  }
+}
+
+function getPlaceholderFile(filename = "placeholder.png") {
+  const dummyBytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 108, 137, 0, 0, 0, 10, 73, 68, 65, 84, 120, 156, 99, 0, 1, 0, 0, 2, 0, 1, 10, 48, 12, 168, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]);
+  const blob = new Blob([dummyBytes], { type: "image/png" });
+  return new File([blob], filename, { type: "image/png" });
+}
 const app = document.querySelector("#app");
 const accountChip = document.querySelector("#accountChip");
 const checkoutDialog = document.querySelector("#checkoutDialog");
@@ -17,7 +43,7 @@ const riders = [
 ];
 
 let state = {
-  account: JSON.parse(localStorage.getItem("npf.account")) || { name: "Guest", role: "customer" },
+  account: JSON.parse(localStorage.getItem("c2s.account")) || { name: "Guest", role: "customer" },
   products: [],
   orders: [],
   chats: [
@@ -51,9 +77,15 @@ async function migrateOldData(manual = false) {
         formData.append("price", p.price);
         formData.append("stock", p.stock);
         formData.append("unit", p.unit || "unit");
-        // Images in old data were dataURLs, we can't easily convert back to File objects for the backend as it expects
-        // But the backend 'add_product' might handle it if we modify it, or we just upload without images
-        // For now, let's try to send them.
+
+        const fileObj = dataURLtoFile(p.image, `${p.productName.replace(/[^a-zA-Z0-9]/g, "_")}.png`);
+        if (fileObj) {
+          formData.append("product_image", fileObj);
+          formData.append("shop_image", fileObj);
+        } else {
+          formData.append("product_image", getPlaceholderFile("product_placeholder.png"));
+          formData.append("shop_image", getPlaceholderFile("shop_placeholder.png"));
+        }
 
         await fetch(`${API_URL}/add_product`, {
           method: "POST",
@@ -91,7 +123,7 @@ async function syncState() {
 }
 
 function saveLocalAccount() {
-  localStorage.setItem("npf.account", JSON.stringify(state.account));
+  localStorage.setItem("c2s.account", JSON.stringify(state.account));
 }
 
 async function setView(viewName) {
@@ -193,16 +225,17 @@ function renderAuth() {
 
     try {
       showToast(isLogin ? "Signing in..." : "Creating account...");
-      const res = await fetch(`${API_URL}/api/login`, {
+      const endpoint = isLogin ? "/api/login" : "/api/register";
+      const res = await fetch(`${API_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password: "password123" })
+        body: JSON.stringify({ username, password: "password123", role })
       });
       const data = await res.json();
       if (data.success) {
         state.account = { name: data.user, role: data.role };
         saveLocalAccount();
-        showToast(`Welcome, ${data.user}!`);
+        showToast(isLogin ? `Welcome, ${data.user}!` : `Account created! Welcome, ${data.user}!`);
         setView(data.role === "admin" ? "admin" : data.role === "seller" ? "seller" : "customer");
       } else {
         showToast(data.message || "Authentication failed");
@@ -370,13 +403,22 @@ function renderSeller() {
           formData.append("price", pPrice);
           formData.append("stock", pStock || "0");
           formData.append("unit", pUnit);
-          if (pImage) formData.append("product_image", pImage);
+          if (pImage) {
+            formData.append("product_image", pImage);
+          } else {
+            formData.append("product_image", getPlaceholderFile("product_placeholder.png"));
+          }
         }
       });
 
       // We also need shop_image (for simplicity use the first product image or a placeholder)
       const firstImage = rows.find(r => r.querySelector("[name='image']").files[0])?.querySelector("[name='image']").files[0];
-      // Refactoring this to match the backend's multipart form.
+      if (firstImage) {
+        formData.append("shop_image", firstImage);
+      } else {
+        formData.append("shop_image", getPlaceholderFile("shop_placeholder.png"));
+      }
+
       const res = await fetch(`${API_URL}/add_product`, {
         method: "POST",
         body: formData,

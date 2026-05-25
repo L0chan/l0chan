@@ -35,7 +35,7 @@
                 {% endif %}
             {% endwith %}
 
-            <form action="/verify_otp" method="POST" class="auth-form">
+            <form id="verifyForm" onsubmit="event.preventDefault(); verifyOTP();" class="auth-form">
                 <div class="input-group">
                     <input name="otp" type="number" placeholder=" " required id="otpCode">
                     <label for="otpCode">OTP Code</label>
@@ -53,5 +53,6 @@
             </div>
         </div>
     </main>
+    <script type="module" src="{{ url_for('static', filename='firebase-auth.js') }}"></script>
 </body>
 </html>

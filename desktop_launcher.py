@@ -5,8 +5,8 @@ import webbrowser
 from backend.app_factory import app
 
 
-HOST = os.environ.get("NPF_HOST", "127.0.0.1")
-PORT = int(os.environ.get("NPF_PORT", "5000"))
+HOST = os.environ.get("C2S_HOST", "127.0.0.1")
+PORT = int(os.environ.get("C2S_PORT", "5000"))
 
 
 def open_app():

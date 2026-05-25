@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$AppName = "NearbyPriceFinder"
+$AppName = "COMPARE2SAVE"
 $EntryPoint = Join-Path $ProjectRoot "desktop_launcher.py"
 $ReleaseDir = Join-Path $ProjectRoot "release"
 $ZipPath = Join-Path $ReleaseDir "$AppName-Windows.zip"

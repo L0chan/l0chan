@@ -1,4 +1,4 @@
-const CACHE_NAME = "nearby-price-finder-mobile-v3";
+const CACHE_NAME = "compare2save-mobile-v3";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -56,7 +56,7 @@ The app now has an Android download route:
 If this file exists, the route downloads it:
 
 ```text
-release/NearbyPriceFinder-Android.apk
+release/COMPARE2SAVE-Android.apk
 ```
 
 If the APK is not present, the route opens an Android setup page with HTTPS/PWA instructions.

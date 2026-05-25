@@ -1,6 +1,6 @@
 {
-  "appId": "com.nearbypricefinder.app",
-  "appName": "Nearby Price Finder",
+  "appId": "com.compare2save.app",
+  "appName": "COMPARE2SAVE",
   "webDir": "www",
   "server": {
     "androidScheme": "https"

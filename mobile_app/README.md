@@ -1,6 +1,6 @@
-# Nearby Price Finder Mobile
+# COMPARE2SAVE Mobile
 
-This is the no-server Android/iOS version of Nearby Price Finder.
+This is the no-server Android/iOS version of COMPARE2SAVE.
 
 The original Flask app needs a Python server, SQLite database, sessions, and backend routes. This mobile version runs completely on the device from static files. Products, users, orders, chats, and settings are stored in browser/WebView `localStorage`.
 

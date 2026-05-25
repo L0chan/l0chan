@@ -3,8 +3,8 @@ import os
 
 VALID_ROLES = {"customer", "seller", "admin"}
 PUBLIC_ROLES = {"customer", "seller"}
-OWNER_ADMIN_USERNAME = os.environ.get("NPF_ADMIN_USERNAME", "admin")
-OWNER_ADMIN_PASSWORD = os.environ.get("NPF_ADMIN_PASSWORD", "admin@123")
+OWNER_ADMIN_USERNAME = os.environ.get("C2S_ADMIN_USERNAME", "admin")
+OWNER_ADMIN_PASSWORD = os.environ.get("C2S_ADMIN_PASSWORD", "admin@123")
 DELIVERY_RIDERS = [
     ("Arjun Kumar", "+91 98765 12001"),
     ("Meera Singh", "+91 98765 12002"),

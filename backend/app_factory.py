@@ -12,12 +12,12 @@ app = Flask(
     static_folder=str(FRONTEND_DIR / "static"),
     static_url_path="/static",
 )
-app.secret_key = os.environ.get("NPF_SECRET_KEY", "nearbypricefinder")
+app.secret_key = os.environ.get("C2S_SECRET_KEY", "compare2save")
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # --- SESSION CONFIG FOR PRODUCTION ---
 # Ensures cookies work correctly behind proxies like Render
-if os.environ.get("RENDER") or not os.environ.get("NPF_DEV"):
+if os.environ.get("RENDER") or not os.environ.get("C2S_DEV"):
     app.config.update(
         SESSION_COOKIE_SECURE=True,
         SESSION_COOKIE_HTTPONLY=True,
