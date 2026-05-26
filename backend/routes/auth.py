@@ -145,25 +145,59 @@ def otp_login():
 def verify_otp_page():
     return render_template("verify_otp.html")
 
-@auth_bp.route("/firebase_login", methods=["POST"])
-def firebase_login():
+@auth_bp.route("/api/send_otp", methods=["POST"])
+def api_send_otp():
     data = request.json
-    id_token = data.get("id_token")
+    phone = data.get("phone")
+    if not phone:
+        return {"success": False, "message": "Phone number is required"}, 400
+    
+    phone = normalize_phone_number(phone)
+    if not phone:
+        return {"success": False, "message": "Invalid phone number format"}, 400
 
+    otp = generate_delivery_otp()
+    session['auth_otp'] = otp
+    session['auth_phone'] = phone
+    session['otp_expiry'] = (datetime.now() + timedelta(minutes=OTP_EXPIRY_MINUTES)).timestamp()
+    
     try:
-        # Verify the ID token sent from the client
-        decoded_token = auth.verify_id_token(id_token)
-        phone_number = decoded_token.get("phone_number")
-        
-        # Log the user in
-        session["user"] = phone_number
-        session["role"] = "customer" # Default role for phone login
-        session["is_owner_admin"] = False
-        
-        return {"success": True, "redirect": dashboard_for_role("customer")}
+        send_sms_otp(phone, otp)
+        return {"success": True, "message": "OTP sent successfully"}
     except Exception as e:
-        print(f"Firebase Auth Error: {str(e)}")
-        return {"success": False, "message": "Invalid authentication token"}, 401
+        return {"success": False, "message": str(e)}, 500
+
+@auth_bp.route("/api/verify_otp", methods=["POST"])
+def api_verify_otp():
+    data = request.json
+    code = data.get("code")
+    
+    if not code:
+        return {"success": False, "message": "Code is required"}, 400
+        
+    stored_otp = session.get('auth_otp')
+    stored_phone = session.get('auth_phone')
+    expiry = session.get('otp_expiry')
+    
+    if not stored_otp or not stored_phone or not expiry:
+        return {"success": False, "message": "No OTP request found. Please request a new code."}, 400
+        
+    if datetime.now().timestamp() > expiry:
+        return {"success": False, "message": "OTP has expired. Please request a new code."}, 400
+        
+    if str(code) != str(stored_otp):
+        return {"success": False, "message": "Invalid OTP code."}, 400
+        
+    # Clear the OTP from session
+    session.pop('auth_otp', None)
+    session.pop('otp_expiry', None)
+    
+    # Log the user in
+    session["user"] = stored_phone
+    session["role"] = "customer" # Default role for phone login
+    session["is_owner_admin"] = False
+    
+    return {"success": True, "redirect": dashboard_for_role("customer")}
 
 @auth_bp.route("/register")
 def register():

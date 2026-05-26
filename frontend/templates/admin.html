@@ -191,7 +191,7 @@
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 18px;
             margin-top: 22px;
         }
@@ -401,9 +401,15 @@
             </article>
 
             <article class="stat-card" style="--accent: var(--amber);">
+                <div class="stat-icon"><i class="fa-solid fa-store"></i></div>
+                <h2>{{ total_sellers }}</h2>
+                <p>Total Shopkeepers</p>
+            </article>
+
+            <article class="stat-card" style="--accent: var(--rose);">
                 <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
-                <h2>{{ total_users }}</h2>
-                <p>Total Users</p>
+                <h2>{{ total_customers }}</h2>
+                <p>Total Customers</p>
             </article>
         </section>
 

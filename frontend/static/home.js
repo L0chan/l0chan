@@ -391,9 +391,9 @@ const { useEffect, useMemo, useRef, useState } = React;
                             >
                                 <div style={{display: 'flex', gap: '12px', alignItems: 'center'}}>
                                     <img 
-                                        src={`/static/uploads/${product.product_image}`} 
+                                        src={product.product_image && product.product_image.startsWith('http') ? product.product_image : product.product_image ? `/static/uploads/${product.product_image}` : '/static/app-icon-512.png'} 
                                         style={{width: '50px', height: '50px', borderRadius: '10px', objectFit: 'cover'}}
-                                        onError={(e) => {e.target.src = '/static/app-icon.svg'}}
+                                        onError={(e) => {e.target.src = '/static/app-icon-512.png'}}
                                     />
                                     <div>
                                         <strong>{product.product_name}</strong>

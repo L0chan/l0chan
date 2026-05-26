@@ -91,16 +91,20 @@ def dashboard():
         # Owner/admin sees global stats
         cursor.execute("SELECT COUNT(*) FROM products")
         total_products = cursor.fetchone()[0]
-        cursor.execute("SELECT COUNT(*) FROM users")
-        total_users = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role='customer'")
+        total_customers = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role='seller'")
+        total_sellers = cursor.fetchone()[0]
         cursor.execute("SELECT COUNT(*) FROM orders")
         total_orders = cursor.fetchone()[0]
     else:
         # Sellers see only their own stats
         cursor.execute("SELECT COUNT(*) FROM products WHERE seller_username=?", (seller,))
         total_products = cursor.fetchone()[0]
-        cursor.execute("SELECT COUNT(*) FROM users")
-        total_users = cursor.fetchone()[0]  # total platform users is fine to show
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role='customer'")
+        total_customers = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role='seller'")
+        total_sellers = cursor.fetchone()[0]
         cursor.execute("SELECT COUNT(*) FROM orders WHERE seller_username=?", (seller,))
         total_orders = cursor.fetchone()[0]
 
@@ -109,7 +113,8 @@ def dashboard():
     return render_template(
         "dashboard.html",
         total_products=total_products,
-        total_users=total_users,
+        total_customers=total_customers,
+        total_sellers=total_sellers,
         total_orders=total_orders
     )
 
@@ -438,9 +443,13 @@ def admin():
     cursor.execute("SELECT COUNT(*) FROM orders")
     total_orders = cursor.fetchone()[0]
 
-    # TOTAL USERS
-    cursor.execute("SELECT COUNT(*) FROM users")
-    total_users = cursor.fetchone()[0]
+    # TOTAL CUSTOMERS
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role='customer'")
+    total_customers = cursor.fetchone()[0]
+
+    # TOTAL SELLERS
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role='seller'")
+    total_sellers = cursor.fetchone()[0]
 
     # ALL PRODUCTS
     cursor.execute("""
@@ -464,7 +473,8 @@ def admin():
         "admin.html",
         total_products=total_products,
         total_orders=total_orders,
-        total_users=total_users,
+        total_customers=total_customers,
+        total_sellers=total_sellers,
         products=products,
         orders=orders
     )

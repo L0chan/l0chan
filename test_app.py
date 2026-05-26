@@ -231,6 +231,26 @@ class TestRoleAccess:
         r = client.get("/admin", follow_redirects=False)
         assert r.status_code == 302
 
+    def test_admin_can_access_admin_stats(self, client, db_with_users):
+        """Admin should see separate stats for customers and shopkeepers."""
+        login(client, "admin", "admin@123")
+        r = client.get("/admin")
+        assert r.status_code == 200
+        html = r.data.decode("utf-8")
+        assert "Total Customers" in html
+        assert "Total Shopkeepers" in html
+        assert "Total Users" not in html
+
+    def test_admin_can_access_dashboard_stats(self, client, db_with_users):
+        """Admin dashboard should see separate stats for customers and shopkeepers."""
+        login(client, "admin", "admin@123")
+        r = client.get("/dashboard")
+        assert r.status_code == 200
+        html = r.data.decode("utf-8")
+        assert "Total Customers" in html
+        assert "Total Shopkeepers" in html
+        assert "Total Users" not in html
+
     def test_seller_can_access_orders_page(self, client, db_with_users):
         """A seller should be able to view their orders page."""
         login_as_seller(client)

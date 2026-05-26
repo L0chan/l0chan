@@ -166,7 +166,7 @@
                                 <a href="/product_map/{{ product['id'] }}">
                                     <span class="map-btn">📍 Map</span>
                                 </a>
-                                <a href="/buy?product_id={{ product['id'] }}&product_name={{ product['product_name'] }}&price={{ product['price'] }}&product_image={% if product['product_image'].startswith('http') %}{{ product['product_image'] }}{% else %}/static/uploads/{{ product['product_image'] }}{% endif %}">
+                                <a href="/buy?product_id={{ product['id'] }}&product_name={{ product['product_name'] }}&price={{ product['price'] }}&product_image={% if product['product_image'] and product['product_image'].startswith('http') %}{{ product['product_image'] }}{% elif product['product_image'] %}/static/uploads/{{ product['product_image'] }}{% else %}/static/app-icon-512.png{% endif %}">
                                     <span class="buy-btn">⚡ Buy Now</span>
                                 </a>
                             </div>

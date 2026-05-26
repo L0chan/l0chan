@@ -1,3 +1,6 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
 from pathlib import Path
 
 from flask import Flask, render_template, render_template_string, request, redirect, session, flash, send_from_directory
