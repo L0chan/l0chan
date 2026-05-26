@@ -435,6 +435,67 @@ class TestOrderFlow:
         assert row["delivery_otp"] is not None
         assert len(row["delivery_otp"]) == 6
 
+    def test_submit_order_verification_correct(self, client, db_with_product):
+        """Customer can verify order as Confirmed Correct."""
+        login_as_customer(client)
+        client.post("/place_order", data={
+            "product_name": "Apple", "phone": "9876543210",
+            "address": "123 Street", "payment": "Cash on Delivery",
+            "price": "50", "product_id": "1", "product_image": ""
+        })
+        
+        conn = get_db_conn()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM orders ORDER BY id DESC LIMIT 1")
+        order_id = cursor.fetchone()[0]
+        conn.close()
+        
+        # Verify order as correct
+        r = client.post(f"/submit_order_verification/{order_id}", data={
+            "verification_status": "Confirmed Correct"
+        }, follow_redirects=True)
+        assert r.status_code == 200
+        
+        conn = get_db_conn()
+        cursor = conn.cursor()
+        cursor.execute("SELECT verification_status, verification_details FROM orders WHERE id=?", (order_id,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        assert row["verification_status"] == "Confirmed Correct"
+        assert row["verification_details"] == ""
+
+    def test_submit_order_verification_refund_request(self, client, db_with_product):
+        """Customer can request return/refund with reason/details."""
+        login_as_customer(client)
+        client.post("/place_order", data={
+            "product_name": "Apple", "phone": "9876543210",
+            "address": "123 Street", "payment": "Cash on Delivery",
+            "price": "50", "product_id": "1", "product_image": ""
+        })
+        
+        conn = get_db_conn()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM orders ORDER BY id DESC LIMIT 1")
+        order_id = cursor.fetchone()[0]
+        conn.close()
+        
+        # Submit return request
+        r = client.post(f"/submit_order_verification/{order_id}", data={
+            "verification_status": "Return/Refund Requested",
+            "verification_details": "[Reason: Product(s) missing] Apple missing"
+        }, follow_redirects=True)
+        assert r.status_code == 200
+        
+        conn = get_db_conn()
+        cursor = conn.cursor()
+        cursor.execute("SELECT verification_status, verification_details FROM orders WHERE id=?", (order_id,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        assert row["verification_status"] == "Return/Refund Requested"
+        assert row["verification_details"] == "[Reason: Product(s) missing] Apple missing"
+
     def test_track_order_page_loads(self, client, db_with_product):
         """Track order page should load for a valid order ID."""
         login_as_customer(client)

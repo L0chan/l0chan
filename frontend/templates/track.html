@@ -593,14 +593,77 @@
             </div>
         </nav>
 
-        <!-- REVIEW BANNER (shown only when Delivered) -->
+        <!-- ORDER VERIFICATION BANNER (shown only when Delivered and Verification is Pending) -->
+        <div id="verificationBanner" style="display:none;margin:18px 0;padding:22px;
+            background:linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(250, 204, 21, 0.1));
+            border:1px solid rgba(34, 211, 238, 0.35);border-radius:18px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+                <div>
+                    <div style="font-weight:800;font-size:1.15rem;display:flex;align-items:center;gap:10px;">
+                        <i class="fa-solid fa-clipboard-check" style="color:var(--cyan)"></i> Verify Your Order Items
+                    </div>
+                    <div style="color:rgba(255,255,255,.7);font-size:.9rem;margin-top:6px;max-width:640px;">
+                        Please verify if you received the correct items. If any product is missing, damaged, or incorrect, you can request a return/refund.
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <form action="/submit_order_verification/{{ order_id }}" method="POST" style="margin:0;">
+                        <input type="hidden" name="verification_status" value="Confirmed Correct">
+                        <button type="submit" style="background:linear-gradient(135deg,var(--green),#2ecc71);color:#0f0f14;
+                                              padding:12px 20px;border-radius:12px;font-weight:800;font-size:.9rem;border:0;
+                                              cursor:pointer;transition:all .2s;"
+                               onmouseover="this.style.transform='translateY(-2px)'"
+                               onmouseout="this.style.transform=''">
+                            <i class="fa-solid fa-check"></i> Yes, All Correct
+                        </button>
+                    </form>
+                    <button onclick="showRefundForm()" style="background:rgba(251,113,133,0.18);color:#fb7185;
+                                          border:1px solid rgba(251,113,133,0.4);padding:12px 20px;border-radius:12px;
+                                          font-weight:800;font-size:.9rem;cursor:pointer;transition:all .2s;"
+                            onmouseover="this.style.transform='translateY(-2px)'"
+                            onmouseout="this.style.transform=''">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Report Missing/Incorrect Items
+                    </button>
+                </div>
+            </div>
+            
+            <!-- REFUND REQUEST FORM -->
+            <div id="refundForm" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.12);">
+                <form action="/submit_order_verification/{{ order_id }}" method="POST" onsubmit="submitRefund(event)">
+                    <input type="hidden" name="verification_status" value="Return/Refund Requested">
+                    <div style="margin-bottom:12px;">
+                        <label style="display:block;font-size:.88rem;color:var(--muted);margin-bottom:6px;font-weight:700;">Reason for Return/Refund:</label>
+                        <select name="verification_reason" style="width:100%;max-width:300px;min-height:44px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:rgba(6,17,31,0.8);color:white;outline:none;" required>
+                            <option value="Product(s) missing">Product(s) missing</option>
+                            <option value="Incorrect product received">Incorrect product received</option>
+                            <option value="Damaged product">Damaged product</option>
+                            <option value="Other issue">Other issue</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:14px;">
+                        <label style="display:block;font-size:.88rem;color:var(--muted);margin-bottom:6px;font-weight:700;">Please describe the issue in detail (e.g., list of missing items):</label>
+                        <textarea name="raw_details" placeholder="e.g. Fresh Milk product is missing from the bag." style="width:100%;min-height:90px;padding:12px;border-radius:10px;border:1px solid var(--line);background:rgba(6,17,31,0.8);color:white;outline:none;font:inherit;" required></textarea>
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <button type="submit" style="background:linear-gradient(135deg,var(--rose),#e11d48);color:white;padding:12px 22px;border-radius:12px;font-weight:800;font-size:.9rem;border:0;cursor:pointer;transition:all .2s;">
+                            Submit Return/Refund Request
+                        </button>
+                        <button type="button" onclick="hideRefundForm()" style="background:rgba(255,255,255,0.08);color:white;padding:12px 20px;border-radius:12px;font-weight:800;font-size:.9rem;border:1px solid var(--line);cursor:pointer;">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- REVIEW BANNER (shown only when Delivered and Verified Correct) -->
         <div id="reviewBanner" style="display:none;margin:18px 0;padding:20px 24px;
             background:linear-gradient(135deg,rgba(52,211,153,.15),rgba(124,110,245,.1));
             border:1px solid rgba(52,211,153,.35);border-radius:18px;
             display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
             <div>
-                <div style="font-weight:800;font-size:1.05rem;">✅ Order Delivered!</div>
-                <div style="color:rgba(255,255,255,.6);font-size:.88rem;margin-top:4px;">Share your experience — help other buyers.</div>
+                <div style="font-weight:800;font-size:1.05rem;">✅ Order Verified & Correct!</div>
+                <div style="color:rgba(255,255,255,.6);font-size:.88rem;margin-top:4px;">Thank you for confirming your order. Help other buyers by leaving a review!</div>
             </div>
             <a id="reviewLink" href="/leave_review/{{ order_id }}"
                style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#0f0f14;
@@ -608,6 +671,24 @@
                       text-decoration:none;white-space:nowrap;transition:all .2s;"
                onmouseover="this.style.transform='translateY(-2px)'"
                onmouseout="this.style.transform=''">⭐ Leave a Review</a>
+        </div>
+
+        <!-- RETURN REQUEST BANNER (shown only when Return/Refund Requested) -->
+        <div id="refundRequestBanner" style="display:none;margin:18px 0;padding:20px 24px;
+            background:linear-gradient(135deg,rgba(251,113,133,.15),rgba(244,63,94,.1));
+            border:1px solid rgba(251,113,133,.35);border-radius:18px;
+            display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+            <div>
+                <div style="font-weight:800;font-size:1.05rem;color:#fecdd3;display:flex;align-items:center;gap:8px;">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Return/Refund Request Pending
+                </div>
+                <div style="color:rgba(255,255,255,.65);font-size:.88rem;margin-top:6px;" id="refundBannerDetails">
+                    Refund details will appear here.
+                </div>
+                <div style="color:rgba(255,255,255,.45);font-size:.8rem;margin-top:4px;">
+                    The shopkeeper has been notified of your request and will contact you to arrange return/refund processing.
+                </div>
+            </div>
         </div>
 
         <section class="hero">
@@ -731,7 +812,9 @@
         "delivery_otp":  {{ (order['delivery_otp']  or '000000')|tojson }},
         "otp_verified":  {{ (order['otp_verified']  or 'No')|tojson }},
         "address":       {{ (order['address']       or 'Customer location')|tojson }},
-        "status":        {{ (status or 'Order Confirmed')|tojson }}
+        "status":        {{ (status or 'Order Confirmed')|tojson }},
+        "verification_status": {{ (order['verification_status'] or 'Pending')|tojson }},
+        "verification_details": {{ (order['verification_details'] or '')|tojson }}
     }
     </script>
 
@@ -840,11 +923,60 @@
             setBike(meta.progress, key);
             setTimeline(key);
 
-            // Show review banner if delivered
-            const banner = document.getElementById('reviewBanner');
-            if (banner) {
-                banner.style.display = (key === 'delivered') ? 'flex' : 'none';
+            // Show review/verification banners if delivered
+            const verificationBanner = document.getElementById('verificationBanner');
+            const reviewBanner = document.getElementById('reviewBanner');
+            const refundRequestBanner = document.getElementById('refundRequestBanner');
+            const refundBannerDetails = document.getElementById('refundBannerDetails');
+            
+            if (key === 'delivered') {
+                const vStatus = order.verification_status || 'Pending';
+                const vDetails = order.verification_details || '';
+                
+                if (vStatus === 'Pending') {
+                    verificationBanner.style.display = 'block';
+                    reviewBanner.style.display = 'none';
+                    refundRequestBanner.style.display = 'none';
+                } else if (vStatus === 'Confirmed Correct') {
+                    verificationBanner.style.display = 'none';
+                    reviewBanner.style.display = 'flex';
+                    refundRequestBanner.style.display = 'none';
+                } else if (vStatus === 'Return/Refund Requested') {
+                    verificationBanner.style.display = 'none';
+                    reviewBanner.style.display = 'none';
+                    refundRequestBanner.style.display = 'block';
+                    refundBannerDetails.textContent = `${vDetails}`;
+                }
+            } else {
+                verificationBanner.style.display = 'none';
+                reviewBanner.style.display = 'none';
+                refundRequestBanner.style.display = 'none';
             }
+        }
+
+        function showRefundForm() {
+            document.getElementById('refundForm').style.display = 'block';
+        }
+
+        function hideRefundForm() {
+            document.getElementById('refundForm').style.display = 'none';
+        }
+
+        function submitRefund(e) {
+            e.preventDefault();
+            const form = e.target;
+            const reason = form.verification_reason.value;
+            const rawDetails = form.raw_details.value.trim();
+            const combinedDetails = `[Reason: ${reason}] ${rawDetails}`;
+            
+            // Create hidden input for verification_details
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'verification_details';
+            input.value = combinedDetails;
+            form.appendChild(input);
+            
+            form.submit();
         }
 
         async function refreshStatus() {
@@ -867,6 +999,8 @@
             otp_verified:   _d.otp_verified,
             address:        _d.address,
             status:         _d.status,
+            verification_status: _d.verification_status,
+            verification_details: _d.verification_details,
         });
 
         setInterval(() => {

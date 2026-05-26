@@ -341,7 +341,7 @@ def track_status(order_id):
 
     cursor.execute("""
     SELECT id, customer_name, product_name, price, address, payment_method, status,
-           rider_name, rider_phone, delivery_otp, otp_verified
+           rider_name, rider_phone, delivery_otp, otp_verified, verification_status, verification_details
     FROM orders
     WHERE id=?
     """, (order_id,))
@@ -373,8 +373,58 @@ def track_status(order_id):
             # SECURITY: Never expose OTP to non-owners
             "delivery_otp": (order["delivery_otp"] or "000000") if is_owner else "hidden",
             "otp_verified": order["otp_verified"] or "No",
+            "verification_status": order["verification_status"] or "Pending",
+            "verification_details": order["verification_details"] or "",
         }
     }
+
+@customer_bp.route("/submit_order_verification/<int:order_id>", methods=["POST"])
+@role_required("customer")
+def submit_order_verification(order_id):
+    customer_name = session.get("user")
+    
+    # Read POST data
+    verification_status = request.form.get("verification_status")
+    verification_details = request.form.get("verification_details", "").strip()
+    
+    if verification_status not in ["Confirmed Correct", "Return/Refund Requested"]:
+        flash("Invalid verification status selected.")
+        return redirect(f"/track/{order_id}")
+        
+    conn = get_db_conn()
+    cursor = conn.cursor()
+    
+    # Verify order owner
+    cursor.execute("SELECT customer_name FROM orders WHERE id=?", (order_id,))
+    order = cursor.fetchone()
+    
+    if not order:
+        conn.close()
+        return "Order not found", 404
+        
+    if order["customer_name"] != customer_name:
+        conn.close()
+        return "Unauthorized", 403
+        
+    # Update verification status and details
+    cursor.execute("""
+    UPDATE orders
+    SET verification_status=?, verification_details=?
+    WHERE id=?
+    """, (verification_status, verification_details, order_id))
+    
+    conn.commit()
+    conn.close()
+    
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+        return {"success": True, "message": "Verification submitted successfully."}
+        
+    if verification_status == "Confirmed Correct":
+        flash("Order verified as correct! Thank you.")
+    else:
+        flash("Return/Refund request submitted successfully. The shopkeeper has been notified.")
+        
+    return redirect(f"/track/{order_id}")
 
 @customer_bp.route("/leave_review/<int:order_id>")
 @role_required("customer")

@@ -217,7 +217,10 @@ def _setup_database():
         rider_phone    TEXT,
         delivery_otp   TEXT,
         otp_verified   TEXT DEFAULT 'No',
-        created_at     TEXT
+        created_at     TEXT,
+        seller_username TEXT,
+        verification_status TEXT DEFAULT 'Pending',
+        verification_details TEXT
     )
     """)
 
@@ -285,6 +288,8 @@ def _setup_database():
     _safe_alter(cursor, "products", "seller_username", "TEXT")
     _safe_alter(cursor, "orders",   "seller_username", "TEXT")
     _safe_alter(cursor, "reviews",  "seller_username", "TEXT")
+    _safe_alter(cursor, "orders",   "verification_status", "TEXT DEFAULT 'Pending'")
+    _safe_alter(cursor, "orders",   "verification_details", "TEXT")
 
     conn.commit()
     conn.close()
