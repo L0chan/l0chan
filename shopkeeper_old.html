@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        :root {
+            --bg: #07111f;
+            --panel: rgba(255, 255, 255, 0.09);
+            --panel-strong: rgba(255, 255, 255, 0.14);
+            --line: rgba(255, 255, 255, 0.15);
+            --text: #f8fbff;
+            --muted: #9fb1c7;
+            --cyan: #22d3ee;
+            --green: #4ade80;
+            --amber: #facc15;
+            --rose: #fb7185;
+            --ink: #06111f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: var(--text);
+            font-family: "Inter", Arial, sans-serif;
+            background:
+                radial-gradient(circle at 10% 12%, rgba(34, 211, 238, 0.22), transparent 28%),
+                radial-gradient(circle at 88% 16%, rgba(74, 222, 128, 0.16), transparent 25%),
+                radial-gradient(circle at 72% 92%, rgba(250, 204, 21, 0.11), transparent 31%),
+                linear-gradient(135deg, #07111f 0%, #101f30 48%, #102538 100%);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 54px 54px;
+            mask-image: linear-gradient(to bottom, black 20%, transparent 90%);
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        input,
+        button {
+            font: inherit;
+        }
+
+        .motion-layer {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .tile {
+            position: absolute;
+            width: var(--size);
+            height: var(--size);
+            left: var(--left);
+            bottom: -150px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.055);
+            animation: rise var(--duration) linear infinite;
+            animation-delay: var(--delay);
+        }
+
+        @keyframes rise {
+            0% {
+                opacity: 0;
+                transform: translateY(0) rotate(0deg) scale(0.75);
+            }
+            12% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-118vh) rotate(520deg) scale(1.14);
+            }
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 270px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            padding: 24px 18px;
+            border-right: 1px solid var(--line);
+            background: rgba(6, 17, 31, 0.78);
+            backdrop-filter: blur(22px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .logo-mark {
+            display: grid;
+            width: 46px;
+            height: 46px;
+            place-items: center;
+            border-radius: 15px;
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            box-shadow: 0 14px 34px rgba(34, 211, 238, 0.24);
+        }
+
+        .menu {
+            display: grid;
+            gap: 10px;
+            margin-top: 34px;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            min-height: 52px;
+            padding: 0 14px;
+            border: 1px solid transparent;
+            border-radius: 16px;
+            color: #d9e6f5;
+            font-size: 15px;
+            font-weight: 700;
+            transition: 180ms ease;
+        }
+
+        .menu a:hover,
+        .menu a.active {
+            color: white;
+            border-color: rgba(34, 211, 238, 0.26);
+            background: rgba(255, 255, 255, 0.09);
+            transform: translateX(4px);
+        }
+
+        .main {
+            padding: 30px;
+        }
+
+        .hero,
+        .stat-card,
+        .form-box,
+        .preview-card {
+            border: 1px solid var(--line);
+            background: var(--panel);
+            box-shadow: 0 22px 58px rgba(0, 0, 0, 0.22);
+            backdrop-filter: blur(18px);
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+            gap: 22px;
+            align-items: stretch;
+            padding: 24px;
+            border-radius: 28px;
+            animation: slideDown 560ms ease both;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: fit-content;
+            padding: 10px 14px;
+            border: 1px solid rgba(34, 211, 238, 0.32);
+            border-radius: 999px;
+            color: #9ef3ff;
+            background: rgba(34, 211, 238, 0.1);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: var(--green);
+            box-shadow: 0 0 0 8px rgba(74, 222, 128, 0.14);
+            animation: pulse 1.7s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            50% {
+                box-shadow: 0 0 0 13px rgba(74, 222, 128, 0.02);
+            }
+        }
+
+        h1 {
+            max-width: 850px;
+            margin-top: 18px;
+            font-size: clamp(38px, 5vw, 66px);
+            line-height: 1.02;
+            letter-spacing: 0;
+        }
+
+        h1 span {
+            color: var(--cyan);
+            text-shadow: 0 0 34px rgba(34, 211, 238, 0.34);
+        }
+
+        .hero p {
+            max-width: 720px;
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.8;
+        }
+
+        .preview-card {
+            position: relative;
+            overflow: hidden;
+            min-height: 260px;
+            padding: 20px;
+            border-radius: 24px;
+        }
+
+        .preview-card::before {
+            content: "";
+            position: absolute;
+            inset: 24px;
+            border: 4px dashed rgba(34, 211, 238, 0.62);
+            border-bottom-color: rgba(74, 222, 128, 0.7);
+            border-left-color: transparent;
+            border-radius: 45% 55% 50% 60%;
+            animation: spin 8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .preview-top {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .preview-top strong {
+            font-size: 22px;
+        }
+
+        .live-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            color: #b7ffd0;
+            background: rgba(74, 222, 128, 0.13);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .floating-product {
+            position: absolute;
+            left: 24px;
+            right: 24px;
+            bottom: 24px;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 18px;
+            background: rgba(6, 17, 31, 0.82);
+            animation: floatCard 4s ease-in-out infinite;
+        }
+
+        @keyframes floatCard {
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .product-dot {
+            display: grid;
+            width: 48px;
+            height: 48px;
+            flex: 0 0 auto;
+            place-items: center;
+            border-radius: 15px;
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+        }
+
+        .floating-product span {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-top: 22px;
+        }
+
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+            min-height: 150px;
+            padding: 22px;
+            border-radius: 24px;
+            animation: cardIn 650ms ease both;
+            animation-delay: calc(var(--index) * 90ms);
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(24px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .stat-icon {
+            display: grid;
+            width: 50px;
+            height: 50px;
+            place-items: center;
+            border-radius: 15px;
+            color: var(--ink);
+            background: var(--accent);
+            font-size: 20px;
+        }
+
+        .stat-card h2 {
+            margin-top: 18px;
+            font-size: 34px;
+        }
+
+        .stat-card p {
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .workbench {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 330px;
+            gap: 22px;
+            margin-top: 22px;
+        }
+
+        .form-box,
+        .tips {
+            border: 1px solid var(--line);
+            background: var(--panel);
+            box-shadow: 0 22px 58px rgba(0, 0, 0, 0.22);
+            backdrop-filter: blur(18px);
+        }
+
+        .form-box {
+            padding: 24px;
+            border-radius: 28px;
+        }
+
+        .section-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .section-head h2 {
+            font-size: 30px;
+        }
+
+        .section-head p {
+            max-width: 520px;
+            margin-top: 7px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .input-box.full {
+            grid-column: 1 / -1;
+        }
+
+        .input-box label {
+            display: block;
+            margin-bottom: 9px;
+            color: #dce9f8;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .input-box input {
+            width: 100%;
+            min-height: 58px;
+            padding: 0 16px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 16px;
+            outline: none;
+            color: white;
+            background: rgba(6, 17, 31, 0.7);
+            transition: 180ms ease;
+        }
+
+        .input-box input:focus {
+            border-color: rgba(34, 211, 238, 0.55);
+            box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.1);
+        }
+
+        .batch-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            grid-column: 1 / -1;
+            margin-top: 8px;
+        }
+
+        .batch-header h3 {
+            font-size: 24px;
+        }
+
+        .batch-header span {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .product-rows {
+            display: grid;
+            gap: 16px;
+            grid-column: 1 / -1;
+        }
+
+        .product-row {
+            display: grid;
+            grid-template-columns: minmax(150px, 1.2fr) minmax(100px, 0.7fr) minmax(100px, 0.7fr) minmax(100px, 0.6fr) minmax(150px, 1fr) 46px;
+            gap: 14px;
+            align-items: end;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .row-remove,
+        .add-row-btn {
+            border: 1px solid rgba(34, 211, 238, 0.28);
+            color: #9ef3ff;
+            background: rgba(34, 211, 238, 0.1);
+            cursor: pointer;
+            font-weight: 900;
+            transition: 180ms ease;
+        }
+
+        .row-remove {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+        }
+
+        .row-remove:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+        }
+
+        .add-row-btn {
+            min-height: 48px;
+            padding: 0 16px;
+            border-radius: 14px;
+        }
+
+        .row-remove:not(:disabled):hover,
+        .add-row-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(34, 211, 238, 0.16);
+        }
+
+        .map-tools {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .map-tools span {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .location-btn {
+            min-height: 42px;
+            padding: 0 14px;
+            border: 1px solid rgba(34, 211, 238, 0.28);
+            border-radius: 13px;
+            color: #9ef3ff;
+            background: rgba(34, 211, 238, 0.1);
+            cursor: pointer;
+            font-weight: 800;
+            transition: 180ms ease;
+            white-space: nowrap;
+        }
+
+        .location-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(34, 211, 238, 0.16);
+        }
+
+        #seller-map {
+            height: 320px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 18px;
+            background: rgba(6, 17, 31, 0.7);
+        }
+
+        .map-status {
+            display: block;
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .upload-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            min-height: 60px;
+            margin-top: 20px;
+            border: 0;
+            border-radius: 17px;
+            color: var(--ink);
+            background: linear-gradient(135deg, var(--cyan), var(--green));
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: 900;
+            transition: 180ms ease;
+            box-shadow: 0 16px 34px rgba(34, 211, 238, 0.24);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 42px rgba(34, 211, 238, 0.3);
+        }
+
+        .tips {
+            padding: 22px;
+            border-radius: 26px;
+        }
+
+        .tips h2 {
+            font-size: 25px;
+            margin-bottom: 16px;
+        }
+
+        .tip-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .tip {
+            display: flex;
+            gap: 12px;
+            padding: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: #e8f5ff;
+            background: rgba(255, 255, 255, 0.06);
+            line-height: 1.5;
+        }
+
+        .tip i {
+            color: var(--green);
+            margin-top: 3px;
+        }
+
+        @media (max-width: 1080px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+                height: auto;
+            }
+
+            .menu {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                margin-top: 22px;
+            }
+
+            .hero,
+            .workbench {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .main {
+                padding: 18px;
+            }
+
+            .stats,
+            .form-grid,
+            .product-row,
+            .menu {
+                grid-template-columns: 1fr;
+            }
+
+            .section-head {
+                flex-direction: column;
+            }
+
+            .batch-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .row-remove {
+                width: 100%;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='pro-redesign.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='site-theme.css') }}">
+</head>
+<body data-panel="seller">
+    <div class="motion-layer" aria-hidden="true">
+        <span class="tile" style="--left: 7%; --size: 78px; --duration: 18s; --delay: -2s;"></span>
+        <span class="tile" style="--left: 26%; --size: 54px; --duration: 15s; --delay: -8s;"></span>
+        <span class="tile" style="--left: 48%; --size: 96px; --duration: 22s; --delay: -5s;"></span>
+        <span class="tile" style="--left: 69%; --size: 66px; --duration: 19s; --delay: -11s;"></span>
+        <span class="tile" style="--left: 88%; --size: 88px; --duration: 24s; --delay: -4s;"></span>
+    </div>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <span class="logo-mark"><i class="fa-solid fa-shop"></i></span>
+                Seller Panel
+            </div>
+
+            <nav class="menu">
+                <a href="/shopkeeper" class="active"><i class="fa-solid fa-store"></i> Add Product</a>
+                <a href="/seller_products"><i class="fa-solid fa-box"></i> Products</a>
+                <a href="/shopkeeper_orders"><i class="fa-solid fa-cart-shopping"></i> Orders</a>
+                <a href="/seller_maps"><i class="fa-solid fa-map-location-dot"></i> Maps</a>
+                <a href="/dashboard"><i class="fa-solid fa-chart-pie"></i> Analytics</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <section class="hero">
+                <div>
+                    <div class="eyebrow">
+                        <span class="pulse-dot"></span>
+                        Seller workspace online
+                    </div>
+                    <h1>Upload products with a <span>premium seller flow.</span></h1>
+                    <p>Add product details, stock, shop location, and images. New products appear in customer search after upload.</p>
+                    <button onclick="migrateOldData(true)" style="margin-top:20px; padding:12px 24px; background:linear-gradient(135deg, var(--cyan), var(--green)); color:var(--ink); border:none; border-radius:14px; cursor:pointer; font-weight:900; box-shadow: 0 10px 20px rgba(34, 211, 238, 0.2);">
+                        🔄 Sync Offline Data from Phone
+                    </button>
+                </div>
+
+                <div class="preview-card" aria-hidden="true">
+                    <div class="preview-top">
+                        <strong>Live Listing</strong>
+                        <span class="live-chip"><span class="pulse-dot"></span> Ready</span>
+                    </div>
+                    <div class="floating-product">
+                        <span class="product-dot"><i class="fa-solid fa-box-open"></i></span>
+                        <div>
+                            <strong>Product card preview</strong>
+                            <span>Images, price, stock and location</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="stats">
+                <article class="stat-card" style="--accent: var(--cyan); --index: 0;">
+                    <div class="stat-icon"><i class="fa-solid fa-box"></i></div>
+                    <h2>Fast</h2>
+                    <p>Product upload</p>
+                </article>
+                <article class="stat-card" style="--accent: var(--green); --index: 1;">
+                    <div class="stat-icon"><i class="fa-solid fa-location-dot"></i></div>
+                    <h2>Local</h2>
+                    <p>Shop discovery</p>
+                </article>
+                <article class="stat-card" style="--accent: var(--amber); --index: 2;">
+                    <div class="stat-icon"><i class="fa-solid fa-bolt"></i></div>
+                    <h2>Live</h2>
+                    <p>Customer search</p>
+                </article>
+            </section>
+
+            <section class="workbench">
+                <div class="form-box">
+                    <div class="section-head">
+                        <div>
+                            <h2>Add Products In Bulk</h2>
+                            <p>Enter shop details once, then add as many product rows as you need before uploading.</p>
+                        </div>
+                    </div>
+
+                    <form action="/add_product" method="POST" enctype="multipart/form-data" id="bulk-product-form">
+                        <div class="form-grid">
+                            <div class="input-box">
+                                <label for="shop_name">Shop Name</label>
+                                <input id="shop_name" type="text" name="shop_name" required>
+                            </div>
+
+                            <div class="input-box">
+                                <label for="location">Location</label>
+                                <input id="location" type="text" name="location" required>
+                            </div>
+
+                            <div class="input-box full">
+                                <label>Real-Time Map Location</label>
+                                <div class="map-tools">
+                                    <span>Use your current location or click the map to pin the shop.</span>
+                                    <button class="location-btn" type="button" id="use-location">
+                                        <i class="fa-solid fa-location-crosshairs"></i>
+                                        Use My Location
+                                    </button>
+                                </div>
+                                <div id="seller-map"></div>
+                                <span class="map-status" id="map-status">Map ready. Select a shop location before upload.</span>
+                                <input id="latitude" type="hidden" name="latitude">
+                                <input id="longitude" type="hidden" name="longitude">
+                            </div>
+
+                            <div class="input-box full">
+                                <label for="shop_image">Shop Image</label>
+                                <input id="shop_image" type="file" name="shop_image" accept="image/*" required>
+                            </div>
+
+                            <div class="batch-header">
+                                <div>
+                                    <h3>Product Batch</h3>
+                                    <span>Each row becomes one product listing under the shop above.</span>
+                                </div>
+                                <button class="add-row-btn" type="button" id="add-product-row">
+                                    <i class="fa-solid fa-plus"></i>
+                                    Add Product Row
+                                </button>
+                            </div>
+
+                            <div class="product-rows" id="product-rows">
+                                <div class="product-row">
+                                    <div class="input-box">
+                                        <label>Product Name</label>
+                                        <input type="text" name="product_name" placeholder="Example: USB cable" required>
+                                    </div>
+
+                                    <div class="input-box">
+                                        <label>Price</label>
+                                        <input type="number" name="price" min="0" step="0.01" placeholder="199" required>
+                                    </div>
+
+                                    <div class="input-box">
+                                        <label>Unit</label>
+                                        <input type="text" name="unit" placeholder="kg, unit, liter" required>
+                                    </div>
+
+                                    <div class="input-box">
+                                        <label>Stock Left</label>
+                                        <input type="number" name="stock" min="0" placeholder="25" required>
+                                    </div>
+
+                                    <div class="input-box">
+                                        <label>Product Image</label>
+                                        <input type="file" name="product_image" accept="image/*" required>
+                                    </div>
+
+                                    <button class="row-remove" type="button" disabled aria-label="Remove product row">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="upload-btn" type="submit">
+                            <i class="fa-solid fa-upload"></i>
+                            Upload All Products
+                        </button>
+                    </form>
+                </div>
+
+                <aside class="tips">
+                    <h2>Seller Checklist</h2>
+                    <div class="tip-list">
+                        <div class="tip"><i class="fa-solid fa-check"></i><span>Use clear product photos so customers can inspect items.</span></div>
+                        <div class="tip"><i class="fa-solid fa-check"></i><span>Keep stock updated before orders arrive.</span></div>
+                        <div class="tip"><i class="fa-solid fa-check"></i><span>Add an accurate location for nearby discovery.</span></div>
+                    </div>
+                </aside>
+            </section>
+        </main>
+    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const defaultPosition = [20.5937, 78.9629];
+        const mapStatus = document.getElementById("map-status");
+        const locationInput = document.getElementById("location");
+        const latitudeInput = document.getElementById("latitude");
+        const longitudeInput = document.getElementById("longitude");
+        const productRows = document.getElementById("product-rows");
+        const addProductRow = document.getElementById("add-product-row");
+        const STORE_KEY = "npf.mobile.state.v2";
+
+        const sellerMap = L.map("seller-map").setView(defaultPosition, 5);
+        let shopMarker = null;
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors",
+        }).addTo(sellerMap);
+
+        async function migrateOldData(manual = false) {
+            const oldData = JSON.parse(localStorage.getItem(STORE_KEY));
+            if (!oldData || !oldData.products || oldData.products.length === 0) {
+                if (manual) alert("No offline data found on this phone.");
+                return;
+            }
+            if (manual || confirm(`Found ${oldData.products.length} items saved on this phone. Would you like to upload them to the live website?`)) {
+                for (const p of oldData.products) {
+                    try {
+                        const formData = new FormData();
+                        formData.append("shop_name", p.shopName);
+                        formData.append("location", p.location);
+                        formData.append("latitude", p.latitude);
+                        formData.append("longitude", p.longitude);
+                        formData.append("product_name", p.productName);
+                        formData.append("price", p.price);
+                        formData.append("stock", p.stock);
+                        formData.append("unit", p.unit || "unit");
+                        await fetch(`/add_product`, { method: "POST", body: formData });
+                    } catch (err) { console.error("Migration error:", err); }
+                }
+                localStorage.removeItem(STORE_KEY);
+                alert("Sync complete! Please refresh the page.");
+                location.reload();
+            }
+        }
+
+        window.addEventListener('load', () => setTimeout(() => migrateOldData(false), 1000));
+
+        function setShopLocation(latitude, longitude, label) {
+            latitudeInput.value = latitude.toFixed(6);
+            longitudeInput.value = longitude.toFixed(6);
+            mapStatus.textContent = `Pinned location: ${latitudeInput.value}, ${longitudeInput.value}`;
+
+            if (!locationInput.value.trim()) {
+                locationInput.value = label || `${latitudeInput.value}, ${longitudeInput.value}`;
+            }
+
+            if (shopMarker) {
+                shopMarker.setLatLng([latitude, longitude]);
+            } else {
+                shopMarker = L.marker([latitude, longitude]).addTo(sellerMap);
+            }
+
+            shopMarker.bindPopup("Shop location").openPopup();
+            sellerMap.setView([latitude, longitude], 15);
+        }
+
+        sellerMap.on("click", (event) => {
+            setShopLocation(event.latlng.lat, event.latlng.lng, "Selected on map");
+        });
+
+        document.getElementById("use-location").addEventListener("click", () => {
+            if (!navigator.geolocation) {
+                mapStatus.textContent = "Geolocation is not supported in this browser.";
+                return;
+            }
+
+            mapStatus.textContent = "Detecting your current location...";
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setShopLocation(
+                        position.coords.latitude,
+                        position.coords.longitude,
+                        "Current location"
+                    );
+                },
+                () => {
+                    mapStatus.textContent = "Could not access location. Click on the map to pin manually.";
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+
+        function updateRemoveButtons() {
+            const rows = productRows.querySelectorAll(".product-row");
+            rows.forEach((row) => {
+                const removeButton = row.querySelector(".row-remove");
+                removeButton.disabled = rows.length === 1;
+            });
+        }
+
+        function createProductRow() {
+            const row = document.createElement("div");
+            row.className = "product-row";
+            row.innerHTML = `
+                <div class="input-box">
+                    <label>Product Name</label>
+                    <input type="text" name="product_name" placeholder="Example: USB cable" required>
+                </div>
+
+                <div class="input-box">
+                    <label>Price</label>
+                    <input type="number" name="price" min="0" step="0.01" placeholder="199" required>
+                </div>
+
+                <div class="input-box">
+                    <label>Unit</label>
+                    <input type="text" name="unit" placeholder="kg, unit, liter" required>
+                </div>
+
+                <div class="input-box">
+                    <label>Stock Left</label>
+                    <input type="number" name="stock" min="0" placeholder="25" required>
+                </div>
+
+                <div class="input-box">
+                    <label>Product Image</label>
+                    <input type="file" name="product_image" accept="image/*" required>
+                </div>
+
+                <button class="row-remove" type="button" aria-label="Remove product row">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+
+            return row;
+        }
+
+        addProductRow.addEventListener("click", () => {
+            const row = createProductRow();
+            productRows.appendChild(row);
+            row.querySelector("input").focus();
+            updateRemoveButtons();
+        });
+
+        productRows.addEventListener("click", (event) => {
+            const removeButton = event.target.closest(".row-remove");
+            if (!removeButton || removeButton.disabled) return;
+
+            removeButton.closest(".product-row").remove();
+            updateRemoveButtons();
+        });
+
+        updateRemoveButtons();
+    </script>
+</body>
+</html>

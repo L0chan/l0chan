@@ -196,9 +196,9 @@ def generate_invoice(order_id):
 
     cursor.execute("SELECT * FROM orders WHERE id=?", (order_id,))
     order = cursor.fetchone()
-    conn.close()
 
     if not order:
+        conn.close()
         return "Order not found", 404
 
     # Security check: Ensure the user is authorized to view this invoice
@@ -214,9 +214,30 @@ def generate_invoice(order_id):
     if not is_owner:
         # Special case: If order has no names (legacy/broken data), we allow viewing if they have the link
         if order['customer_name'] or order['seller_username']:
+            conn.close()
             flash("You are not authorized to view this invoice.")
             return redirect("/")
 
+    # Fetch all orders checked out at the exact same transaction (same customer, timestamp, address, payment method)
+    cursor.execute("""
+    SELECT * FROM orders
+    WHERE customer_name = ? 
+      AND created_at = ? 
+      AND address = ? 
+      AND payment_method = ?
+    """, (order["customer_name"], order["created_at"], order["address"], order["payment_method"]))
+    orders = cursor.fetchall()
+    conn.close()
+
+    total_amount = 0.0
+    for o in orders:
+        try:
+            total_amount += float(o["price"] or 0)
+        except (ValueError, TypeError):
+            pass
+
+    if total_amount.is_integer():
+        total_amount = int(total_amount)
 
     return render_template_string("""
     <!DOCTYPE html>
@@ -272,16 +293,18 @@ def generate_invoice(order_id):
                     </tr>
                 </thead>
                 <tbody>
+                    {% for item in orders %}
                     <tr>
-                        <td>{{ order.product_name }}</td>
-                        <td>{{ order.status }}</td>
-                        <td style="text-align: right;">₹{{ order.price }}</td>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.status }}</td>
+                        <td style="text-align: right;">₹{{ item.price }}</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
 
             <div class="total">
-                Total Amount: ₹{{ order.price }}
+                Total Amount: ₹{{ total_amount }}
             </div>
 
             <div class="footer">
@@ -295,7 +318,7 @@ def generate_invoice(order_id):
         </div>
     </body>
     </html>
-    """, order=order)
+    """, order=order, orders=orders, total_amount=total_amount)
 
 @core_bp.route("/chat_response", methods=["POST"])
 def chat_response():
