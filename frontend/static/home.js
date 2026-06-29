@@ -272,7 +272,7 @@ const { useEffect, useMemo, useRef, useState } = React;
             return (
                 <nav className="navbar">
                     <a className="brand" href="/home" aria-label="COMPARE2SAVE home">
-                        <span className="brand-mark">C2S</span>
+                        <img src="/static/logo.png" className="brand-logo" alt="" />
                         <span className="brand-text">COMPARE2SAVE</span>
                     </a>
                     <div className="nav-links">
@@ -570,9 +570,11 @@ const { useEffect, useMemo, useRef, useState } = React;
 
                             <div className="assistant-messages" ref={messagesRef}>
                                 {messages.map((message, index) => (
-                                    <div className={`assistant-message ${message.from}`} key={`${message.from}-${index}`}>
-                                        {message.text}
-                                    </div>
+                                    <div 
+                                        className={`assistant-message ${message.from}`} 
+                                        key={`${message.from}-${index}`}
+                                        dangerouslySetInnerHTML={{ __html: message.text }}
+                                    />
                                 ))}
                                 {isSending && (
                                     <div className="assistant-message bot">

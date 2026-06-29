@@ -515,6 +515,25 @@
                 return;
             }
             if (manual || confirm(`Found ${oldData.products.length} items saved on this phone. Would you like to upload them to the live website?`)) {
+                // Helper functions
+                function dataURLtoFile(dataurl, filename = "file.png") {
+                    if (!dataurl || !dataurl.startsWith("data:")) return null;
+                    try {
+                        const arr = dataurl.split(',');
+                        const mime = arr[0].match(/:(.*?);/)[1];
+                        const bstr = atob(arr[1]);
+                        let n = bstr.length;
+                        const u8arr = new Uint8Array(n);
+                        while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+                        return new File([u8arr], filename, { type: mime });
+                    } catch (e) { return null; }
+                }
+                function getPlaceholderFile(filename = "placeholder.png") {
+                    const dummyBytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 108, 137, 0, 0, 0, 10, 73, 68, 65, 84, 120, 156, 99, 0, 1, 0, 0, 2, 0, 1, 10, 48, 12, 168, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130]);
+                    const blob = new Blob([dummyBytes], { type: "image/png" });
+                    return new File([blob], filename, { type: "image/png" });
+                }
+
                 for (const p of oldData.products) {
                     try {
                         const formData = new FormData();
@@ -526,6 +545,16 @@
                         formData.append("price", p.price);
                         formData.append("stock", p.stock);
                         formData.append("unit", p.unit || "unit");
+
+                        const fileObj = dataURLtoFile(p.image, `${p.productName.replace(/[^a-zA-Z0-9]/g, "_")}.png`);
+                        if (fileObj) {
+                            formData.append("product_image", fileObj);
+                            formData.append("shop_image", fileObj);
+                        } else {
+                            formData.append("product_image", getPlaceholderFile("product_placeholder.png"));
+                            formData.append("shop_image", getPlaceholderFile("shop_placeholder.png"));
+                        }
+
                         await fetch(`/add_product`, { method: "POST", body: formData });
                     } catch (err) { console.error("Migration error:", err); }
                 }

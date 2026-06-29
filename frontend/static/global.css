@@ -140,6 +140,16 @@
             box-shadow: 0 12px 30px rgba(34, 211, 238, 0.24);
         }
 
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: #ffffff !important;
+            padding: 4px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1) !important;
+        }
+
         .brand-text {
             font-size: clamp(19px, 2vw, 27px);
             line-height: 1.08;

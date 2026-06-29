@@ -42,14 +42,14 @@ a {
 
 .motion-layer,
 .background-flow {
-    display: none !important;
+    display: block;
 }
 
 .tile,
 .signal,
 .float-tile,
 .orb {
-    display: none !important;
+    display: block;
 }
 
 .shell,
@@ -59,7 +59,7 @@ a {
     position: relative;
 }
 
-/* Card resetting */
+/* Card resetting - removed flat color overrides and enabled glassmorphic filters */
 .navbar,
 .topbar,
 .hero,
@@ -84,20 +84,20 @@ a {
 .modal,
 .assistant-panel,
 .panel {
-    border: 1px solid var(--np-line) !important;
-    background: var(--np-card) !important;
-    color: var(--np-ink) !important;
-    box-shadow: var(--np-shadow) !important;
-    backdrop-filter: none !important;
-    border-radius: 12px !important;
-    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s !important;
+    border: 1px solid var(--np-line);
+    background: var(--np-card);
+    color: var(--np-ink);
+    box-shadow: var(--np-shadow);
+    backdrop-filter: blur(12px) saturate(180%);
+    border-radius: 12px;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
 }
 
 .sidebar {
-    border-right: 1px solid var(--np-line) !important;
-    background: var(--np-bg) !important;
-    color: var(--np-ink) !important;
-    backdrop-filter: none;
+    border-right: 1px solid var(--np-line);
+    background: var(--np-bg);
+    color: var(--np-ink);
+    backdrop-filter: blur(12px) saturate(180%);
 }
 
 .brand-mark,
@@ -113,6 +113,17 @@ a {
     box-shadow: none !important;
     border-radius: 8px;
 }
+
+.brand-logo {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #ffffff !important;
+    padding: 4px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1) !important;
+}
+
 
 .brand-text,
 .logo,
@@ -410,12 +421,13 @@ textarea::placeholder {
     margin: 0 auto 20px;
     padding: 12px;
     border-radius: 12px;
-    background: var(--np-blue);
+    background: #ffffff !important;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 12px 32px rgba(255, 255, 255, 0.15) !important;
 }
-.auth-logo img { width: 100%; height: 100%; filter: brightness(0) invert(1); }
+.auth-logo img { width: 100%; height: 100%; filter: none !important; }
 
 .auth-header h1 { font-size: 34px; margin: 0; font-weight: 700; color: #fff; }
 .auth-header p { color: var(--np-muted); margin-top: 10px; font-size: 16px; }

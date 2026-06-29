@@ -329,15 +329,17 @@
                 </div>
             </div>
 
-            <div class="preview-image">
-                {% if product['product_image'].startswith('http') %}
+             <div class="preview-image">
+                {% if product['product_image'] and product['product_image'].startswith('http') %}
                     <img src="{{ product['product_image'] }}" alt="{{ product['product_name'] }}">
-                {% else %}
+                {% elif product['product_image'] %}
                     <img src="{{ url_for('static', filename='uploads/' ~ product['product_image']) }}" alt="{{ product['product_name'] }}">
+                {% else %}
+                    <img src="/static/app-icon-512.png" alt="{{ product['product_name'] }}">
                 {% endif %}
             </div>
 
-            {% set img_url = product['product_image'] if product['product_image'].startswith('http') else url_for('static', filename='uploads/' ~ product['product_image']) %}
+            {% set img_url = product['product_image'] if product['product_image'] and product['product_image'].startswith('http') else (url_for('static', filename='uploads/' ~ product['product_image']) if product['product_image'] else '/static/app-icon-512.png') %}
             <a class="buy-btn" href="/buy?product_id={{ product['id'] }}&product_name={{ product['product_name'] }}&price={{ product['price'] }}&product_image={{ img_url }}">Buy Now</a>
         </aside>
     </main>
@@ -345,7 +347,7 @@
     <script>
         window.productViewerData = {
             name: {{ product['product_name']|tojson }},
-            image: {{ (product['product_image'] if product['product_image'].startswith('http') else url_for('static', filename='uploads/' ~ product['product_image'])) | tojson }},
+            image: {{ (product['product_image'] if product['product_image'] and product['product_image'].startswith('http') else (url_for('static', filename='uploads/' ~ product['product_image']) if product['product_image'] else '/static/app-icon-512.png')) | tojson }},
         };
     </script>
     <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
@@ -390,16 +392,47 @@
             rimLight.position.set(-4, 2, 3);
             scene.add(rimLight);
 
-            const productGeometry = new THREE.SphereGeometry(1.4, 64, 64);
+            const productName = window.productViewerData.name.toLowerCase();
             const textureLoader = new THREE.TextureLoader();
-            const baseMaterial = new THREE.MeshStandardMaterial({
-                color: 0xffffff,
-                roughness: 0.42,
-                metalness: 0.08,
+
+            let productGeometry;
+            let productMesh;
+
+            const sideMaterial = new THREE.MeshStandardMaterial({
+                color: 0x111827,
+                roughness: 0.4,
+                metalness: 0.5,
             });
 
-            const productMesh = new THREE.Mesh(productGeometry, baseMaterial);
-            productMesh.scale.set(1, 1.25, 1); // Make it slightly egg-shaped
+            const frontMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                roughness: 0.3,
+                metalness: 0.1,
+            });
+
+            if (productName.includes("egg")) {
+                // EGG shape
+                productGeometry = new THREE.SphereGeometry(1.0, 64, 64);
+                productMesh = new THREE.Mesh(productGeometry, frontMaterial);
+                productMesh.scale.set(1, 1.4, 1); // Stretch vertically to form an egg shape
+            } else if (productName.includes("milk") || productName.includes("drink") || productName.includes("can") || productName.includes("bottle") || productName.includes("coke") || productName.includes("oil")) {
+                // CAN / CYLINDER shape
+                productGeometry = new THREE.CylinderGeometry(0.75, 0.75, 2.2, 64);
+                productMesh = new THREE.Mesh(productGeometry, frontMaterial);
+            } else {
+                // BOX shape
+                productGeometry = new THREE.BoxGeometry(2.4, 2.0, 0.3);
+                const materials = [
+                    sideMaterial, // +X
+                    sideMaterial, // -X
+                    sideMaterial, // +Y
+                    sideMaterial, // -Y
+                    frontMaterial, // +Z (Front)
+                    sideMaterial  // -Z
+                ];
+                productMesh = new THREE.Mesh(productGeometry, materials);
+            }
+
             group.add(productMesh);
 
             textureLoader.load(
@@ -408,8 +441,8 @@
                     texture.colorSpace = THREE.SRGBColorSpace;
                     texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
                     
-                    baseMaterial.map = texture;
-                    baseMaterial.needsUpdate = true;
+                    frontMaterial.map = texture;
+                    frontMaterial.needsUpdate = true;
                     
                     loadingState.classList.add("hidden");
                 },

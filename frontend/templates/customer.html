@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Panel</title>
+    <title>COMPARE2SAVE — Explore Products Near You</title>
+    <meta name="description" content="Browse and compare prices of products from nearby shops. Fast checkout, live tracking, and local delivery.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Leaflet Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -27,7 +28,7 @@
     <div class="shell">
         <nav class="navbar">
             <a class="brand" href="/home" aria-label="COMPARE2SAVE home">
-                <span class="brand-mark">C2S</span>
+                <img src="/static/logo.png" class="brand-logo" alt="">
                 <span class="brand-text">COMPARE2SAVE</span>
             </a>
 
@@ -162,12 +163,15 @@
 
                             <div class="delivery">Fast delivery available</div>
 
-                            <div class="card-actions" style="grid-template-columns: 1fr 1fr;">
+                            <div class="card-actions" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
                                 <a href="/product_map/{{ product['id'] }}">
-                                    <span class="map-btn">📍 Map</span>
+                                    <span class="map-btn" style="padding: 10px 4px; display: block; text-align: center;">📍 Map</span>
+                                </a>
+                                <a href="/product_3d/{{ product['id'] }}">
+                                    <span class="three-btn" style="padding: 10px 4px; display: block; text-align: center; background: rgba(0, 210, 196, 0.15); color: #00d2c4; border: 1px solid rgba(0, 210, 196, 0.4); border-radius: 12px; font-weight: 800; font-size: 13px; transition: all 0.2s;">📦 3D View</span>
                                 </a>
                                 <a href="/buy?product_id={{ product['id'] }}&product_name={{ product['product_name'] }}&price={{ product['price'] }}&product_image={% if product['product_image'] and product['product_image'].startswith('http') %}{{ product['product_image'] }}{% elif product['product_image'] %}/static/uploads/{{ product['product_image'] }}{% else %}/static/app-icon-512.png{% endif %}">
-                                    <span class="buy-btn">⚡ Buy Now</span>
+                                    <span class="buy-btn" style="padding: 10px 4px; display: block; text-align: center;">⚡ Buy</span>
                                 </a>
                             </div>
 

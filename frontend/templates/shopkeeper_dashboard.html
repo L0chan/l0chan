@@ -785,16 +785,20 @@
                     {% for product in products %}
                         <article class="product-card" style="--index: {{ loop.index0 }};">
                             <div class="image-wrap">
-                                {% if product['product_image'].startswith('http') %}
+                                {% if product['product_image'] and product['product_image'].startswith('http') %}
                                     <img src="{{ product['product_image'] }}" class="product-img" alt="{{ product['product_name'] }}">
-                                {% else %}
+                                {% elif product['product_image'] %}
                                     <img src="/static/uploads/{{ product['product_image'] }}" class="product-img" alt="{{ product['product_name'] }}">
+                                {% else %}
+                                    <img src="/static/app-icon-512.png" class="product-img" alt="{{ product['product_name'] }}">
                                 {% endif %}
                                 
-                                {% if product['shop_image'].startswith('http') %}
+                                {% if product['shop_image'] and product['shop_image'].startswith('http') %}
                                     <img src="{{ product['shop_image'] }}" class="shop-image" alt="{{ product['shop_name'] }}">
-                                {% else %}
+                                {% elif product['shop_image'] %}
                                     <img src="/static/uploads/{{ product['shop_image'] }}" class="shop-image" alt="{{ product['shop_name'] }}">
+                                {% else %}
+                                    <img src="/static/app-icon-512.png" class="shop-image" alt="{{ product['shop_name'] }}">
                                 {% endif %}
                             </div>
 
