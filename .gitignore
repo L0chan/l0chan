@@ -1,13 +1,80 @@
+# =====================
 # Python
+# =====================
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+*.pyo
+*.pyd
 venv/
+.venv/
+env/
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# =====================
+# Environment Variables
+# =====================
 .env
+.env.local
+.env.*.local
 
+# =====================
 # Database
+# =====================
 database.db
+*.sqlite3
+*.db
 
-# Uploads
+# =====================
+# Uploads (keep .gitkeep)
+# =====================
 frontend/static/uploads/*
 !frontend/static/uploads/.gitkeep
+
+# =====================
+# Screenshots (dev artifacts)
+# =====================
+frontend/static/Screenshot*.png
+frontend/static/screenshot*.png
+
+# =====================
+# IDE / Editor
+# =====================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.suo
+*.user
+
+# =====================
+# OS Files
+# =====================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =====================
+# Logs & Temp
+# =====================
+*.log
+*.tmp
+*.bak
+
+# =====================
+# Release / Build
+# =====================
+release/
+*.zip
+*.exe
+
+# =====================
+# Firebase credentials
+# =====================
+serviceAccount.json
+firebase-adminsdk*.json

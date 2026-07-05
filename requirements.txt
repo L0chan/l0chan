@@ -1,18 +1,31 @@
+# ─── Core Framework ───────────────────────────────────────────────────
 Flask==3.1.2
-Flask-SQLAlchemy==3.1.1
-gunicorn==23.0.0
 Werkzeug==3.1.8
 Jinja2==3.1.6
 itsdangerous==2.2.0
 click==8.3.0
 blinker==1.9.0
 MarkupSafe==3.0.3
+
+# ─── Database ─────────────────────────────────────────────────────────
+Flask-SQLAlchemy==3.1.1
 SQLAlchemy==2.0.49
 greenlet==3.5.0
-flask-cors
-psycopg2-binary
-cloudinary
-firebase-admin
-twilio
+psycopg2-binary       # PostgreSQL driver (production)
 
-python-dotenv
+# ─── Auth & Security ──────────────────────────────────────────────────
+twilio                # SMS OTP authentication
+firebase-admin        # Firebase Admin SDK (optional)
+
+# ─── API Integrations ─────────────────────────────────────────────────
+openai                # AI shopping assistant
+
+# ─── Storage ──────────────────────────────────────────────────────────
+cloudinary            # Cloud image upload & delivery
+
+# ─── Server ───────────────────────────────────────────────────────────
+gunicorn==23.0.0      # WSGI server for production
+flask-cors            # Cross-Origin Resource Sharing
+
+# ─── Utilities ────────────────────────────────────────────────────────
+python-dotenv         # Load .env file

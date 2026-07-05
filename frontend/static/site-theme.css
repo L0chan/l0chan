@@ -1,469 +1,253 @@
-/*
-   COMPARE2SAVE - Premium Glassmorphism Theme
-   Delivers a high-fidelity cyber-glass aesthetic with animated ambient glows,
-   role-based color systems, sleek inputs, and smooth transitions.
+/* 
+   COMPARE2SAVE - Ultra Aesthetic Theme 
+   Features morphing mesh gradients, premium deep glassmorphism, 
+   Space Grotesk typography, and liquid hover states.
 */
 
-/* ── Google Fonts: Inter (primary) + Poppins (fallback) ── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
-    --site-font: "Inter", "Poppins", "Segoe UI", -apple-system, sans-serif;
+    --font-heading: 'Space Grotesk', sans-serif;
+    --font-body: 'Outfit', sans-serif;
     
-    /* Core Deep Dark Colors */
-    --theme-bg-body: #060913;
-    --theme-bg: #090e1c;
-    --theme-bg-2: #0f162a;
-    --theme-card: rgba(15, 23, 42, 0.65);
-    --theme-card-hover: rgba(30, 41, 59, 0.7);
-    --theme-border: rgba(255, 255, 255, 0.08);
-    --theme-border-hover: rgba(255, 255, 255, 0.18);
+    /* Deep Void Palette */
+    --void-100: #020205;
+    --void-200: #06060c;
+    --void-300: #090915;
     
-    --theme-ink: #f8fafc; /* off-white slate */
-    --theme-muted: #94a3b8; /* slate-400 */
+    /* Ethereal Glass */
+    --glass-base: rgba(15, 15, 25, 0.4);
+    --glass-hover: rgba(25, 25, 40, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-glow: rgba(255, 255, 255, 0.25);
     
-    /* Common Accents */
-    --theme-success: #10b981;
-    --theme-success-rgb: 16, 185, 129;
-    --theme-success-glow: rgba(16, 185, 129, 0.35);
-    --theme-warning: #f59e0b;
-    --theme-warning-rgb: 245, 158, 11;
-    --theme-danger: #ef4444;
-    --theme-danger-rgb: 239, 68, 68;
+    /* Vibrant Neon Accents */
+    --neon-pink: #ff2a75;
+    --neon-blue: #00f0ff;
+    --neon-purple: #8c00ff;
+    --neon-green: #00ff66;
     
-    /* Default Primary */
-    --theme-primary: #3b82f6;
-    --theme-primary-hover: #2563eb;
-    --theme-primary-glow: rgba(59, 130, 246, 0.35);
-    --theme-primary-rgb: 59, 130, 246;
-    --theme-accent-gradient: linear-gradient(135deg, #3b82f6, #0ea5e9);
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0b0;
     
-    --theme-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    --theme-shadow-glow: 0 0 15px var(--theme-primary-glow);
-    --theme-radius: 16px;
-}
-
-/* Panel specific accents & gradients */
-body[data-panel="auth"], body[data-panel="otp"] {
-    --theme-primary: #3b82f6;
-    --theme-primary-hover: #1d4ed8;
-    --theme-primary-glow: rgba(59, 130, 246, 0.4);
-    --theme-primary-rgb: 59, 130, 246;
-    --theme-accent-gradient: linear-gradient(135deg, #3b82f6, #0ea5e9);
-}
-body[data-panel="home"] {
-    --theme-primary: #06b6d4;
-    --theme-primary-hover: #0891b2;
-    --theme-primary-glow: rgba(6, 182, 212, 0.4);
-    --theme-primary-rgb: 6, 182, 212;
-    --theme-accent-gradient: linear-gradient(135deg, #06b6d4, #3b82f6);
-}
-body[data-panel="customer"], body[data-panel="search"], body[data-panel="results"] {
-    --theme-primary: #10b981;
-    --theme-primary-hover: #059669;
-    --theme-primary-glow: rgba(16, 185, 129, 0.4);
-    --theme-primary-rgb: 16, 185, 129;
-    --theme-accent-gradient: linear-gradient(135deg, #10b981, #06b6d4);
-}
-body[data-panel="seller"], body[data-panel="products"], body[data-panel="maps"], body[data-panel="edit"] {
-    --theme-primary: #f59e0b;
-    --theme-primary-hover: #d97706;
-    --theme-primary-glow: rgba(245, 158, 11, 0.4);
-    --theme-primary-rgb: 245, 158, 11;
-    --theme-accent-gradient: linear-gradient(135deg, #f59e0b, #f97316);
-}
-body[data-panel="orders"], body[data-panel="tracking"], body[data-panel="success"] {
-    --theme-primary: #f97316;
-    --theme-primary-hover: #ea580c;
-    --theme-primary-glow: rgba(249, 115, 22, 0.4);
-    --theme-primary-rgb: 249, 115, 22;
-    --theme-accent-gradient: linear-gradient(135deg, #f97316, #ef4444);
-}
-body[data-panel="admin"] {
-    --theme-primary: #8b5cf6;
-    --theme-primary-hover: #7c3aed;
-    --theme-primary-glow: rgba(139, 92, 246, 0.4);
-    --theme-primary-rgb: 139, 92, 246;
-    --theme-accent-gradient: linear-gradient(135deg, #8b5cf6, #d946ef);
-}
-body[data-panel="analytics"] {
-    --theme-primary: #6366f1;
-    --theme-primary-hover: #4f46e5;
-    --theme-primary-glow: rgba(99, 102, 241, 0.4);
-    --theme-primary-rgb: 99, 102, 241;
-    --theme-accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
-}
-body[data-panel="chat"] {
-    --theme-primary: #ec4899;
-    --theme-primary-hover: #db2777;
-    --theme-primary-glow: rgba(236, 72, 153, 0.4);
-    --theme-primary-rgb: 236, 72, 153;
-    --theme-accent-gradient: linear-gradient(135deg, #ec4899, #f43f5e);
+    --liquid-gradient: linear-gradient(270deg, var(--neon-pink), var(--neon-purple), var(--neon-blue), var(--neon-green));
 }
 
 * {
     box-sizing: border-box;
-    letter-spacing: normal !important;
+    font-family: var(--font-body) !important;
+    letter-spacing: 0.01em;
 }
 
-html {
-    scroll-behavior: smooth;
-}
-
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-::-webkit-scrollbar-track {
-    background: var(--theme-bg-body);
-}
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
-    border-radius: 99px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: var(--theme-primary);
-}
-
-body {
-    min-height: 100vh;
-    color: var(--theme-ink) !important;
-    font-family: var(--site-font) !important;
-    background-color: var(--theme-bg-body) !important;
-    background-image: 
-        radial-gradient(circle at 10% 20%, rgba(var(--theme-primary-rgb), 0.12), transparent 45%),
-        radial-gradient(circle at 90% 10%, rgba(16, 185, 129, 0.08), transparent 35%),
-        radial-gradient(circle at 50% 80%, rgba(139, 92, 246, 0.08), transparent 45%),
-        linear-gradient(180deg, #050814 0%, #0c1020 100%) !important;
-    background-attachment: fixed !important;
-    overflow-x: hidden;
+html, body {
     margin: 0;
+    padding: 0;
+    background-color: var(--void-100) !important;
+    color: var(--text-primary) !important;
+    overflow-x: hidden;
 }
 
-/* Cyber Grid background */
+/* Morphing Mesh Gradient Background */
 body::before {
-    content: "" !important;
-    position: fixed !important;
-    inset: 0 !important;
-    z-index: -10 !important;
-    background-image:
-        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px) !important;
-    background-size: 60px 60px !important;
-    mask-image: radial-gradient(circle at center, black 30%, transparent 95%) !important;
-    pointer-events: none !important;
-    display: block !important;
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(255, 42, 117, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(0, 240, 255, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(140, 0, 255, 0.15) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(0, 255, 102, 0.1) 0px, transparent 50%);
+    background-size: 200% 200%;
+    animation: meshMorph 15s ease infinite alternate;
+    z-index: -3;
+    pointer-events: none;
 }
 
-/* Re-style background elements for rich ambient space */
-.tile, .float-tile, .signal {
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    background: rgba(255, 255, 255, 0.02) !important;
-    backdrop-filter: blur(4px) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-    display: block !important;
+/* Subtle grain overlay */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+    z-index: -2;
+    pointer-events: none;
 }
 
-a {
-    color: inherit;
-    text-decoration: none;
-    transition: all 0.3s ease;
+@keyframes meshMorph {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 100%; }
 }
 
-button, input, textarea, select {
-    font: inherit;
+/* Typography Overhauls */
+h1, h2, h3, h4, h5, h6, .title, .brand-text, strong {
+    font-family: var(--font-heading) !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.04em !important;
 }
 
-option {
-    background-color: var(--theme-bg-2);
-    color: var(--theme-ink);
-}
-
-/* Common Layout Elements */
-.shell, .page-shell, .layout, .checkout-shell, .success-shell, .download-shell, body > .container, body > .box, body > main {
-    position: relative;
-}
-
-/* Cards & Panels - True glassmorphism */
-.navbar, .topbar, .checkout-nav, .sidebar, .hero, .brand-panel, .form-panel, .checkout-card, .success-card, .stat-card, .analytics-panel, .activity-panel, .radar-panel, .form-box, .tips, .preview-card, .search-panel, .product-card, .order-card, .table-panel, .card, .box, .container, .chat-box, .chat-container, .payment-box, .map-card, .info-card, .timeline-card, .download-card, .download-shell main, .glass-card, .quick-card, .modal, .assistant-panel, .product-box, .order-box {
-    border: 1px solid var(--theme-border) !important;
-    border-radius: var(--theme-radius) !important;
-    color: var(--theme-ink) !important;
-    background: var(--theme-card) !important;
-    box-shadow: var(--theme-shadow) !important;
-    backdrop-filter: blur(16px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease !important;
-}
-
-/* Navbars / Sidebars - Saturated glass */
-.navbar, .topbar, .checkout-nav, .sidebar {
-    background: rgba(10, 16, 30, 0.85) !important;
-    border-bottom: 1px solid var(--theme-border) !important;
-    border-right: 1px solid var(--theme-border) !important;
-}
-
-.sidebar {
-    border-radius: 0 !important;
-}
-
-/* Typography & Text */
-h1, h2, h3, .title, .brand-text, .logo, .content, .shop, .map-top strong, .preview-top strong, .panel-head h2, .section-head h2, .card-top h2, th, label {
-    color: var(--theme-ink) !important;
-    font-weight: 700;
-}
-
-h1 span, .form-panel h1 span, .brand-panel h1 span, .success-card h1 span {
-    background: var(--theme-accent-gradient, linear-gradient(135deg, var(--theme-primary), #22d3ee)) !important;
+h1 span, .brand-text span {
+    background: var(--liquid-gradient) !important;
+    background-size: 300% 300% !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
-    text-shadow: none !important;
-    filter: drop-shadow(0 2px 8px rgba(var(--theme-primary-rgb), 0.3));
+    animation: liquidFlow 6s ease infinite;
 }
 
-p, .lead, .hero p, .section-head p, .panel-head span, .meta, .feature-item span, .feature p, .mini-result span, .floating-product span, .switch-link, .map-status, .tip, .activity-item, .empty, .quick-card span, .assistant-header strong, td, li {
-    color: var(--theme-muted) !important;
-    line-height: 1.6;
-}
-
-/* Badges & Pills */
-.eyebrow, .status-pill, .live-chip, .delivery, .badge, .status, .role-pill, .account-pill, .status-chip, .live-pill, .eta, .notice, .install-note, .flash-box, .flash-message, .order-id-box {
-    border: 1px solid rgba(var(--theme-primary-rgb), 0.3) !important;
-    color: #ffffff !important;
-    background: rgba(var(--theme-primary-rgb), 0.12) !important;
-    border-radius: 8px !important;
-    padding: 6px 12px;
-    font-size: 0.85em;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-}
-
-/* Interactive Elements (Buttons, Links) */
-.nav-links a, .nav a, .menu a, .quick-actions a, .map-btn, .secondary-btn, .location-btn, .view-btn, .assistant-prompts button, .feature, .stat-box, .payment-option, .result-card, .timeline-item, .activity-item, .tip, .action, .btn, .download-action, button {
-    border: 1px solid var(--theme-border) !important;
-    color: var(--theme-ink) !important;
-    background: rgba(255, 255, 255, 0.03) !important;
-    border-radius: 12px !important;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-weight: 500;
-}
-
-.nav-links a:hover, .nav a:hover, .menu a:hover, .menu a.active, .quick-actions a:hover, .map-btn:hover, .secondary-btn:hover, .location-btn:hover, .feature:hover, .assistant-prompts button:hover, .download-action:hover, .payment-option:hover {
-    color: #ffffff !important;
-    background: rgba(var(--theme-primary-rgb), 0.15) !important;
-    border-color: var(--theme-primary) !important;
-    box-shadow: 0 0 15px rgba(var(--theme-primary-rgb), 0.35) !important;
-    transform: translateY(-2px);
-}
-
-/* Primary Buttons */
-.primary-btn, .search-btn, .buy-btn, .upload-btn, .modal-btn, .btn.primary, .btn.view, .btn.status, .hero-action, .assistant-toggle, .assistant-form button, .download-action, button[type="submit"], button.online, button.cod, .btn.online, .btn.cod {
-    color: #ffffff !important;
-    border: 1px solid transparent !important;
-    background: var(--theme-accent-gradient, linear-gradient(135deg, #3b82f6, #06b6d4)) !important;
-    border-radius: 12px !important;
-    font-weight: 600 !important;
-    padding: 12px 24px !important;
-    box-shadow: 0 4px 14px rgba(var(--theme-primary-rgb), 0.35) !important;
-}
-
-.primary-btn:hover, .search-btn:hover, .buy-btn:hover, .upload-btn:hover, .btn.primary:hover, .hero-action:hover, .assistant-toggle:hover, button[type="submit"]:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(var(--theme-primary-rgb), 0.5) !important;
-    filter: brightness(1.1);
-}
-
-/* Danger / Delete Buttons */
-.btn.delete, .action.delete, .delete-btn {
-    color: #ffffff !important;
-    border: 1px solid var(--theme-danger) !important;
-    background: var(--theme-danger) !important;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
-}
-
-.btn.delete:hover, .action.delete:hover, .delete-btn:hover {
-    background: #dc2626 !important;
-    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.5) !important;
-    transform: translateY(-2px);
-}
-
-/* Form Inputs */
-.field input, .field textarea, .field select, .input-box input, .input-box textarea, .input-box select, .search-box input, .modal-input, .assistant-form input, .status-select, .otp-input, input, textarea, select {
-    color: var(--theme-ink) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 12px !important;
-    background: rgba(8, 14, 27, 0.7) !important;
-    padding: 12px 16px;
-    outline: none !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important;
-}
-
-input::placeholder, textarea::placeholder {
-    color: var(--theme-muted) !important;
-}
-
-.field input:focus, .field textarea:focus, .field select:focus, .input-box input:focus, .input-box textarea:focus, .input-box select:focus, .search-box input:focus, .modal-input:focus, .assistant-form input:focus, .status-select:focus, .otp-input:focus, input:focus, textarea:focus, select:focus {
-    border-color: var(--theme-primary) !important;
-    background: rgba(13, 22, 42, 0.9) !important;
-    box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb), 0.15), 0 0 15px rgba(var(--theme-primary-rgb), 0.2) !important;
-}
-
-/* Tables & Data */
-table {
-    border-collapse: collapse;
-    width: 100%;
-}
-
-th {
-    color: var(--theme-ink) !important;
-    background: rgba(255, 255, 255, 0.04) !important;
-    border-bottom: 2px solid var(--theme-border) !important;
-    text-align: left;
-    padding: 14px;
-    font-weight: 600;
-}
-
-td {
-    border-bottom: 1px solid var(--theme-border) !important;
-    padding: 14px;
-}
-
-tr:hover td {
-    background: rgba(255, 255, 255, 0.02) !important;
-}
-
-/* Hover Effects on Cards (The "Impressive" factor) */
-.product-card:hover, .order-card:hover, .stat-card:hover, .card:hover, .quick-card:hover, .download-card:hover, .box:hover {
-    border-color: var(--theme-primary) !important;
-    transform: translateY(-5px) scale(1.015) !important;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(var(--theme-primary-rgb), 0.3) !important;
-}
-
-/* Animated shimmer underline for active nav links */
-.menu a.active, .nav a.active, .topbar a.active {
-    position: relative;
-    color: #ffffff !important;
-    background: rgba(var(--theme-primary-rgb), 0.15) !important;
-    border-color: rgba(var(--theme-primary-rgb), 0.4) !important;
-}
-.menu a.active::after, .nav a.active::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--theme-accent-gradient);
-    border-radius: 2px;
-}
-
-/* Section headings with gradient accent bar */
-.section-head, .panel-head, .card-top {
-    border-bottom: 1px solid rgba(var(--theme-primary-rgb), 0.15) !important;
-    padding-bottom: 14px !important;
-}
-
-/* Glowing primary action buttons (override site-theme for homepage gradient) */
-body[data-panel="home"] .btn.primary {
-    background: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6) !important;
-    background-size: 200% 200% !important;
-    animation: gradientShift 4s ease infinite !important;
-    box-shadow: 0 8px 32px rgba(6, 182, 212, 0.4) !important;
-}
-@keyframes gradientShift {
-    0%   { background-position: 0% 50%; }
-    50%  { background-position: 100% 50%; }
+@keyframes liquidFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
 
-/* Premium image placeholders */
-.product-card img, .order-card img, .checkout-image {
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-.product-card:hover img, .order-card:hover img {
-    transform: scale(1.04) !important;
-}
-
-/* Loading skeleton for lazy-loaded data */
-.skeleton {
-    background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%) !important;
-    background-size: 200% 100% !important;
-    animation: shimmer 1.5s ease infinite !important;
-    border-radius: 8px !important;
-    color: transparent !important;
-}
-@keyframes shimmer {
-    from { background-position: 200% 0; }
-    to   { background-position: -200% 0; }
+/* Ultra-Premium Glassmorphism Cards */
+.navbar, .sidebar, .hero, .form-panel, .checkout-card, .stat-card, 
+.product-card, .card, .box, .modal, .glass-card, .panel, .container, .auth-card {
+    background: var(--glass-base) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 24px !important;
+    backdrop-filter: blur(30px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+    box-shadow: 
+        0 20px 40px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.1) !important;
+    transform-style: preserve-3d; /* For 3D JS tilts */
+    will-change: transform;
 }
 
-/* Specific elements */
-.price {
-    color: var(--theme-success) !important;
-    font-weight: 700;
-    font-size: 1.1em;
+.product-card, .stat-card, .card {
+    transition: box-shadow 0.4s ease, border-color 0.4s ease !important;
 }
 
-.rating {
-    color: var(--theme-warning) !important;
+.product-card:hover, .stat-card:hover, .card:hover {
+    border-color: var(--glass-border-glow) !important;
+    box-shadow: 
+        0 30px 60px rgba(0,0,0,0.8),
+        inset 0 1px 0 rgba(255,255,255,0.2),
+        0 0 30px rgba(0, 240, 255, 0.2) !important;
+    background: var(--glass-hover) !important;
 }
 
-.pulse-dot, .pulse {
-    background: var(--theme-success) !important;
-    box-shadow: 0 0 0 6px var(--theme-success-glow), 0 0 15px var(--theme-success-glow) !important;
+/* Images & Media inside Cards */
+.product-card img, .card img {
+    border-radius: 18px !important;
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+.product-card:hover img, .card:hover img {
+    transform: scale(1.05) translateZ(20px) !important;
 }
 
-/* Chat & Messages */
-.assistant-header, .chat-header, .header {
-    background: rgba(10, 16, 30, 0.9) !important;
-    border-bottom: 1px solid var(--theme-border) !important;
-}
-
-.assistant-messages, .chat-body, .messages {
-    background: rgba(6, 10, 20, 0.95) !important;
-}
-
-.assistant-message.bot, .bot, .bot-msg, .message {
-    border: 1px solid var(--theme-border) !important;
-    background: rgba(255, 255, 255, 0.04) !important;
-    border-radius: 12px !important;
-    color: var(--theme-ink) !important;
-}
-
-.assistant-message.user, .user, .user-msg {
-    color: #ffffff !important;
-    background: var(--theme-accent-gradient, linear-gradient(135deg, var(--theme-primary), #00d4ff)) !important;
-    border: 1px solid transparent !important;
-    border-radius: 12px !important;
-}
-
-/* Map specific */
-.image-wrap, .checkout-image, .map-scene, .map-stage, #seller-map, #map, .radar, .qr-box, .payment-grid, .table-scroll {
-    border: 1px solid var(--theme-border) !important;
-    background-color: var(--theme-bg) !important;
-    border-radius: var(--theme-radius);
+/* Liquid Animated Buttons */
+.primary-btn, .search-btn, .buy-btn, button[type="submit"], .btn.primary {
+    position: relative;
+    background: var(--liquid-gradient) !important;
+    background-size: 300% 300% !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 16px !important;
+    padding: 14px 32px !important;
+    font-family: var(--font-heading) !important;
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    cursor: pointer;
     overflow: hidden;
+    z-index: 1;
+    animation: liquidFlow 5s ease infinite !important;
+    box-shadow: 0 10px 30px rgba(0, 240, 255, 0.4) !important;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.1em !important;
 }
 
-/* Responsive */
-@media (max-width: 820px) {
-    .layout {
-        grid-template-columns: 1fr !important;
-    }
-    .sidebar {
-        position: static !important;
-        height: auto !important;
-        border-right: none !important;
-        border-bottom: 1px solid var(--theme-border) !important;
-    }
-    .menu, .stats, .products, .orders, .download-grid, .grid, .bottom-grid, .checkout-grid, .success-actions, .card-actions, .actions {
-        grid-template-columns: 1fr !important;
-    }
-    .navbar, .topbar, .hero, .checkout-nav, .section-head {
-        align-items: flex-start !important;
-        flex-direction: column !important;
-    }
+.primary-btn::before, .search-btn::before, .buy-btn::before, button[type="submit"]::before, .btn.primary::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: var(--void-200);
+    border-radius: 14px;
+    z-index: -1;
+    transition: opacity 0.3s ease;
+}
+
+.primary-btn:hover::before, .search-btn:hover::before, .buy-btn:hover::before, button[type="submit"]:hover::before, .btn.primary:hover::before {
+    opacity: 0;
+}
+
+.primary-btn:hover, .search-btn:hover, .buy-btn:hover, button[type="submit"]:hover, .btn.primary:hover {
+    transform: translateY(-4px) scale(1.02) !important;
+    box-shadow: 0 15px 40px rgba(0, 240, 255, 0.6) !important;
+    color: #fff !important;
+}
+
+/* Inputs and Forms */
+input, select, textarea {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 14px !important;
+    color: var(--text-primary) !important;
+    padding: 16px 24px !important;
+    font-size: 16px !important;
+    font-family: var(--font-body) !important;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3) !important;
+}
+
+input:focus, select:focus, textarea:focus {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: var(--neon-blue) !important;
+    box-shadow: 
+        inset 0 2px 4px rgba(0,0,0,0.3),
+        0 0 0 4px rgba(0, 240, 255, 0.2),
+        0 0 20px rgba(0, 240, 255, 0.3) !important;
+    outline: none !important;
+    transform: translateY(-2px);
+}
+
+/* Secondary Actions / Minor Links */
+.nav-links a, .menu a, .secondary-btn, .action {
+    font-family: var(--font-heading) !important;
+    font-weight: 500 !important;
+    border: 1px solid transparent !important;
+    background: rgba(255,255,255,0.03) !important;
+    color: var(--text-secondary) !important;
+    border-radius: 12px !important;
+    padding: 10px 18px !important;
+    transition: all 0.3s ease !important;
+}
+
+.nav-links a:hover, .menu a:hover, .secondary-btn:hover, .action:hover {
+    color: #fff !important;
+    background: rgba(255,255,255,0.1) !important;
+    border-color: var(--glass-border-glow) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4) !important;
+}
+
+/* Initial Hidden State for Scroll Animations */
+.reveal-hidden {
+    opacity: 0;
+    transform: translateY(60px) scale(0.95);
+}
+
+.reveal-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Custom Scrollbar Aesthetic */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--void-100); }
+::-webkit-scrollbar-thumb { 
+    background: var(--liquid-gradient); 
+    border-radius: 10px; 
+}
+
+/* Flash Messages */
+.flash-message {
+    background: rgba(0, 255, 102, 0.1) !important;
+    border: 1px solid var(--neon-green) !important;
+    color: var(--neon-green) !important;
+    box-shadow: 0 0 20px rgba(0, 255, 102, 0.2) !important;
 }

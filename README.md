@@ -1,103 +1,236 @@
-# COMPARE2SAVE
+<div align="center">
 
-COMPARE2SAVE is a comprehensive, full-stack marketplace and local product discovery application. It connects customers with local shopkeepers, enabling seamless inventory management, geographical product tracking, secure authentication, and a modern shopping experience.
+# 🛒 COMPARE2SAVE
 
-## ✨ Key Features
+### Smart Local Shopping Platform
 
-*   **Role-Based Access Control (RBAC):** Secure, dedicated dashboards for `Customers`, `Shopkeepers`, and `Owner Admins`. Strict routing prevents unauthorized access to restricted panels.
-*   **Twilio OTP Authentication:** Phone number verification and secure login flows using SMS-based One-Time Passwords.
-*   **Interactive 3D Product Viewer:** Customers can view products in a fully interactive 360-degree 3D environment built with `Three.js`.
-*   **Geolocation & Live Maps:** Interactive maps to track order delivery status and find nearby seller locations.
-*   **AI Shopping Assistant:** Integrated OpenAI-powered chatbot to assist customers with product discovery and queries.
-*   **Clean Dark Theme UI:** A professional, fully responsive, "man-made" dark theme, offering an impressive and structured aesthetic across all devices.
-*   **Live Chat:** Real-time messaging system allowing direct communication between buyers and sellers.
-*   **Progressive Web App (PWA):** Installable on desktops and mobile devices directly from the browser for a native-like experience.
+**Discover nearby products · Compare prices · Track orders live · AI-powered shopping assistant**
 
-## 🛠️ Technology Stack
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Flask](https://img.shields.io/badge/Flask-3.x-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
+[![SQLite](https://img.shields.io/badge/SQLite-Local_DB-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://sqlite.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Production-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgresql.org)
+[![PWA](https://img.shields.io/badge/PWA-Installable-5A0FC8?style=for-the-badge&logo=googlechrome&logoColor=white)](https://web.dev/progressive-web-apps)
+[![Three.js](https://img.shields.io/badge/Three.js-3D_Viewer-000000?style=for-the-badge&logo=threedotjs&logoColor=white)](https://threejs.org)
+[![OpenAI](https://img.shields.io/badge/OpenAI-AI_Assistant-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com)
+[![Twilio](https://img.shields.io/badge/Twilio-OTP_Auth-F22F46?style=for-the-badge&logo=twilio&logoColor=white)](https://twilio.com)
 
-*   **Backend:** Python, Flask, Flask-SQLAlchemy (ORM), Flask-Login
-*   **Database:** SQLite (Local development)
-*   **Frontend:** HTML5, Vanilla CSS (Clean Dark Theme), JavaScript (ES6)
-*   **Libraries & APIs:** Three.js (3D Rendering), Twilio API (SMS Auth), OpenAI API (Chatbot), Leaflet.js (Maps)
+</div>
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| 🗺️ **Nearby Product Discovery** | Find products around your location using interactive Leaflet.js maps |
+| 🤖 **AI Shopping Assistant** | OpenAI-powered chatbot for product discovery and price queries |
+| 📦 **3D Product Viewer** | Inspect products in a 360° interactive Three.js environment |
+| 🔐 **OTP Authentication** | Secure phone number verification via Twilio SMS |
+| 🔄 **Live Order Tracking** | Real-time order status with live map delivery updates |
+| 👥 **Role-Based Dashboards** | Dedicated panels for Customers, Shopkeepers, and Admins |
+| 💳 **Flexible Payments** | Cash-on-delivery + UPI QR code payment support |
+| 📱 **Progressive Web App** | Install on any device directly from the browser |
+| 🏪 **Seller Management** | Full inventory, order, and analytics dashboard for shopkeepers |
+| 💬 **Live Chat** | Real-time buyer-seller messaging |
+
+---
+
+## 🛠️ Tech Stack
+
+### Backend
+**Python 3.11+** · **Flask 3.x** · **Flask-SQLAlchemy** · **Flask-Login** · **Gunicorn**
+
+### Frontend
+**HTML5** · **Vanilla CSS** (Glassmorphism dark theme) · **JavaScript ES6+**  
+**React 18** (home page, CDN) · **Jinja2** (server-side templating)
+
+### APIs & Libraries
+
+| Library | Purpose |
+|---|---|
+| [Three.js](https://threejs.org) | 3D product viewer |
+| [Leaflet.js](https://leafletjs.com) | Interactive maps & geolocation |
+| [Twilio API](https://twilio.com) | SMS OTP authentication |
+| [OpenAI API](https://openai.com) | AI shopping assistant |
+| [Cloudinary](https://cloudinary.com) | Cloud image upload & delivery |
+| [Lottie Web](https://airbnb.io/lottie) | Animated SVG illustrations |
+
+---
 
 ## 📁 Project Structure
 
-```text
+```
 COMPARE2SAVE/
-├── backend/                  # Flask application factory, routes, and models
-│   ├── auth/                 # Authentication & OTP logic
-│   ├── shopkeeper/           # Seller inventory and dashboard logic
-│   └── models.py             # SQLAlchemy database models
-├── frontend/                 # Static assets and templates
-│   ├── static/               # CSS themes, JavaScript, and uploaded images
-│   └── templates/            # Jinja2 HTML templates
-├── mobile_app/               # Capacitor/offline-first mobile wrapper
-├── app.py                    # Main application entry point
-├── database.db               # SQLite Database
-└── requirements.txt          # Python dependencies
+│
+├── backend/                    # Core application logic
+│   ├── routes/
+│   │   ├── auth.py             # Login, register, OTP flows
+│   │   ├── core.py             # Home, search, AI chat routes
+│   │   ├── customer.py         # Customer dashboard & orders
+│   │   └── seller.py           # Shopkeeper inventory & analytics
+│   ├── app.py                  # Flask app with all routes
+│   ├── app_factory.py          # Application factory pattern
+│   ├── models.py               # SQLAlchemy ORM models
+│   ├── database_setup.py       # DB initialization script
+│   └── utils.py                # Shared helpers
+│
+├── frontend/
+│   ├── static/
+│   │   ├── home.css            # Landing page design system
+│   │   ├── global.css          # Shared styles (all pages)
+│   │   ├── home.js             # React-powered landing page
+│   │   ├── animations.js       # Scroll & entrance animations
+│   │   ├── pwa.js              # PWA install prompt logic
+│   │   └── service-worker.js   # Offline caching
+│   └── templates/              # Jinja2 HTML templates (27 pages)
+│       ├── home.html           # Landing page
+│       ├── customer.html       # Customer marketplace
+│       ├── shopkeeper.html     # Seller product management
+│       ├── dashboard.html      # Analytics dashboard
+│       ├── track.html          # Live order tracking with maps
+│       └── ...
+│
+├── docs/
+│   └── banner.png
+│
+├── app.py                      # Entry point (ProxyFix for HTTPS)
+├── requirements.txt            # Python dependencies
+├── .env.example                # Environment variable template
+└── .gitignore
 ```
 
-## 🚀 Run the Web App Locally
+---
 
-1. **Install dependencies:**
-```powershell
-python -m pip install -r requirements.txt
+## 🚀 Quick Start
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/YOUR_USERNAME/COMPARE2SAVE.git
+cd COMPARE2SAVE
 ```
 
-2. **Run the server:**
-```powershell
+### 2. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Configure environment
+
+```bash
+cp .env.example .env
+# Fill in your API keys (see Environment Variables section)
+```
+
+### 4. Run the server
+
+```bash
 python app.py
 ```
 
-3. **Open in browser:**
-Navigate to `http://127.0.0.1:5000`
+### 5. Open in browser
+
+```
+http://127.0.0.1:5000
+```
 
 ### Default Admin Login
-```text
-username: admin
-password: admin@123
+
 ```
-*(You can override these values using the `C2S_ADMIN_USERNAME` and `C2S_ADMIN_PASSWORD` environment variables.)*
+Username: admin
+Password: admin@123
+```
+
+> Override with `C2S_ADMIN_USERNAME` and `C2S_ADMIN_PASSWORD` environment variables.
+
+---
 
 ## ⚙️ Environment Variables
 
-For production or full feature functionality, set the following environment variables (e.g., in a `.env` file):
+Create a `.env` file (copy from `.env.example`):
 
-```text
-C2S_SECRET_KEY=change-this-for-production
+```env
+# App Security
+C2S_SECRET_KEY=change-this-in-production
 C2S_ADMIN_USERNAME=admin
 C2S_ADMIN_PASSWORD=admin@123
-OPENAI_API_KEY=your-openai-key
+
+# OpenAI — AI Shopping Assistant
+OPENAI_API_KEY=your-openai-api-key
 OPENAI_MODEL=gpt-4o-mini
+
+# Twilio — OTP Authentication
 TWILIO_ACCOUNT_SID=your-twilio-sid
-TWILIO_AUTH_TOKEN=your-twilio-token
-TWILIO_FROM_NUMBER=your-twilio-phone-number
-DATABASE_URL=postgres://user:password@host/dbname # (Optional) Use for production PostgreSQL, otherwise uses local SQLite
+TWILIO_AUTH_TOKEN=your-twilio-auth-token
+TWILIO_FROM_NUMBER=+1234567890
+
+# Database — PostgreSQL for production (SQLite used locally if not set)
+DATABASE_URL=postgresql://user:password@host/dbname
+
+# Cloudinary — Image uploads
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
 ```
 
-## 📱 Desktop & Mobile Installation
+---
 
-### Install as a PWA
-The project includes a web manifest and service worker. Run the Flask server, open the site in Chrome or Edge, and click the "Install App" icon in the URL bar to add it to your desktop or mobile home screen.
+## 🏗️ Architecture
 
-### Create Windows Executable (.exe)
-To package the web application into a standalone Windows app:
-```powershell
-.\make_downloads.bat
 ```
-The Windows package is created at `release\COMPARE2SAVE-Windows.zip`. Extract it and run `COMPARE2SAVE.exe`.
-
-### Offline-First Mobile App (iOS / Android)
-The `mobile_app` folder contains a separate offline-first mobile version that uses `localStorage` instead of a Python backend. 
-
-To generate native wrappers using Capacitor (requires Node.js):
-```powershell
-cd mobile_app
-npm install
-npm run android:add
-npm run sync
-npm run open:android
+Browser / PWA Client
+        │
+        │  HTTP / REST API
+        ▼
+┌───────────────────┐
+│   Flask (app.py)  │  ← ProxyFix middleware for HTTPS in production
+│   Gunicorn WSGI   │
+└────────┬──────────┘
+         │
+   ┌─────┴──────────────────────────────┐
+   │          Route Blueprints           │
+   │  auth · core · customer · seller   │
+   └─────┬──────────────────────────────┘
+         │
+   ┌─────┴──────────────┐
+   │  SQLAlchemy ORM    │
+   └──────┬──────┬──────┘
+          │      │
+      SQLite  PostgreSQL
+      (local) (production)
 ```
-*(For iOS, replace `android` with `ios`. macOS and Xcode are required.)*
 
-*Note: The Capacitor build is a no-server client. To connect a mobile app to a shared live marketplace, you must point the mobile frontend API calls to your hosted Flask backend URL.*
+---
+
+## 📱 Install as PWA
+
+1. Start the Flask server
+2. Open in **Chrome** or **Edge**
+3. Click the **install icon** (⊕) in the address bar
+
+The app installs to your desktop or mobile home screen for a native-like experience — no app store required.
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit changes: `git commit -m 'feat: add your feature'`
+4. Push: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+Open source. Use freely for learning, personal projects, or as a foundation for your own marketplace.
+
+---
+
+<div align="center">
+  <p>Built with ❤️ using Python, Flask, and modern web technologies.</p>
+  <strong>⭐ Star this repo if you found it useful!</strong>
+</div>
